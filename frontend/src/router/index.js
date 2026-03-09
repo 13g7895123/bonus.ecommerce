@@ -3,6 +3,7 @@ import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import ForgotPassword from '../views/ForgotPassword.vue'
+import Settings from '../views/Settings.vue'
 
 const routes = [
   {
@@ -24,6 +25,11 @@ const routes = [
     path: '/forgot-password',
     name: 'ForgotPassword',
     component: ForgotPassword
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: Settings
   }
 ]
 

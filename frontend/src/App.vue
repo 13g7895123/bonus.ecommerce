@@ -7,8 +7,10 @@ const isMenuOpen = ref(false)
 const isLoggedIn = ref(false)
 const activeMenu = ref(null)
 
-// 判斷是否為首頁，只有首頁才顯示導覽列、底部導覽列和背景色限制
+// 判斷是否為首頁，只有首頁才顯示導覽列、部分背景色限制
 const isHomePage = computed(() => route.path === '/')
+// 判斷是否為設定頁
+const isSettingsPage = computed(() => route.path === '/settings')
 
 const announcements = ref([
   { id: 1, date: '2024-03-09', title: '阿聯酋航空最新航班資訊公告' },
@@ -45,76 +47,79 @@ const goBack = () => {
     <!-- 主內容區 -->
     <router-view v-if="!isMenuOpen"></router-view>
 
-    <!-- 全螢幕選單 (僅首頁有漢堡選單) -->
+    <!-- 全螢幕選單 (限制最大寬度防止滿版) -->
     <template v-if="isHomePage">
       <transition name="fade">
         <div v-if="isMenuOpen" class="full-menu-overlay">
-          <div class="menu-container">
-            <div class="menu-header">
-              <div v-if="activeMenu" class="header-left">
-                <button class="back-button" @click="goBack">
-                  <span class="arrow-left-icon"></span>
+          <div class="menu-container-outer">
+            <div class="menu-container">
+              <div class="menu-header">
+                <div v-if="activeMenu" class="header-left">
+                  <button class="back-button" @click="goBack">
+                    <span class="arrow-left-icon"></span>
+                  </button>
+                  <h2 class="menu-header-title">
+                    {{ activeMenu === 'member' ? '會員' : activeMenu === 'help' ? '協助' : activeMenu === 'news' ? '公告' : '語言' }}
+                  </h2>
+                </div>
+                <div v-else class="header-left">
+                  <h2 class="menu-header-title">選單</h2>
+                </div>
+                <button class="close-button" @click="toggleMenu">
+                  <span class="cross-icon"></span>
                 </button>
-                <h2 class="menu-header-title">
-                  {{ activeMenu === 'member' ? '會員' : activeMenu === 'help' ? '協助' : activeMenu === 'news' ? '公告' : '語言' }}
-                </h2>
               </div>
-              <div v-else class="header-left">
-                <h2 class="menu-header-title">選單</h2>
-              </div>
-              <button class="close-button" @click="toggleMenu">
-                <span class="cross-icon"></span>
-              </button>
-            </div>
 
-            <ul v-if="!activeMenu" class="menu-list">
-              <li><a href="#" @click.prevent="activeMenu = 'member'">會員</a></li>
-              <li><a href="#" @click.prevent="activeMenu = 'help'">協助</a></li>
-              <li><a href="#" @click.prevent="activeMenu = 'news'">公告</a></li>
-              <li><a href="#" @click.prevent="activeMenu = 'lang'">語言</a></li>
-              <li v-if="isLoggedIn"><a href="#" @click.prevent="toggleMenu" class="logout-link">登出</a></li>
-            </ul>
+              <ul v-if="!activeMenu" class="menu-list">
+                <li><a href="#" @click.prevent="activeMenu = 'member'">會員</a></li>
+                <li><a href="#" @click.prevent="activeMenu = 'help'">協助</a></li>
+                <li><a href="#" @click.prevent="activeMenu = 'news'">公告</a></li>
+                <li><a href="#" @click.prevent="activeMenu = 'lang'">語言</a></li>
+                <li v-if="isLoggedIn"><a href="#" @click.prevent="toggleMenu" class="logout-link">登出</a></li>
+              </ul>
 
-            <div v-else class="submenu-content">
-              <ul v-if="activeMenu === 'member'" class="submenu-list">
-                <li v-if="!isLoggedIn">
-                  <router-link to="/login" @click="isMenuOpen = false">註冊/登入 阿聯酋航空 Skywards</router-link>
-                </li>
-                <li v-else><a href="#">Skywards 會員資訊</a></li>
-              </ul>
-              <ul v-if="activeMenu === 'help'" class="submenu-list">
-                <li><a href="#">在線客服</a></li>
-              </ul>
-              <ul v-if="activeMenu === 'lang'" class="submenu-list">
-                <li><a href="#">中文</a></li>
-                <li><a href="#">英文</a></li>
-              </ul>
-              <div v-if="activeMenu === 'news'" class="announcements-page">
-                <div v-for="news in announcements" :key="news.id" class="news-card">
-                  <p class="news-date">{{ news.date }}</p>
-                  <h3 class="news-title">{{ news.title }}</h3>
+              <div v-else class="submenu-content">
+                <ul v-if="activeMenu === 'member'" class="submenu-list">
+                  <li v-if="!isLoggedIn">
+                    <router-link to="/login" @click="isMenuOpen = false">註冊/登入 阿聯酋航空 Skywards</router-link>
+                  </li>
+                  <li v-else><a href="#">Skywards 會員資訊</a></li>
+                </ul>
+                <ul v-if="activeMenu === 'help'" class="submenu-list">
+                  <li><a href="#">在線客服</a></li>
+                </ul>
+                <ul v-if="activeMenu === 'lang'" class="submenu-list">
+                  <li><a href="#">中文</a></li>
+                  <li><a href="#">英文</a></li>
+                </ul>
+                <div v-if="activeMenu === 'news'" class="announcements-page">
+                  <div v-for="news in announcements" :key="news.id" class="news-card">
+                    <p class="news-date">{{ news.date }}</p>
+                    <h3 class="news-title">{{ news.title }}</h3>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </transition>
-
-      <footer class="bottom-nav">
-        <router-link to="/" class="nav-item">
-          <span class="nav-icon">🏠</span>
-          <span class="nav-label">首頁</span>
-        </router-link>
-        <div class="nav-item">
-          <span class="nav-icon">✈️</span>
-          <span class="nav-label">Skywards</span>
-        </div>
-        <div class="nav-item">
-          <span class="nav-icon">👤</span>
-          <span class="nav-label">我的</span>
-        </div>
-      </footer>
     </template>
+
+    <!-- 底部導覽 (僅在首頁或設定頁顯示) -->
+    <footer v-if="isHomePage || isSettingsPage" class="bottom-nav">
+      <router-link to="/" class="nav-item">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">首頁</span>
+      </router-link>
+      <div class="nav-item">
+        <span class="nav-icon">✈️</span>
+        <span class="nav-label">Skywards</span>
+      </div>
+      <router-link to="/settings" class="nav-item">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">我的</span>
+      </router-link>
+    </footer>
   </div>
 </template>
 
@@ -174,15 +179,24 @@ const goBack = () => {
 .hamburger .icon::before { top: -8px; }
 .hamburger .icon::after { bottom: -8px; }
 
-/* 菜單覆蓋層 */
+/* 菜單覆蓋層 - 修正滿版問題 */
 .full-menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #ffffff;
+  background-color: rgba(0,0,0,0.5); /* 半透明背景 */
   z-index: 1000;
+  display: flex;
+  justify-content: center; /* 置中 */
+}
+
+.menu-container-outer {
+  width: 100%;
+  max-width: 1024px; /* 與整體布局一致 */
+  height: 100%;
+  background-color: #ffffff;
   overflow-y: auto;
 }
 
@@ -264,32 +278,6 @@ const goBack = () => {
 
 .logout-link {
   color: #d71921 !important;
-}
-
-/* 公告頁面 */
-.announcements-page {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.news-card {
-  background: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
-  border-left: 4px solid #d71921;
-}
-
-.news-date {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.news-title {
-  font-size: 1.1rem;
-  margin: 0;
-  color: #333;
 }
 
 /* 底部導覽 */
