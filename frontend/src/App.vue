@@ -4,7 +4,7 @@ import { ref } from 'vue'
 const isMenuOpen = ref(false)
 const isLoggedIn = ref(false) // 模擬登入狀態
 const activeMenu = ref(null) // 當前顯示的子選單: 'member', 'help', 'news', 'lang'
-const currentPage = ref('home') // 'home' or 'login'
+const currentPage = ref('home') // 'home', 'login', 'forgot-password', 'register'
 
 const announcements = ref([
   { id: 1, date: '2024-03-09', title: '阿聯酋航空最新航班資訊公告' },
@@ -25,6 +25,11 @@ const selectMenu = (menu) => {
   } else {
     activeMenu.value = menu
   }
+}
+
+const goToPage = (page) => {
+  currentPage.value = page
+  isMenuOpen.value = false
 }
 
 const goBackToHome = () => {
@@ -55,7 +60,7 @@ const goBack = () => {
     <!-- 登入獨立頁面 (不包含 Navbar) -->
     <div v-if="currentPage === 'login'" class="standalone-login-page">
       <div class="login-header-nav">
-        <button class="back-home-btn" @click="goBackToHome">
+        <button class="back-home-btn" @click="goToPage('home')">
           <span class="arrow-left"></span>
         </button>
         <div class="login-logo-small">
@@ -71,7 +76,7 @@ const goBack = () => {
           <input type="email" placeholder="電子郵件" class="login-input" />
           <div class="password-group">
             <input type="password" placeholder="密碼" class="login-input" />
-            <a href="#" class="forgot-password">忘記您的密碼了嗎?</a>
+            <a href="#" class="forgot-password" @click.prevent="goToPage('forgot-password')">忘記您的密碼了嗎?</a>
           </div>
           
           <button class="login-submit-btn">登錄</button>
@@ -80,7 +85,83 @@ const goBack = () => {
           
           <div class="join-now-group">
             <p class="join-label">還不是會員?</p>
-            <button class="join-now-btn">現在加入</button>
+            <button class="join-now-btn" @click="goToPage('register')">現在加入</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 忘記密碼頁面 -->
+    <div v-if="currentPage === 'forgot-password'" class="standalone-login-page">
+      <div class="login-header-nav">
+        <button class="back-home-btn" @click="goToPage('login')">
+          <span class="arrow-left"></span>
+        </button>
+        <div class="login-logo-small">
+          <img src="/logo.png" alt="Logo" />
+        </div>
+      </div>
+      <div class="login-page">
+        <h2 class="login-title">忘記密碼</h2>
+        <div class="login-form">
+          <input type="tel" placeholder="請輸入您的電話號碼" class="login-input" />
+          <p class="forgot-instructions">我們會向您發送訊息，以設定或重設您的新密碼</p>
+          <button class="login-submit-btn">提交</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 註冊頁面 -->
+    <div v-if="currentPage === 'register'" class="standalone-login-page">
+      <div class="login-header-nav">
+        <button class="back-home-btn" @click="goToPage('login')">
+          <span class="arrow-left"></span>
+        </button>
+        <div class="login-logo-small">
+          <img src="/logo.png" alt="Logo" />
+        </div>
+      </div>
+      <div class="login-page">
+        <h2 class="login-title">加入阿聯酋航空 Skywards</h2>
+        <p class="login-desc">每次旅行都能享有各種優惠。享受獎勵航班、艙位升等、專屬權益等優惠。</p>
+        
+        <div class="login-form">
+          <div class="form-field">
+            <input type="email" placeholder="電子郵件" class="login-input" />
+          </div>
+          <div class="form-field">
+            <input type="text" placeholder="名字" class="login-input" />
+          </div>
+          <div class="form-field">
+            <input type="text" placeholder="姓名" class="login-input" />
+            <p class="field-instruction">您必須以英文輸入輸入姓名,且須與護照上顯示的完全相同。</p>
+          </div>
+          <div class="form-field">
+            <input type="password" placeholder="密碼" class="login-input" />
+          </div>
+          <div class="form-field">
+            <input type="text" placeholder="出生日期" class="login-input" />
+          </div>
+          <div class="form-field">
+            <input type="text" placeholder="居住國家/地區" class="login-input" />
+          </div>
+          <div class="form-row">
+            <input type="text" placeholder="國家/地區代碼" class="login-input half" />
+            <input type="tel" placeholder="手機號碼" class="login-input half" />
+          </div>
+          <div class="form-field">
+            <input type="text" placeholder="輸入邀請碼(選填)" class="login-input" />
+          </div>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" id="terms" />
+            <label for="terms">我同意<span class="red-text">網站服務條款</span>及<span class="red-text">隱私政策</span></label>
+          </div>
+          
+          <button class="login-submit-btn">註冊</button>
+          
+          <div class="footer-note">
+            我已有帳號 <a href="#" class="login-link-red" @click.prevent="goToPage('login')">登入</a>
           </div>
         </div>
       </div>
@@ -154,7 +235,7 @@ const goBack = () => {
           <img src="/coin.png" alt="Coin" class="coin-image" />
           <h2 class="hero-subtitle">加入阿聯酋航空 Skywards</h2>
           <h1 class="hero-description">成為阿聯酋航空 Skywards 會員，即可享有航班獎勵、升等及其他福利</h1>
-          <button class="cta-button" @click="currentPage = 'login'">立即加入</button>
+          <button class="cta-button" @click="goToPage('register')">立即加入</button>
         </div>
       </main>
 
@@ -524,6 +605,73 @@ const goBack = () => {
   font-weight: 700;
   border-radius: 4px;
   cursor: pointer;
+  margin-top: 1rem;
+}
+
+.forgot-instructions {
+  font-size: 0.95rem;
+  color: #666;
+  text-align: left;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.form-field {
+  width: 100%;
+  margin-bottom: 1.25rem;
+}
+
+.field-instruction {
+  font-size: 0.85rem;
+  color: #666;
+  text-align: left;
+  margin-top: 0.4rem;
+  line-height: 1.4;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.login-input.half {
+  flex: 1;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-align: left;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.checkbox-group input {
+  margin-top: 0.25rem;
+  width: 18px;
+  height: 18px;
+}
+
+.red-text {
+  color: #d71921;
+  cursor: pointer;
+}
+
+.footer-note {
+  margin-top: 2rem;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.login-link-red {
+  color: #d71921;
+  text-decoration: underline;
+  font-weight: 700;
+  margin-left: 0.5rem;
 }
 
 .login-divider {
