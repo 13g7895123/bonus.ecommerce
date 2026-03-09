@@ -7,10 +7,10 @@ const isMenuOpen = ref(false)
 const isLoggedIn = ref(false)
 const activeMenu = ref(null)
 
-// 判斷是否為首頁，只有首頁才顯示導覽列、部分背景色限制
+// 判斷當前頁面
 const isHomePage = computed(() => route.path === '/')
-// 判斷是否為設定頁
 const isSettingsPage = computed(() => route.path === '/settings')
+const isSkywardsPage = computed(() => route.path === '/skywards')
 
 const announcements = ref([
   { id: 1, date: '2024-03-09', title: '阿聯酋航空最新航班資訊公告' },
@@ -29,7 +29,7 @@ const goBack = () => {
 </script>
 
 <template>
-  <div class="app-container" :class="{ 'menu-active': isMenuOpen, 'white-bg': !isHomePage }">
+  <div class="app-container" :class="{ 'menu-active': isMenuOpen, 'white-bg': !isHomePage && !isSkywardsPage }">
     <!-- Navbar 僅在首頁顯示 -->
     <nav v-if="isHomePage" class="navbar">
       <div class="logo">
@@ -105,16 +105,16 @@ const goBack = () => {
       </transition>
     </template>
 
-    <!-- 底部導覽 (僅在首頁或設定頁顯示) -->
-    <footer v-if="isHomePage || isSettingsPage" class="bottom-nav">
+    <!-- 底部導覽 (在首頁、設定頁、Skywards 頁顯示) -->
+    <footer v-if="isHomePage || isSettingsPage || isSkywardsPage" class="bottom-nav">
       <router-link to="/" class="nav-item">
         <span class="nav-icon">🏠</span>
         <span class="nav-label">首頁</span>
       </router-link>
-      <div class="nav-item">
+      <router-link to="/skywards" class="nav-item">
         <span class="nav-icon">✈️</span>
         <span class="nav-label">Skywards</span>
-      </div>
+      </router-link>
       <router-link to="/settings" class="nav-item">
         <span class="nav-icon">👤</span>
         <span class="nav-label">我的</span>
@@ -179,22 +179,22 @@ const goBack = () => {
 .hamburger .icon::before { top: -8px; }
 .hamburger .icon::after { bottom: -8px; }
 
-/* 菜單覆蓋層 - 修正滿版問題 */
+/* 菜單覆蓋層 */
 .full-menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.5); /* 半透明背景 */
+  background-color: rgba(0,0,0,0.5);
   z-index: 1000;
   display: flex;
-  justify-content: center; /* 置中 */
+  justify-content: center;
 }
 
 .menu-container-outer {
   width: 100%;
-  max-width: 1024px; /* 與整體布局一致 */
+  max-width: 1024px;
   height: 100%;
   background-color: #ffffff;
   overflow-y: auto;

@@ -4,6 +4,7 @@ import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import ForgotPassword from '../views/ForgotPassword.vue'
 import Settings from '../views/Settings.vue'
+import SkywardsDashboard from '../views/SkywardsDashboard.vue'
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: '/settings',
     name: 'Settings',
     component: Settings
+  },
+  {
+    path: '/skywards',
+    name: 'Skywards',
+    component: SkywardsDashboard
   }
 ]
 
