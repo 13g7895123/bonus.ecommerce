@@ -5,6 +5,8 @@ import Register from '../views/Register.vue'
 import ForgotPassword from '../views/ForgotPassword.vue'
 import Settings from '../views/Settings.vue'
 import SkywardsDashboard from '../views/SkywardsDashboard.vue'
+import Profile from '../views/Profile.vue'
+import ProfileDetails from '../views/ProfileDetails.vue'
 
 const routes = [
   {
@@ -36,6 +38,16 @@ const routes = [
     path: '/skywards',
     name: 'Skywards',
     component: SkywardsDashboard
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile
+  },
+  {
+    path: '/profile/details',
+    name: 'ProfileDetails',
+    component: ProfileDetails
   }
 ]
 
