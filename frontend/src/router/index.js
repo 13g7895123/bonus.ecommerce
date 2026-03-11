@@ -7,6 +7,8 @@ import Settings from '../views/Settings.vue'
 import SkywardsDashboard from '../views/SkywardsDashboard.vue'
 import Profile from '../views/Profile.vue'
 import ProfileDetails from '../views/ProfileDetails.vue'
+import ChangePassword from '../views/ChangePassword.vue'
+import IdentityVerification from '../views/IdentityVerification.vue'
 
 const routes = [
   {
@@ -48,6 +50,16 @@ const routes = [
     path: '/profile/details',
     name: 'ProfileDetails',
     component: ProfileDetails
+  },
+  {
+    path: '/change-password',
+    name: 'ChangePassword',
+    component: ChangePassword
+  },
+  {
+    path: '/identity-verification',
+    name: 'IdentityVerification',
+    component: IdentityVerification
   }
 ]
 

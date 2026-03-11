@@ -22,8 +22,12 @@
         <span class="link-label">詳細的個人資料</span>
         <span class="arrow-right">></span>
       </router-link>
-      <router-link to="/forgot-password" class="link-item">
+      <router-link to="/change-password" class="link-item">
         <span class="link-label">重設密碼</span>
+        <span class="arrow-right">></span>
+      </router-link>
+      <router-link to="/identity-verification" class="link-item">
+        <span class="link-label">實名認證</span>
         <span class="arrow-right">></span>
       </router-link>
     </div>
