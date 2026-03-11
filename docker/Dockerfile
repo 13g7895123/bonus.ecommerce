@@ -1,13 +1,13 @@
 # ---- Build Stage ----
-FROM node:22-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
 COPY frontend/package.json frontend/bun.lock* ./
-RUN npm install
+RUN bun install --frozen-lockfile
 
 COPY frontend/ .
-RUN npm run build
+RUN bun run build
 
 # ---- Production Stage ----
 FROM nginx:stable-alpine
