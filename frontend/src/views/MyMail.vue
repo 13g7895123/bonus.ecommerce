@@ -1,12 +1,6 @@
 <template>
   <div class="mail-page">
-    <div class="mail-header">
-      <router-link to="/settings" class="back-btn">
-        <span class="arrow-left"></span>
-      </router-link>
-      <h2 class="header-title">信件</h2>
-      <div class="header-placeholder"></div>
-    </div>
+    <PageHeader title="信件" back-to="/settings" />
 
     <div class="mail-list">
       <div class="mail-item" v-for="mail in mails" :key="mail.id">
@@ -23,6 +17,8 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/PageHeader.vue'
+
 const mails = [
   {
     id: 1,
@@ -36,45 +32,6 @@ const mails = [
 .mail-page {
   background-color: #f5f5f5;
   min-height: 100vh;
-}
-
-.mail-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.back-btn {
-  text-decoration: none;
-  color: #333;
-  padding: 5px;
-  display: flex;
-  align-items: center;
-}
-
-.arrow-left {
-  display: block;
-  width: 12px;
-  height: 12px;
-  border-left: 2px solid #333;
-  border-bottom: 2px solid #333;
-  transform: rotate(45deg);
-}
-
-.header-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.header-placeholder {
-  width: 22px;
 }
 
 .mail-list {

@@ -28,10 +28,10 @@
           <div class="card-icon">💰</div>
           <p class="card-text">提款申請</p>
         </router-link>
-        <div class="essential-card">
+        <router-link to="/mileage-rewards" class="essential-card">
           <div class="card-icon">🎖️</div>
-          <p class="card-text">里程回饋</p>
-        </div>
+          <p class="card-text">里程回饵</p>
+        </router-link>
         <router-link to="/customer-service" class="essential-card">
           <div class="card-icon">🎧</div>
           <p class="card-text">在線客服</p>

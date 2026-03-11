@@ -16,6 +16,7 @@ import WithdrawalSetPassword from '../views/WithdrawalSetPassword.vue'
 import WithdrawalSetup from '../views/WithdrawalSetup.vue'
 import WithdrawalApply from '../views/WithdrawalApply.vue'
 import MyMail from '../views/MyMail.vue'
+import MileageRewards from '../views/MileageRewards.vue'
 
 const routes = [
   {
@@ -107,6 +108,11 @@ const routes = [
     path: '/my-mail',
     name: 'MyMail',
     component: MyMail
+  },
+  {
+    path: '/mileage-rewards',
+    name: 'MileageRewards',
+    component: MileageRewards
   }
 ]
 

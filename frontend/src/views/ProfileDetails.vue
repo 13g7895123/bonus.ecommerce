@@ -1,12 +1,6 @@
 <template>
   <div class="details-page">
-    <div class="details-header">
-      <router-link to="/profile" class="back-btn">
-        <span class="arrow-left-icon"></span>
-      </router-link>
-      <h2 class="header-title">詳細個人資料</h2>
-      <div class="header-placeholder"></div>
-    </div>
+    <PageHeader title="詳細個人資料" back-to="/profile" />
 
     <!-- 聯絡詳細資料標題與編輯按鈕 -->
     <div class="section-container">
@@ -52,46 +46,15 @@
   </div>
 </template>
 
+<script setup>
+import PageHeader from '../components/PageHeader.vue'
+</script>
+
 <style scoped>
 .details-page {
   background-color: #f5f5f5;
   min-height: 100vh;
   color: #333;
-}
-
-.details-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #eee;
-  margin-bottom: 1rem;
-}
-
-.header-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.back-btn {
-  text-decoration: none;
-  color: #333;
-  padding: 5px;
-}
-
-.arrow-left-icon {
-  display: block;
-  width: 12px;
-  height: 12px;
-  border-left: 2px solid #333;
-  border-bottom: 2px solid #333;
-  transform: rotate(45deg);
-}
-
-.header-placeholder {
-  width: 22px;
 }
 
 .section-container {

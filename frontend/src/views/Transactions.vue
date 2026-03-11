@@ -1,12 +1,6 @@
 <template>
   <div class="tx-page">
-    <div class="tx-header">
-      <router-link to="/settings" class="back-btn">
-        <span class="arrow-left"></span>
-      </router-link>
-      <h2 class="header-title">交易紀錄</h2>
-      <div class="header-placeholder"></div>
-    </div>
+    <PageHeader title="交易紀錄" back-to="/settings" />
 
     <div class="tx-list">
       <router-link to="/transactions/topup" class="tx-item">
@@ -23,49 +17,14 @@
   </div>
 </template>
 
+<script setup>
+import PageHeader from '../components/PageHeader.vue'
+</script>
+
 <style scoped>
 .tx-page {
   background-color: #f5f5f5;
   min-height: 100vh;
-}
-
-.tx-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.back-btn {
-  text-decoration: none;
-  color: #333;
-  padding: 5px;
-  display: flex;
-  align-items: center;
-}
-
-.arrow-left {
-  display: block;
-  width: 12px;
-  height: 12px;
-  border-left: 2px solid #333;
-  border-bottom: 2px solid #333;
-  transform: rotate(45deg);
-}
-
-.header-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.header-placeholder {
-  width: 22px;
 }
 
 .tx-list {

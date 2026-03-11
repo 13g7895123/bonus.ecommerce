@@ -1,44 +1,18 @@
 <template>
   <div class="iv-page">
-    <div class="iv-header-nav">
-      <router-link to="/settings" class="back-btn">
-        <span class="arrow-left"></span>
-      </router-link>
-      <div class="iv-logo">
-        <img src="/logo.png" alt="Logo" />
-      </div>
-    </div>
+    <LogoHeader back-to="/settings" />
 
     <div class="iv-content">
       <!-- 說明文字 -->
       <p class="iv-desc">為了保障帳戶安全體驗 請您綁定個人身份資訊</p>
 
-      <!-- 上傳區塊：正面 -->
-      <div class="upload-box">
-        <div class="upload-icon">📷</div>
-        <p class="upload-side">正面</p>
-        <p class="upload-hint">上傳您正面身分證</p>
-      </div>
+      <UploadBox side="正面" hint="上傳您正面身分證" />
+      <UploadBox side="背面" hint="上傳您背面身分證" />
 
-      <!-- 上傳區塊：背面 -->
-      <div class="upload-box">
-        <div class="upload-icon">📷</div>
-        <p class="upload-side">背面</p>
-        <p class="upload-hint">上傳您背面身分證</p>
-      </div>
+      <AppInput label="身份證字號" placeholder="請輸入身份證號" />
+      <AppInput label="代表人姓名" placeholder="請輸入代表人姓名" />
 
-      <!-- 輸入欄位 -->
-      <div class="input-group">
-        <label class="input-label">身份證字號</label>
-        <input type="text" placeholder="請輸入身份證號" class="iv-input" />
-      </div>
-      <div class="input-group">
-        <label class="input-label">代表人姓名</label>
-        <input type="text" placeholder="請輸入代表人姓名" class="iv-input" />
-      </div>
-
-      <!-- 注意事項紅框 -->
-      <div class="notice-box">
+      <NoticeBox>
         <div class="notice-section">
           <p class="notice-title">上傳身份證正反面：</p>
           <p class="notice-text">
@@ -59,15 +33,76 @@
             確保填寫正確的格式：1個大寫英文字母＋9位阿拉伯數字（例如：A123456789）
           </p>
         </div>
-      </div>
+      </NoticeBox>
 
-      <!-- 下一步按鈕 -->
       <button class="next-btn">下一步</button>
     </div>
   </div>
 </template>
 
+<script setup>
+import LogoHeader from '../components/LogoHeader.vue'
+import UploadBox from '../components/UploadBox.vue'
+import NoticeBox from '../components/NoticeBox.vue'
+import AppInput from '../components/AppInput.vue'
+</script>
+
 <style scoped>
+.iv-page {
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
+.iv-content {
+  padding: 1.5rem;
+}
+
+.iv-desc {
+  font-size: 0.875rem;
+  color: #999;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.notice-section {
+  margin-bottom: 0.875rem;
+}
+
+.notice-section:last-child {
+  margin-bottom: 0;
+}
+
+.notice-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #d71921;
+  margin: 0 0 0.25rem 0;
+}
+
+.notice-text {
+  font-size: 0.8rem;
+  color: #555;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.next-btn {
+  width: 100%;
+  padding: 1rem;
+  background-color: #d71921;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.next-btn:hover {
+  background-color: #b8151b;
+}
 .iv-page {
   background-color: #ffffff;
   min-height: 100vh;

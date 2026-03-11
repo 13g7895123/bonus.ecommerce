@@ -1,23 +1,69 @@
 <template>
   <div class="standalone-login-page">
-    <div class="login-header-nav">
-      <router-link to="/login" class="back-home-btn">
-        <span class="arrow-left"></span>
-      </router-link>
-      <div class="login-logo-small">
-        <img src="/logo.png" alt="Logo" />
-      </div>
-    </div>
+    <LogoHeader back-to="/login" />
     <div class="login-page">
       <h2 class="login-title">忘記密碼</h2>
       <div class="login-form">
-        <input type="tel" placeholder="請輸入您的電話號碼" class="login-input" />
+        <AppInput type="tel" placeholder="請輸入您的電話號碼" />
         <p class="forgot-instructions">我們會向您發送訊息，以設定或重設您的新密碼</p>
         <button class="login-submit-btn">提交</button>
       </div>
     </div>
   </div>
 </template>
+
+<script setup>
+import LogoHeader from '../components/LogoHeader.vue'
+import AppInput from '../components/AppInput.vue'
+</script>
+
+<style scoped>
+.standalone-login-page {
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.login-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.login-form {
+  width: 100%;
+}
+
+.forgot-instructions {
+  font-size: 0.95rem;
+  color: #666;
+  text-align: left;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.login-submit-btn {
+  width: 100%;
+  background-color: #d71921;
+  color: white;
+  border: none;
+  padding: 1.1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+}
+</style>
 
 <style scoped>
 .standalone-login-page {

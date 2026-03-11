@@ -1,12 +1,6 @@
 <template>
   <div class="topup-page">
-    <div class="topup-header">
-      <router-link to="/transactions" class="back-btn">
-        <span class="arrow-left"></span>
-      </router-link>
-      <h2 class="header-title">儲值紀錄</h2>
-      <div class="header-placeholder"></div>
-    </div>
+    <PageHeader title="儲值紀錄" back-to="/transactions" />
 
     <div class="record-list">
       <div class="record-item" v-for="record in records" :key="record.id">
@@ -21,6 +15,8 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/PageHeader.vue'
+
 const records = [
   { id: 1, time: '2026/03/11 14:32', amount: '+$7,000' },
   { id: 2, time: '2026/03/10 09:15', amount: '+$3,500' },
@@ -34,45 +30,6 @@ const records = [
 .topup-page {
   background-color: #f5f5f5;
   min-height: 100vh;
-}
-
-.topup-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.back-btn {
-  text-decoration: none;
-  color: #333;
-  padding: 5px;
-  display: flex;
-  align-items: center;
-}
-
-.arrow-left {
-  display: block;
-  width: 12px;
-  height: 12px;
-  border-left: 2px solid #333;
-  border-bottom: 2px solid #333;
-  transform: rotate(45deg);
-}
-
-.header-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.header-placeholder {
-  width: 22px;
 }
 
 .record-list {

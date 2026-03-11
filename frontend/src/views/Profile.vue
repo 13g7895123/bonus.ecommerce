@@ -1,12 +1,6 @@
 <template>
   <div class="profile-page">
-    <div class="profile-header">
-      <router-link to="/skywards" class="back-btn">
-        <span class="arrow-left-icon"></span>
-      </router-link>
-      <h2 class="header-title">個人檔案</h2>
-      <div class="header-placeholder"></div>
-    </div>
+    <PageHeader title="個人檔案" back-to="/skywards" />
 
     <!-- 變更照片區塊 -->
     <div class="change-photo-section">
@@ -39,45 +33,15 @@
   </div>
 </template>
 
+<script setup>
+import PageHeader from '../components/PageHeader.vue'
+</script>
+
 <style scoped>
 .profile-page {
   background-color: #f5f5f5;
   min-height: 100vh;
   color: #333;
-}
-
-.profile-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #eee;
-}
-
-.header-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.back-btn {
-  text-decoration: none;
-  color: #333;
-  padding: 5px;
-}
-
-.arrow-left-icon {
-  display: block;
-  width: 12px;
-  height: 12px;
-  border-left: 2px solid #333;
-  border-bottom: 2px solid #333;
-  transform: rotate(45deg);
-}
-
-.header-placeholder {
-  width: 22px;
 }
 
 .change-photo-section {

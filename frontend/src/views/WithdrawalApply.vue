@@ -1,12 +1,6 @@
 <template>
   <div class="wa-page">
-    <div class="wa-header">
-      <router-link to="/withdrawal/setup" class="back-btn">
-        <span class="arrow-left"></span>
-      </router-link>
-      <h2 class="header-title">提款申請</h2>
-      <div class="header-placeholder"></div>
-    </div>
+    <PageHeader title="提款申請" back-to="/withdrawal/setup" />
 
     <div class="wa-content">
       <!-- 可提款現金 -->
@@ -32,12 +26,8 @@
       </div>
 
       <!-- 輸入框 -->
-      <div class="form-group">
-        <input type="number" placeholder="請輸入提款金額" class="wa-input" />
-      </div>
-      <div class="form-group">
-        <input type="password" placeholder="請輸入提款密碼" class="wa-input" />
-      </div>
+      <AppInput type="number" placeholder="請輸入提款金額" />
+      <AppInput type="password" placeholder="請輸入提款密碼" />
 
       <!-- 提款申請按鈕 -->
       <button class="apply-btn">提款申請</button>
@@ -45,49 +35,15 @@
   </div>
 </template>
 
+<script setup>
+import PageHeader from '../components/PageHeader.vue'
+import AppInput from '../components/AppInput.vue'
+</script>
+
 <style scoped>
 .wa-page {
   background-color: #ffffff;
   min-height: 100vh;
-}
-
-.wa-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.back-btn {
-  text-decoration: none;
-  color: #333;
-  padding: 5px;
-  display: flex;
-  align-items: center;
-}
-
-.arrow-left {
-  display: block;
-  width: 12px;
-  height: 12px;
-  border-left: 2px solid #333;
-  border-bottom: 2px solid #333;
-  transform: rotate(45deg);
-}
-
-.header-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.header-placeholder {
-  width: 22px;
 }
 
 .wa-content {
@@ -133,34 +89,6 @@
   height: 1px;
   background-color: #f0f0f0;
   margin: 0.25rem 0;
-}
-
-/* 輸入框 */
-.form-group {
-  margin-bottom: 1rem;
-  margin-top: 0.75rem;
-}
-
-.wa-input {
-  width: 100%;
-  padding: 0.875rem 1rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  color: #333;
-  background-color: #f9f9f9;
-  box-sizing: border-box;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.wa-input:focus {
-  border-color: #d71921;
-  background-color: #ffffff;
-}
-
-.wa-input::placeholder {
-  color: #aaa;
 }
 
 /* 提款申請按鈕 */

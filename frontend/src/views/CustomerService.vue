@@ -1,13 +1,6 @@
 <template>
   <div class="cs-page">
-    <!-- Header -->
-    <div class="cs-header">
-      <router-link to="/settings" class="back-btn">
-        <span class="arrow-left"></span>
-      </router-link>
-      <h2 class="header-title">在線客服</h2>
-      <div class="header-placeholder"></div>
-    </div>
+    <PageHeader title="在線客服" back-to="/settings" />
 
     <!-- 訊息列表 -->
     <div class="messages-container">
@@ -65,52 +58,16 @@
   </div>
 </template>
 
+<script setup>
+import PageHeader from '../components/PageHeader.vue'
+</script>
+
 <style scoped>
 .cs-page {
   background-color: #f5f5f5;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-/* Header */
-.cs-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.back-btn {
-  text-decoration: none;
-  color: #333;
-  padding: 5px;
-  display: flex;
-  align-items: center;
-}
-
-.arrow-left {
-  display: block;
-  width: 12px;
-  height: 12px;
-  border-left: 2px solid #333;
-  border-bottom: 2px solid #333;
-  transform: rotate(45deg);
-}
-
-.header-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.header-placeholder {
-  width: 22px;
 }
 
 /* 訊息區域 */
