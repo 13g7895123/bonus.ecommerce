@@ -35,20 +35,21 @@ const announcements = ref([
     <div class="about-container">
       <div class="about-header">
         <h2 class="about-title">關於我們</h2>
-        <div class="title-underline"></div>
+        <!-- <div class="title-underline"></div> -->
+        <p class="about-subtitle">瞭解更多關於我們的歷史沿革、企業和永續發展倡議的資訊</p>
       </div>
-      <div class="about-grid">
-        <div class="about-item">
-          <h3 class="item-title">我們的故事</h3>
-          <p class="item-text">自 1985 年成立以來，阿聯酋航空已從只有兩架飛機的小型航空公司發展成為全球領先的航空品牌之一。我們以杜拜為基地，連接全球超過 150 個目的地。</p>
+      <div class="about-circles">
+        <div class="circle-img-wrap">
+          <img src="/plane.png" alt="歷史沿革" class="circle-img" />
         </div>
-        <div class="about-item">
-          <h3 class="item-title">卓越服務</h3>
-          <p class="item-text">我們因其卓越的產品 and 服務而獲得無數獎項。從機上廚師烹製的精緻美食到獲獎肯定的 ice 影音娛樂系統，我們致力於為每位乘客提供難忘的旅程。</p>
+        <div class="circle-img-wrap">
+          <img src="/mountain.png" alt="企業文化" class="circle-img" />
         </div>
-        <div class="about-item">
-          <h3 class="item-title">環境責任</h3>
-          <p class="item-text">我們致力於減少營運對環境的影響。我們投資於最先進、燃油效率最高的飛機，並努力在整個供應鏈中實施可持續發展的做法。</p>
+        <div class="circle-img-wrap">
+          <img src="/people.png" alt="永續發展" class="circle-img" />
+        </div>
+        <div class="circle-img-wrap">
+          <img src="/together.png" alt="社會責任" class="circle-img" />
         </div>
       </div>
     </div>
@@ -196,9 +197,9 @@ const announcements = ref([
 }
 
 .about-section {
-  background-color: #000000;
-  padding: 5rem 1.5rem;
-  color: white;
+  background-color: #ffffff;
+  padding: 5rem 1.5rem 14rem;
+  color: #111111;
 }
 
 .about-container {
@@ -208,42 +209,48 @@ const announcements = ref([
 
 .about-header {
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: 3rem;
 }
 
 .about-title {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
+  color: #111111;
 }
 
 .title-underline {
   width: 60px;
   height: 4px;
   background-color: #d71921;
-  margin: 0 auto;
+  margin: 0 auto 1.5rem;
 }
 
-.about-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 3rem;
-}
-
-.about-item {
-  text-align: center;
-}
-
-.item-title {
+.about-subtitle {
   font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1.25rem;
-  color: #ffffff;
+  font-weight: 800;
+  color: #555555;
+  margin: 0;
+  line-height: 1.6;
 }
 
-.item-text {
-  font-size: 1rem;
-  line-height: 1.7;
-  color: #cccccc;
+.about-circles {
+  display: grid;
+  grid-template-columns: repeat(2, 30%);
+  gap: 5rem;
+  justify-content: center;
+}
+
+.circle-img-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.circle-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>

@@ -108,15 +108,25 @@ const goBack = () => {
     <!-- 底部導覽 (在首頁、設定頁、Skywards 頁顯示) -->
     <footer v-if="isHomePage || isSettingsPage || isSkywardsPage" class="bottom-nav">
       <router-link to="/" class="nav-item">
-        <span class="nav-icon">🏠</span>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9.75L12 3l9 6.75V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.75z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
         <span class="nav-label">首頁</span>
       </router-link>
       <router-link to="/skywards" class="nav-item">
-        <span class="nav-icon">✈️</span>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
         <span class="nav-label">Skywards</span>
       </router-link>
       <router-link to="/settings" class="nav-item">
-        <span class="nav-icon">👤</span>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
         <span class="nav-label">我的</span>
       </router-link>
     </footer>
@@ -289,24 +299,25 @@ const goBack = () => {
   width: 100%;
   max-width: 1024px;
   height: 60px;
-  background-color: #111;
+  background-color: #ffffff;
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 100;
-  border-top: 1px solid #333;
+  border-top: 1px solid #dddddd;
 }
 
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #999;
+  color: #333333;
   text-decoration: none;
 }
 
 .nav-icon {
-  font-size: 1.25rem;
+  width: 24px;
+  height: 24px;
   margin-bottom: 4px;
 }
 
@@ -317,6 +328,7 @@ const goBack = () => {
 .router-link-active.nav-item {
   color: #d71921;
 }
+
 
 /* 動畫 */
 .fade-enter-active, .fade-leave-active {
