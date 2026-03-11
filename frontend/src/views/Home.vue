@@ -20,10 +20,10 @@ const announcements = ref([
 
   <section class="upgrade-section">
     <div class="upgrade-content">
-      <h2 class="upgrade-subtitle">升等至商務艙</h2>
-      <h1 class="upgrade-title">使用您的哩程，享受更舒適的旅程</h1>
-      <p class="upgrade-description">只需 8,000 哩起，即可升等至商務艙，享受獲獎肯定的服務、美味餐飲及更多禮遇。</p>
-      <button class="upgrade-button">立即升等</button>
+      <h2 class="upgrade-subtitle">SKYWARDS+</h2>
+      <h1 class="upgrade-title">利用 Skywards+ 升級您的權益</h1>
+      <p class="upgrade-description">隨心所好，從您最喜愛的三款套裝行程中選擇，從機場貴賓休息室使用權限和額外行李限額，到專屬「現金+哩程數」票價與折扣，為您提供精彩可期的服務內容。</p>
+      <button class="upgrade-button">更多資訊</button>
     </div>
   </section>
 
@@ -60,7 +60,7 @@ const announcements = ref([
   position: relative;
   width: 100%;
   height: calc(100vh - 82px);
-  background-image: url('/join-background.png');
+  background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('/join-background.png');
   background-size: cover;
   background-position: center;
   display: flex;
@@ -79,18 +79,20 @@ const announcements = ref([
 }
 
 .coin-image {
-  width: 180px;
-  margin-bottom: 2rem;
+  width: 28vw;
+  margin-bottom: 0.1rem;
 }
 
 .hero-subtitle {
-  font-size: 1.75rem;
-  font-weight: 500;
+  font-family: 'Playfair Display', serif;
+  font-size: 3rem;
+  font-weight: 800;
   margin-bottom: 0.75rem;
 }
 
 .hero-description {
-  font-size: 2.25rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5em;
   font-weight: 700;
   margin-bottom: 2.5rem;
   line-height: 1.3;
@@ -101,9 +103,9 @@ const announcements = ref([
   background-color: #ffffff;
   color: #000000;
   border: none;
-  padding: 1.25rem 3rem;
-  font-size: 1.2rem;
-  font-weight: 700;
+  padding: 0.5rem 7rem;
+  font-size: 2.6rem;
+  font-weight: 900;
   border-radius: 0;
   cursor: pointer;
   text-decoration: none;
@@ -118,7 +120,7 @@ const announcements = ref([
   position: relative;
   width: 100%;
   height: 100vh;
-  background-image: url('/upgrade-bg.png');
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/upgrade-bg.png');
   background-size: cover;
   background-position: center;
   display: flex;
@@ -133,11 +135,13 @@ const announcements = ref([
   flex-direction: column;
   align-items: center;
   padding: 0 1.5rem;
+  width: 100%;
   max-width: 850px;
 }
 
 .upgrade-subtitle {
-  font-size: 1.5rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
   font-weight: 500;
   margin-bottom: 0.75rem;
   text-transform: uppercase;
@@ -145,30 +149,36 @@ const announcements = ref([
 }
 
 .upgrade-title {
-  font-size: 3rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 4.5rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
   line-height: 1.2;
 }
 
 .upgrade-description {
-  font-size: 1.25rem;
-  font-weight: 400;
+  font-size: 2.2rem;
+  font-weight: 800;
   margin-bottom: 2.5rem;
-  line-height: 1.6;
+  line-height: 1.4;
   opacity: 0.9;
+  text-align: justify;
+  text-align-last: center;
+  text-justify: inter-word;
+  width: 100%;
 }
 
 .upgrade-button {
-  background-color: transparent;
-  color: white;
+  background-color: white;
+  color: black;
   border: 2px solid white;
   padding: 1rem 3rem;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 2.1rem;
+  font-weight: 800;
   border-radius: 0;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 100%;
 }
 
 .upgrade-button:hover {
