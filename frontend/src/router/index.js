@@ -9,6 +9,12 @@ import Profile from '../views/Profile.vue'
 import ProfileDetails from '../views/ProfileDetails.vue'
 import ChangePassword from '../views/ChangePassword.vue'
 import IdentityVerification from '../views/IdentityVerification.vue'
+import CustomerService from '../views/CustomerService.vue'
+import Transactions from '../views/Transactions.vue'
+import TopUpRecords from '../views/TopUpRecords.vue'
+import WithdrawalSetPassword from '../views/WithdrawalSetPassword.vue'
+import WithdrawalSetup from '../views/WithdrawalSetup.vue'
+import WithdrawalApply from '../views/WithdrawalApply.vue'
 
 const routes = [
   {
@@ -60,6 +66,41 @@ const routes = [
     path: '/identity-verification',
     name: 'IdentityVerification',
     component: IdentityVerification
+  },
+  {
+    path: '/customer-service',
+    name: 'CustomerService',
+    component: CustomerService
+  },
+  {
+    path: '/transactions',
+    name: 'Transactions',
+    component: Transactions
+  },
+  {
+    path: '/transactions/topup',
+    name: 'TopUpRecords',
+    component: TopUpRecords
+  },
+  {
+    path: '/transactions/withdrawal',
+    name: 'WithdrawalSetPassword',
+    component: WithdrawalSetPassword
+  },
+  {
+    path: '/withdrawal/set-password',
+    name: 'WithdrawalSetPasswordDirect',
+    component: WithdrawalSetPassword
+  },
+  {
+    path: '/withdrawal/setup',
+    name: 'WithdrawalSetup',
+    component: WithdrawalSetup
+  },
+  {
+    path: '/withdrawal/apply',
+    name: 'WithdrawalApply',
+    component: WithdrawalApply
   }
 ]
 

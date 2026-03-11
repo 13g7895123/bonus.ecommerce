@@ -12,30 +12,30 @@
     <div class="section">
       <h3 class="section-title">旅行必需品</h3>
       <div class="essentials-grid">
-        <div class="essential-card">
+        <router-link to="/identity-verification" class="essential-card">
           <div class="card-icon">🪪</div>
           <p class="card-text">實名認證</p>
-        </div>
+        </router-link>
         <div class="essential-card">
           <div class="card-icon">✉️</div>
           <p class="card-text">我的信件</p>
         </div>
-        <div class="essential-card">
+        <router-link to="/transactions" class="essential-card">
           <div class="card-icon">📜</div>
           <p class="card-text">交易紀錄</p>
-        </div>
-        <div class="essential-card">
+        </router-link>
+        <router-link to="/withdrawal/set-password" class="essential-card">
           <div class="card-icon">💰</div>
           <p class="card-text">提款申請</p>
-        </div>
+        </router-link>
         <div class="essential-card">
           <div class="card-icon">🎖️</div>
           <p class="card-text">里程回饋</p>
         </div>
-        <div class="essential-card">
+        <router-link to="/customer-service" class="essential-card">
           <div class="card-icon">🎧</div>
           <p class="card-text">在線客服</p>
-        </div>
+        </router-link>
       </div>
     </div>
 
@@ -139,6 +139,8 @@
   background-color: #f9f9f9;
   border-radius: 8px;
   text-align: center;
+  text-decoration: none;
+  color: #333;
 }
 
 .card-icon {
