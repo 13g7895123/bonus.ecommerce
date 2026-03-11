@@ -16,10 +16,10 @@
           <div class="card-icon">🪪</div>
           <p class="card-text">實名認證</p>
         </router-link>
-        <div class="essential-card">
+        <router-link to="/my-mail" class="essential-card">
           <div class="card-icon">✉️</div>
           <p class="card-text">我的信件</p>
-        </div>
+        </router-link>
         <router-link to="/transactions" class="essential-card">
           <div class="card-icon">📜</div>
           <p class="card-text">交易紀錄</p>

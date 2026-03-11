@@ -15,6 +15,7 @@ import TopUpRecords from '../views/TopUpRecords.vue'
 import WithdrawalSetPassword from '../views/WithdrawalSetPassword.vue'
 import WithdrawalSetup from '../views/WithdrawalSetup.vue'
 import WithdrawalApply from '../views/WithdrawalApply.vue'
+import MyMail from '../views/MyMail.vue'
 
 const routes = [
   {
@@ -101,6 +102,11 @@ const routes = [
     path: '/withdrawal/apply',
     name: 'WithdrawalApply',
     component: WithdrawalApply
+  },
+  {
+    path: '/my-mail',
+    name: 'MyMail',
+    component: MyMail
   }
 ]
 

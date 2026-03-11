@@ -202,6 +202,9 @@
   background-color: #ffffff;
   border-top: 1px solid #eee;
   z-index: 20;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .plus-btn {
@@ -222,6 +225,7 @@
 
 .chat-input {
   flex: 1;
+  min-width: 0;
   padding: 0.55rem 0.875rem;
   border: 1px solid #e0e0e0;
   border-radius: 20px;
