@@ -38,9 +38,9 @@ const isSettingsPage = computed(() => route.path === '/settings')
 const isSkywardsPage = computed(() => route.path === '/skywards')
 
 const announcements = ref([
-  { id: 1, date: '2024-03-09', title: '阿聯酋航空最新航班資訊公告' },
-  { id: 2, date: '2024-03-08', title: 'Skywards 集哩程計畫更新提醒' },
-  { id: 3, date: '2024-03-05', title: '全球機場貴賓室服務調整通知' },
+  { id: 1, date: '2024-03-09 10:30:00', title: '【賣家交易安全提醒】請賣家勿點選可疑QRcode或Line連結' },
+  { id: 2, date: '2024-03-08 14:15:20', title: 'Skywards 集哩程計畫更新提醒' },
+  { id: 3, date: '2024-03-05 09:45:10', title: '全球機場貴賓室服務調整通知' },
 ])
 
 const toggleMenu = () => {
@@ -120,9 +120,10 @@ const goBack = () => {
                   <li><a href="#">英文</a></li>
                 </ul>
                 <div v-if="activeMenu === 'news'" class="announcements-page">
-                  <div v-for="news in announcements" :key="news.id" class="news-card">
-                    <p class="news-date">{{ news.date }}</p>
+                  <div v-for="news in announcements" :key="news.id" class="news-card" @click="router.push(`/announcement/${news.id}`)">
+                    
                     <h3 class="news-title">{{ news.title }}</h3>
+                    <p class="news-date">{{ news.date }}</p>
                   </div>
                 </div>
               </div>
@@ -475,5 +476,41 @@ const goBack = () => {
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
+}
+
+/* 公告樣式調整 */
+.announcements-page {
+  background-color: #fff;
+}
+
+.news-card {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #ddd;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Left align */
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.news-card:hover {
+  background-color: #f9f9f9;
+}
+
+.news-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.news-date {
+  font-size: 0.8rem;
+  color: #999; /* Grey color */
+  margin: 0;
+  align-self: flex-start;
 }
 </style>

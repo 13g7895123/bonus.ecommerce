@@ -17,12 +17,18 @@ import WithdrawalSetup from '../views/WithdrawalSetup.vue'
 import WithdrawalApply from '../views/WithdrawalApply.vue'
 import MyMail from '../views/MyMail.vue'
 import MileageRewards from '../views/MileageRewards.vue'
+import AnnouncementDetail from '../views/AnnouncementDetail.vue'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: Home
+  },
+  {
+    path: '/announcement/:id',
+    name: 'AnnouncementDetail',
+    component: AnnouncementDetail
   },
   {
     path: '/login',
