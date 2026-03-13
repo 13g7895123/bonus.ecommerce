@@ -1,6 +1,9 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useApi } from '../composables/useApi'
 
+const api = useApi()
+const user = ref(null)
 const activeTab = ref('miles') // 'miles' or 'tier'
 const showModal = ref(false)
 
@@ -11,6 +14,27 @@ const openModal = () => {
 const closeModal = () => {
   showModal.value = false
 }
+
+const getTierName = (tier) => {
+  const tiers = {
+    'blue': '藍卡',
+    'silver': '銀卡',
+    'gold': '金卡',
+    'platinum': '白金卡'
+  }
+  return tiers[tier] || '藍卡'
+}
+
+onMounted(() => {
+  try {
+    const currentUser = api.auth.getCurrentUser()
+    if (currentUser) {
+      user.value = currentUser
+    }
+  } catch (e) {
+    console.error('Failed to load user info', e)
+  }
+})
 </script>
 
 <template>
@@ -24,46 +48,41 @@ const closeModal = () => {
         <div class="avatar-circle">
           <span class="avatar-icon">👤</span>
         </div>
-        <h2 class="user-name">Admin User</h2>
-        <p class="user-id">ID: admin@emirates.com</p>
+        <h2 class="user-name">{{ user?.name || 'Guest User' }}</h2>
+        <p class="user-id">ID: {{ user?.email || 'N/A' }}</p>
         <div class="user-balance">
           <span class="currency">$</span>
-          <span class="amount">25,400</span>
+          <span class="amount">{{ user?.wallet?.balance?.toLocaleString() || '0' }}</span>
         </div>
-        <button class="details-btn">我的明細表</button>
       </div>
+      <button class="details-btn">我的明細表</button>
     </header>
 
     <!-- 狀態切換與等級區塊 -->
     <section class="membership-section">
-      <div class="toggle-container">
-        <button 
-          class="toggle-btn" 
+      <!-- 會員里程數與等級切換 -->
+      <div class="stats-container">
+        <div 
+          class="stat-box" 
           :class="{ active: activeTab === 'miles' }"
           @click="activeTab = 'miles'"
-        >會員里程數</button>
-        <button 
-          class="toggle-btn" 
-          :class="{ active: activeTab === 'tier' }"
-          @click="activeTab = 'tier'"
-        >等級</button>
-      </div>
-
-      <!-- 會員里程數內容 -->
-      <div v-if="activeTab === 'miles'" class="stats-container">
-        <div class="stat-box">
-          <span class="stat-value">25,400</span>
+        >
+          <span class="stat-value">{{ user?.miles?.toLocaleString() || '0' }}</span>
           <div class="stat-divider"></div>
           <p class="stat-label">Skywards會員里程數</p>
         </div>
-        <div class="stat-box">
-          <span class="stat-value large">藍卡</span>
+        <div 
+          class="stat-box" 
+          :class="{ active: activeTab === 'tier' }"
+          @click="activeTab = 'tier'"
+        >
+          <span class="stat-value large">{{ user ? getTierName(user.tier) : '藍卡' }}</span>
           <p class="stat-label small">等級</p>
         </div>
       </div>
 
-      <!-- 等級內容 -->
-      <div v-else class="tier-content">
+      <!-- 等級內容 (僅在切換到等級時顯示) -->
+      <div v-if="activeTab === 'tier'" class="tier-content">
         <div class="tier-progress-container">
           <div class="tier-rail">
             <div class="tier-line active"></div>
@@ -206,20 +225,35 @@ const closeModal = () => {
   background: transparent;
   border: 1px solid white;
   color: white;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1rem;
   border-radius: 4px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  display: block;
-  margin: 0 auto;
+  
+  /* Modified Logic: Position at bottom left */
+  position: absolute;
+  bottom: 0.5rem; /* Adjust based on padding of header (currently 3rem top, 2rem bottom) */
+  left: 1.5rem;
+  margin: 0;
 }
 
 .membership-section { background-color: #ffffff; padding: 1.5rem; margin-bottom: 1rem; }
-.toggle-container { display: flex; background-color: #f0f0f0; border-radius: 30px; padding: 4px; margin-bottom: 2rem; }
-.toggle-btn { flex: 1; padding: 0.75rem; border: none; background: transparent; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer; }
-.toggle-btn.active { background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.stats-container { display: flex; justify-content: space-between; text-align: center; }
-.stat-box { flex: 1; display: flex; flex-direction: column; padding: 0 1rem; }
+/* .toggle-container { display: flex; background-color: #f0f0f0; border-radius: 30px; padding: 4px; margin-bottom: 2rem; } */
+/* .toggle-btn { flex: 1; padding: 0.75rem; border: none; background: transparent; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer; } */
+/* .toggle-btn.active { background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); } */
+.stats-container { display: flex; justify-content: space-between; text-align: center; margin-bottom: 2rem; }
+.stat-box { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  padding: 0 1rem 1rem; 
+  cursor: pointer; 
+  border-bottom: 3px solid transparent; 
+  transition: border-color 0.3s;
+}
+.stat-box.active {
+  border-bottom-color: #E6007E; /* Peach/Pink Highlight */
+}
 .stat-value { font-size: 1.5rem; font-weight: 700; color: #000; margin-bottom: 10px; }
 .stat-value.large { font-size: 1.75rem; color: #00205B; }
 .stat-divider { width: 60%; height: 1px; background-color: #ddd; margin: 0 auto 10px; }
