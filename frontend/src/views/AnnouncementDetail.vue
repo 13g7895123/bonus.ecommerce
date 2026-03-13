@@ -68,7 +68,10 @@ const announcements = [
   },
 ]
 
-const news = computed(() => announcements.find(n => n.id == id.value))
+const news = computed(() => {
+    // 確保 ID 為數字進行比較
+    return announcements.find(n => n.id === Number(id.value))
+})
 
 </script>
 
