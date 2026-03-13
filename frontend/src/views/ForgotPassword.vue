@@ -28,8 +28,7 @@ import AppInput from '../components/AppInput.vue'
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 3rem 1.5rem;
-  max-width: 500px;
+  padding: 3rem 5rem;
   margin: 0 auto;
 }
 
@@ -115,8 +114,7 @@ import AppInput from '../components/AppInput.vue'
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 3rem 1.5rem;
-  max-width: 500px;
+  padding: 3rem 5rem;
   margin: 0 auto;
 }
 

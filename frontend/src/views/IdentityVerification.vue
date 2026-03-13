@@ -54,7 +54,7 @@ import AppInput from '../components/AppInput.vue'
 }
 
 .iv-content {
-  padding: 1.5rem;
+  padding: 3rem 5rem;
 }
 
 .iv-desc {
@@ -144,7 +144,7 @@ import AppInput from '../components/AppInput.vue'
 }
 
 .iv-content {
-  padding: 1.5rem;
+  padding: 3rem 5rem;
 }
 
 .iv-desc {

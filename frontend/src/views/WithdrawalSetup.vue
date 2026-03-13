@@ -42,7 +42,7 @@ import AppInput from '../components/AppInput.vue'
 }
 
 .ws-content {
-  padding: 1.5rem;
+  padding: 3rem 5rem;
 }
 
 .ws-desc {
@@ -151,7 +151,7 @@ import AppInput from '../components/AppInput.vue'
 }
 
 .ws-content {
-  padding: 1.5rem;
+  padding: 3rem 5rem;
 }
 
 .ws-desc {

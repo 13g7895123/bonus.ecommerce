@@ -51,7 +51,7 @@ const handleLogin = async () => {
     </div>
     
     <div class="login-page">
-      <h2 class="login-title">登錄阿聯酋航空</h2>
+      <h1 class="login-title">登錄阿聯酋航空</h1>
       <p class="login-desc">每次跟我們或合作夥伴聯乘都能賺取哩程數。還能使用 Skywards 會員哩程數換取各種獎勵。</p>
       
       <div class="login-form">
@@ -64,7 +64,7 @@ const handleLogin = async () => {
         <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
 
         <button class="login-submit-btn" :disabled="loading" @click="handleLogin">
-          {{ loading ? '登入中...' : '登錄' }}
+          {{ loading ? '登入中...' : '登入' }}
         </button>
         
         <hr class="login-divider" />
@@ -128,8 +128,7 @@ const handleLogin = async () => {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 3rem 1.5rem;
-  max-width: 500px;
+  padding: 3rem 5rem;
   margin: 0 auto;
 }
 
@@ -224,7 +223,7 @@ const handleLogin = async () => {
   width: 100%;
   background-color: #ffffff;
   color: #000000;
-  border: 1px solid #000000;
+  border: 1px solid #a8a8a9;
   padding: 1.1rem;
   font-size: 1.1rem;
   font-weight: 700;
@@ -233,5 +232,6 @@ const handleLogin = async () => {
   display: block;
   text-align: center;
   text-decoration: none;
+  box-sizing: border-box;
 }
 </style>

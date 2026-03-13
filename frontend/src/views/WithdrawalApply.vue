@@ -47,7 +47,7 @@ import AppInput from '../components/AppInput.vue'
 }
 
 .wa-content {
-  padding: 1.5rem;
+  padding: 3rem 5rem;
 }
 
 /* 資訊區塊 */

@@ -25,7 +25,7 @@ import AppInput from '../components/AppInput.vue'
 }
 
 .wsp-content {
-  padding: 2rem 1.5rem;
+  padding: 3rem 5rem;
 }
 
 .wsp-desc {
