@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import AppInput from '../components/AppInput.vue'
+import AuthHeader from '../components/AuthHeader.vue'
+import DebugFillButton from '../components/DebugFillButton.vue'
 
 const router = useRouter()
 const api = useApi()
@@ -11,6 +13,11 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const errorMessage = ref('')
+
+const fillRandomData = () => {
+  email.value = 'admin@example.com'
+  password.value = 'password'
+}
 
 const handleLogin = async () => {
   if (!email.value || !password.value) {
@@ -51,8 +58,7 @@ const handleLogin = async () => {
     </div>
     
     <div class="login-page">
-      <h1 class="login-title">登錄阿聯酋航空</h1>
-      <p class="login-desc">每次跟我們或合作夥伴聯乘都能賺取哩程數。還能使用 Skywards 會員哩程數換取各種獎勵。</p>
+      <AuthHeader title="登錄阿聯酋航空" description="每次跟我們或合作夥伴聯乘都能賺取哩程數。還能使用 Skywards 會員哩程數換取各種獎勵。" />
       
       <div class="login-form">
         <AppInput v-model="email" type="email" placeholder="電子郵件" />
@@ -73,6 +79,7 @@ const handleLogin = async () => {
           <p class="join-label">還不是會員?</p>
           <router-link to="/register" class="join-now-btn">現在加入</router-link>
         </div>
+        <DebugFillButton @fill="fillRandomData" />
       </div>
     </div>
   </div>

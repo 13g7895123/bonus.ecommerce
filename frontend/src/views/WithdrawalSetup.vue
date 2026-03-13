@@ -9,10 +9,10 @@
 
       <div class="section-label">銀行認證資訊</div>
 
-      <AppInput placeholder="請輸入銀行名稱" />
-      <AppInput placeholder="請輸入分行資訊" />
-      <AppInput placeholder="請輸入銀行帳號" />
-      <AppInput placeholder="請輸入銀行姓名" />
+      <AppInput v-model="bankName" placeholder="請輸入銀行名稱" />
+      <AppInput v-model="branchName" placeholder="請輸入分行資訊" />
+      <AppInput v-model="accountNo" placeholder="請輸入銀行帳號" />
+      <AppInput v-model="accountName" placeholder="請輸入銀行姓名" />
 
       <NoticeBox>
         <p class="notice-title">新增帳戶注意事項：</p>
@@ -24,15 +24,31 @@
       </NoticeBox>
 
       <router-link to="/withdrawal/apply" class="submit-btn">送出</router-link>
+      <DebugFillButton @fill="fillRandomData" />
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import PageHeader from '../components/PageHeader.vue'
 import UploadBox from '../components/UploadBox.vue'
 import NoticeBox from '../components/NoticeBox.vue'
 import AppInput from '../components/AppInput.vue'
+import DebugFillButton from '../components/DebugFillButton.vue'
+import { getRandomName } from '../utils/random'
+
+const bankName = ref('')
+const branchName = ref('')
+const accountNo = ref('')
+const accountName = ref('')
+
+const fillRandomData = () => {
+  bankName.value = '玉山銀行'
+  branchName.value = '信義分行'
+  accountNo.value = '1234567890123'
+  accountName.value = getRandomName()
+}
 </script>
 
 <style scoped>

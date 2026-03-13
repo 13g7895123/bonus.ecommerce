@@ -3,6 +3,15 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import AppInput from '../components/AppInput.vue'
+import AuthHeader from '../components/AuthHeader.vue'
+import DebugFillButton from '../components/DebugFillButton.vue'
+import { 
+  getRandomEmail, 
+  getRandomName, 
+  getRandomSurname, 
+  getRandomDate, 
+  getRandomPhone 
+} from '../utils/random'
 
 const router = useRouter()
 const api = useApi()
@@ -19,6 +28,18 @@ const form = reactive({
   inviteCode: '',
   terms: false
 })
+
+const fillRandomData = () => {
+  form.email = getRandomEmail()
+  form.firstName = getRandomName()
+  form.lastName = getRandomSurname()
+  form.password = 'password'
+  form.dob = getRandomDate()
+  form.country = 'Taiwan'
+  form.countryCode = '+886'
+  form.phone = getRandomPhone()
+  form.terms = true
+}
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -66,8 +87,7 @@ const handleRegister = async () => {
       </div>
     </div>
     <div class="login-page">
-      <h2 class="login-title">加入阿聯酋航空 Skywards</h2>
-      <p class="login-desc">每次旅行都能享有各種優惠。享受獎勵航班、艙位升等、專屬權益等優惠。</p>
+      <AuthHeader title="加入阿聯酋航空 Skywards" description="每次旅行都能享有各種優惠。享受獎勵航班、艙位升等、專屬權益等優惠。" />
       
       <div class="login-form">
         <div class="form-field">
@@ -84,7 +104,7 @@ const handleRegister = async () => {
           <AppInput v-model="form.password" type="password" placeholder="密碼" />
         </div>
         <div class="form-field">
-          <AppInput v-model="form.dob" type="text" placeholder="出生日期 (YYYY-MM-DD)" />
+          <AppInput v-model="form.dob" type="date" placeholder="出生日期" />
         </div>
         <div class="form-field">
           <AppInput v-model="form.country" type="text" placeholder="居住國家/地區" />
@@ -115,6 +135,8 @@ const handleRegister = async () => {
         <div class="footer-note">
           我已有帳號 <router-link to="/login" class="login-link-red">登入</router-link>
         </div>
+
+        <DebugFillButton @fill="fillRandomData" />
       </div>
     </div>
   </div>

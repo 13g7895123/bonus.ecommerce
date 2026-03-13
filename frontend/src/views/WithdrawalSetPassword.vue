@@ -5,17 +5,28 @@
     <div class="wsp-content">
       <p class="wsp-desc">為保護您的帳戶安全，請先設定提款密碼</p>
 
-      <AppInput type="password" label="設定提款密碼" placeholder="請設关6-12位數字密碼" />
-      <AppInput type="password" label="確認提款密碼" placeholder="再次輸入密碼" />
+      <AppInput v-model="pwd1" type="password" label="設定提款密碼" placeholder="請設关6-12位數字密碼" />
+      <AppInput v-model="pwd2" type="password" label="確認提款密碼" placeholder="再次輸入密碼" />
 
       <router-link to="/withdrawal/setup" class="submit-btn">確認</router-link>
+      <DebugFillButton @fill="fillRandomData" />
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
+import DebugFillButton from '../components/DebugFillButton.vue'
+
+const pwd1 = ref('')
+const pwd2 = ref('')
+
+const fillRandomData = () => {
+  pwd1.value = '123456'
+  pwd2.value = '123456'
+}
 </script>
 
 <style scoped>

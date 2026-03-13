@@ -9,8 +9,8 @@
       <UploadBox side="正面" hint="上傳您正面身分證" />
       <UploadBox side="背面" hint="上傳您背面身分證" />
 
-      <AppInput label="身份證字號" placeholder="請輸入身份證號" />
-      <AppInput label="代表人姓名" placeholder="請輸入代表人姓名" />
+      <AppInput v-model="idNumber" label="身份證字號" placeholder="請輸入身份證號" />
+      <AppInput v-model="fullName" label="代表人姓名" placeholder="請輸入代表人姓名" />
 
       <NoticeBox>
         <div class="notice-section">
@@ -36,15 +36,27 @@
       </NoticeBox>
 
       <button class="next-btn">下一步</button>
+      <DebugFillButton @fill="fillRandomData" />
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import LogoHeader from '../components/LogoHeader.vue'
 import UploadBox from '../components/UploadBox.vue'
 import NoticeBox from '../components/NoticeBox.vue'
 import AppInput from '../components/AppInput.vue'
+import DebugFillButton from '../components/DebugFillButton.vue'
+import { getRandomName } from '../utils/random'
+
+const idNumber = ref('')
+const fullName = ref('')
+
+const fillRandomData = () => {
+  idNumber.value = 'A123456789'
+  fullName.value = getRandomName()
+}
 </script>
 
 <style scoped>

@@ -26,18 +26,30 @@
       </div>
 
       <!-- 輸入框 -->
-      <AppInput type="number" placeholder="請輸入提款金額" />
-      <AppInput type="password" placeholder="請輸入提款密碼" />
+      <AppInput v-model="amount" type="number" placeholder="請輸入提款金額" />
+      <AppInput v-model="password" type="password" placeholder="請輸入提款密碼" />
 
       <!-- 提款申請按鈕 -->
       <button class="apply-btn">提款申請</button>
+      
+      <DebugFillButton @fill="fillRandomData" />
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
+import DebugFillButton from '../components/DebugFillButton.vue'
+
+const amount = ref('')
+const password = ref('')
+
+const fillRandomData = () => {
+  amount.value = '1000'
+  password.value = '123456'
+}
 </script>
 
 <style scoped>
