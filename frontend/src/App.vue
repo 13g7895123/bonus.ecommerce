@@ -49,7 +49,7 @@ const goBack = () => {
 
     <!-- 全螢幕選單 (限制最大寬度防止滿版) -->
     <template v-if="isHomePage">
-      <transition name="fade">
+      <transition name="slide">
         <div v-if="isMenuOpen" class="full-menu-overlay">
           <div class="menu-container-outer">
             <div class="menu-container">
@@ -63,7 +63,7 @@ const goBack = () => {
                   </h2>
                 </div>
                 <div v-else class="header-left">
-                  <h2 class="menu-header-title">選單</h2>
+                  <!-- 主選單不顯示標題 -->
                 </div>
                 <button class="close-button" @click="toggleMenu">
                   <span class="cross-icon"></span>
@@ -205,20 +205,30 @@ const goBack = () => {
   background-color: rgba(0,0,0,0.5);
   z-index: 1000;
   display: flex;
-  justify-content: center;
+  justify-content: center; /* Center the constrained area */
+  align-items: flex-start; /* Ensure top alignment */
+  overflow: hidden;
 }
 
 .menu-container-outer {
   width: 100%;
   max-width: var(--app-max-width);
   height: 100%;
-  background-color: #ffffff;
+  background-color: #333333;
   overflow-y: auto;
+  position: relative;
+  /* Since justify-content is center, this block is centered. 
+     The transform translateX(100%) will move it to the right OF ITS CONTAINER (the flex parent or its flow).
+     Wait, if flex centered, translating 100% moves it visually to the right, possibly overlapping the right margin.
+     To make it "slide from right edge of visible area", we simply use the transition.
+     The visible area IS the max-width block.
+     So when translateX(100%), it is shifted entirely to the right of the visible slot.
+  */
 }
 
 .menu-container {
   padding: 20px;
-  color: #333;
+  color: #ffffff;
 }
 
 .menu-header {
@@ -227,13 +237,14 @@ const goBack = () => {
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #555555;
 }
 
 .menu-header-title {
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
+  color: #ffffff;
 }
 
 .close-button, .back-button {
@@ -256,7 +267,7 @@ const goBack = () => {
   position: absolute;
   width: 20px;
   height: 2px;
-  background-color: #333;
+  background-color: #ffffff;
   top: 50%;
   left: 0;
 }
@@ -268,8 +279,8 @@ const goBack = () => {
   display: block;
   width: 12px;
   height: 12px;
-  border-left: 2px solid #333;
-  border-bottom: 2px solid #333;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
   transform: rotate(45deg);
 }
 
@@ -280,20 +291,41 @@ const goBack = () => {
 }
 
 .menu-list li, .submenu-list li {
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid #555555;
 }
 
 .menu-list a, .submenu-list a {
   display: block;
   padding: 1.25rem 0;
-  color: #333;
+  color: #ffffff;
   text-decoration: none;
   font-size: 1.1rem;
   font-weight: 500;
 }
 
+/* Slide Transition */
+.slide-enter-active,
+.slide-leave-active {
+  transition: background-color 0.3s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.slide-enter-active .menu-container-outer,
+.slide-leave-active .menu-container-outer {
+  transition: transform 0.3s ease-out;
+}
+
+.slide-enter-from .menu-container-outer,
+.slide-leave-to .menu-container-outer {
+  transform: translateX(100%);
+}
+
 .logout-link {
-  color: #d71921 !important;
+  color: #ff4d4f !important;
 }
 
 /* 底部導覽 */

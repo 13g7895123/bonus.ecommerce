@@ -1,3 +1,43 @@
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useApi } from '../composables/useApi'
+
+const router = useRouter()
+const api = useApi()
+
+const email = ref('')
+const password = ref('')
+const loading = ref(false)
+const errorMessage = ref('')
+
+const handleLogin = async () => {
+  if (!email.value || !password.value) {
+    errorMessage.value = '請輸入電子郵件和密碼'
+    return
+  }
+
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    const response = await api.auth.login({
+      email: email.value,
+      password: password.value
+    })
+    console.log('Login success:', response)
+    // 登入成功，導向首頁
+    router.push('/')
+  } catch (error) {
+    console.error('Login failed:', error)
+    const errObj = error.response?.data || error
+    errorMessage.value = errObj.message || '登入失敗，請稍後再試'
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
 <template>
   <div class="standalone-login-page">
     <div class="login-header-nav">
@@ -14,13 +54,17 @@
       <p class="login-desc">每次跟我們或合作夥伴聯乘都能賺取哩程數。還能使用 Skywards 會員哩程數換取各種獎勵。</p>
       
       <div class="login-form">
-        <input type="email" placeholder="電子郵件" class="login-input" />
+        <input v-model="email" type="email" placeholder="電子郵件" class="login-input" />
         <div class="password-group">
-          <input type="password" placeholder="密碼" class="login-input" />
+          <input v-model="password" type="password" placeholder="密碼" class="login-input" />
           <router-link to="/forgot-password" class="forgot-password">忘記您的密碼了嗎?</router-link>
         </div>
         
-        <button class="login-submit-btn">登錄</button>
+        <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
+
+        <button class="login-submit-btn" :disabled="loading" @click="handleLogin">
+          {{ loading ? '登入中...' : '登錄' }}
+        </button>
         
         <hr class="login-divider" />
         
@@ -121,6 +165,18 @@
   margin-bottom: 2rem;
 }
 
+.password-group input {
+  margin-bottom: 0.5rem;
+}
+
+.error-msg {
+  color: #d71921;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+
 .forgot-password {
   color: #d71921;
   font-size: 0.9rem;
@@ -139,6 +195,11 @@
   font-weight: 700;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.login-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .login-divider {

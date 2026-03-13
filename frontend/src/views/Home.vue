@@ -60,7 +60,7 @@ const announcements = ref([
 .hero-section {
   position: relative;
   width: 100%;
-  height: calc(100vh - 82px);
+  height: calc(100vh - 30vh);
   background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('/join-background.png');
   background-size: cover;
   background-position: center;
@@ -80,20 +80,20 @@ const announcements = ref([
 }
 
 .coin-image {
-  width: 28vw;
+  width: 24vw;
   margin-bottom: 0.1rem;
 }
 
 .hero-subtitle {
   font-family: 'Playfair Display', serif;
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 800;
   margin-bottom: 0.75rem;
 }
 
 .hero-description {
   font-family: 'Playfair Display', serif;
-  font-size: 2.5em;
+  font-size: 2em;
   font-weight: 700;
   margin-bottom: 2.5rem;
   line-height: 1.3;
@@ -105,7 +105,7 @@ const announcements = ref([
   color: #000000;
   border: none;
   padding: 0.5rem 7rem;
-  font-size: 2.6rem;
+  font-size: 2rem;
   font-weight: 900;
   border-radius: 0;
   cursor: pointer;
