@@ -4,36 +4,58 @@
       <router-link to="/" class="back-btn">
         <span class="arrow-left-icon"></span>
       </router-link>
-      <h2 class="header-title">我的</h2>
+      <h2 class="header-title">我的設定</h2>
       <div class="header-placeholder"></div>
     </div>
 
     <!-- 旅行必需品區塊 -->
-    <div class="section">
-      <h3 class="section-title">旅行必需品</h3>
-      <div class="essentials-grid">
+    <div class="section" style="background-color: transparent;">
+      <h3 class="section-title" style="padding-left: 1.5rem;">旅行必需品</h3>
+      <div class="essentials-grid" style="padding: 0 1.5rem;">
         <router-link to="/identity-verification" class="essential-card">
-          <div class="card-icon">🪪</div>
+          <svg class="card-icon" viewBox="0 0 24 24" width="28" height="28" stroke="#d71921" stroke-width="1.5" fill="none">
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <circle cx="12" cy="10" r="3" />
+            <path d="M12 16a6 6 0 0 0-6 3v1h12v-1a6 6 0 0 0-6-3z" />
+          </svg>
           <p class="card-text">實名認證</p>
         </router-link>
         <router-link to="/my-mail" class="essential-card">
-          <div class="card-icon">✉️</div>
+          <svg class="card-icon" viewBox="0 0 24 24" width="28" height="28" stroke="#d71921" stroke-width="1.5" fill="none">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
           <p class="card-text">我的信件</p>
         </router-link>
         <router-link to="/transactions" class="essential-card">
-          <div class="card-icon">📜</div>
+          <svg viewBox="0 0 24 24" width="28" height="28" stroke="#d71921" stroke-width="1.5" fill="none" class="card-icon">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
           <p class="card-text">交易紀錄</p>
         </router-link>
         <router-link to="/withdrawal/set-password" class="essential-card">
-          <div class="card-icon">💰</div>
+           <svg viewBox="0 0 24 24" width="28" height="28" stroke="#d71921" stroke-width="1.5" fill="none" class="card-icon">
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <line x1="2" y1="10" x2="22" y2="10" />
+            <path d="M12 15h.01"/>
+          </svg>
           <p class="card-text">提款申請</p>
         </router-link>
         <router-link to="/mileage-rewards" class="essential-card">
-          <div class="card-icon">🎖️</div>
-          <p class="card-text">里程回饵</p>
+           <svg viewBox="0 0 24 24" width="28" height="28" stroke="#d71921" stroke-width="1.5" fill="none" class="card-icon">
+             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+           </svg>
+          <p class="card-text">里程回饋</p>
         </router-link>
         <router-link to="/customer-service" class="essential-card">
-          <div class="card-icon">🎧</div>
+           <svg viewBox="0 0 24 24" width="28" height="28" stroke="#d71921" stroke-width="1.5" fill="none" class="card-icon">
+             <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+             <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+           </svg>
           <p class="card-text">在線客服</p>
         </router-link>
       </div>
@@ -136,15 +158,17 @@
   align-items: center;
   justify-content: center;
   padding: 1rem 0.5rem;
-  background-color: #f9f9f9;
+  background-color: #ffffff;
   border-radius: 8px;
   text-align: center;
   text-decoration: none;
   color: #333;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Added subtle shadow */
 }
 
 .card-icon {
-  font-size: 1.75rem;
+  width: 32px;
+  height: 32px;
   margin-bottom: 0.5rem;
 }
 
