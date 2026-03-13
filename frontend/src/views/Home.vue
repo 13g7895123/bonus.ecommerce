@@ -97,7 +97,7 @@ const announcements = ref([
   font-weight: 700;
   margin-bottom: 2.5rem;
   line-height: 1.3;
-  max-width: 800px;
+  max-width: var(--app-max-width);
 }
 
 .cta-button {
@@ -137,7 +137,7 @@ const announcements = ref([
   align-items: center;
   padding: 0 1.5rem;
   width: 100%;
-  max-width: 850px;
+  max-width: var(--app-max-width);
 }
 
 .upgrade-subtitle {
@@ -203,7 +203,7 @@ const announcements = ref([
 }
 
 .about-container {
-  max-width: 1000px;
+  max-width: var(--app-max-width);
   margin: 0 auto;
 }
 

@@ -150,21 +150,27 @@ const goBack = () => {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background-color: #000000;
+  background-color: white;
   position: relative;
   z-index: 10;
 }
 
 .logo-image {
-  height: 50px;
+  height: 60px;
   display: block;
 }
 
 .hamburger {
-  background: transparent;
+  background-color: #f0f0f0;
+  border-radius: 50%;
   border: none;
   cursor: pointer;
-  padding: 10px;
+  width: 44px;
+  height: 44px;
+  padding: 0; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1001;
 }
 
@@ -172,7 +178,7 @@ const goBack = () => {
   display: block;
   width: 24px;
   height: 2px;
-  background-color: white;
+  background-color: #000000;
   position: relative;
 }
 
@@ -182,7 +188,7 @@ const goBack = () => {
   position: absolute;
   width: 24px;
   height: 2px;
-  background-color: white;
+  background-color: #000000;
   left: 0;
 }
 
@@ -204,7 +210,7 @@ const goBack = () => {
 
 .menu-container-outer {
   width: 100%;
-  max-width: 1024px;
+  max-width: var(--app-max-width);
   height: 100%;
   background-color: #ffffff;
   overflow-y: auto;
@@ -297,7 +303,7 @@ const goBack = () => {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 1024px;
+  max-width: var(--app-max-width);
   height: 60px;
   background-color: #ffffff;
   display: flex;

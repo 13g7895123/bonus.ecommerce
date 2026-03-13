@@ -150,8 +150,9 @@ import PageHeader from '../components/PageHeader.vue'
 .input-bar {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -160,7 +161,7 @@ import PageHeader from '../components/PageHeader.vue'
   border-top: 1px solid #eee;
   z-index: 20;
   box-sizing: border-box;
-  max-width: 100%;
+  max-width: var(--app-max-width);
   overflow: hidden;
 }
 
