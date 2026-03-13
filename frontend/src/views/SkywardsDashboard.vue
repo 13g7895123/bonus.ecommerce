@@ -43,10 +43,17 @@ onMounted(() => {
     <header class="skywards-header">
       <div class="user-profile">
         <router-link to="/profile" class="profile-more-btn">
-          <span class="dots-icon">...</span>
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="19" cy="12" r="1"></circle>
+            <circle cx="5" cy="12" r="1"></circle>
+          </svg>
         </router-link>
         <div class="avatar-circle">
-          <span class="avatar-icon">👤</span>
+          <svg class="avatar-icon" viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
         </div>
         <h2 class="user-name">{{ user?.name || 'Guest User' }}</h2>
         <p class="user-id">ID: {{ user?.email || 'N/A' }}</p>
@@ -68,7 +75,6 @@ onMounted(() => {
           @click="activeTab = 'miles'"
         >
           <span class="stat-value">{{ user?.miles?.toLocaleString() || '0' }}</span>
-          <div class="stat-divider"></div>
           <p class="stat-label">Skywards會員里程數</p>
         </div>
         <div 
@@ -254,9 +260,9 @@ onMounted(() => {
 .stat-box.active {
   border-bottom-color: #E6007E; /* Peach/Pink Highlight */
 }
-.stat-value { font-size: 1.5rem; font-weight: 700; color: #000; margin-bottom: 10px; }
-.stat-value.large { font-size: 1.75rem; color: #00205B; }
-.stat-divider { width: 60%; height: 1px; background-color: #ddd; margin: 0 auto 10px; }
+.stat-value { font-size: 3rem; font-weight: 700; color: #000; margin-bottom: 5px; line-height: 1; }
+.stat-value.large { font-size: 3rem; color: #00205B; }
+/* .stat-divider { width: 60%; height: 1px; background-color: #ddd; margin: 0 auto 10px; } */
 .stat-label { font-size: 0.85rem; color: #666; }
 .stat-label.small { font-size: 0.75rem; }
 

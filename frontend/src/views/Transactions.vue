@@ -4,12 +4,22 @@
 
     <div class="tx-list">
       <router-link to="/transactions/topup" class="tx-item">
-        <div class="tx-icon">💳</div>
+        <div class="tx-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+        </div>
         <span class="tx-label">儲值紀錄</span>
         <span class="arrow-right"></span>
       </router-link>
       <router-link to="/transactions/withdrawal" class="tx-item">
-        <div class="tx-icon">💸</div>
+        <div class="tx-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </div>
         <span class="tx-label">提款紀錄</span>
         <span class="arrow-right"></span>
       </router-link>
