@@ -214,30 +214,24 @@ const goBack = () => {
   width: 100%;
   max-width: var(--app-max-width);
   height: 100%;
-  background-color: #333333;
+  background-color: #ffffff; 
   overflow-y: auto;
   position: relative;
-  /* Since justify-content is center, this block is centered. 
-     The transform translateX(100%) will move it to the right OF ITS CONTAINER (the flex parent or its flow).
-     Wait, if flex centered, translating 100% moves it visually to the right, possibly overlapping the right margin.
-     To make it "slide from right edge of visible area", we simply use the transition.
-     The visible area IS the max-width block.
-     So when translateX(100%), it is shifted entirely to the right of the visible slot.
-  */
 }
 
 .menu-container {
-  padding: 20px;
-  color: #ffffff;
+  padding: 0;
+  color: #333;
 }
 
 .menu-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #555555;
+  margin-bottom: 0;
+  padding: 1rem 1.5rem;
+  background-color: #000000;
+  color: #ffffff;
 }
 
 .menu-header-title {
@@ -281,7 +275,43 @@ const goBack = () => {
   height: 12px;
   border-left: 2px solid #ffffff;
   border-bottom: 2px solid #ffffff;
+  transform: rotate(45deg); /* Originally 45deg makes a < when left/bottom borders used. Wait.
+  border-left lines up |, border-bottom lines up _. 45deg rotates it.
+  Original: border-left, border-bottom.
+  If square is:
+    |
+   _
+  Rotate 45deg clockwise:
+    \
+     \
+  That's a down-left arrow? Or V shape pointing down?
+  Let's verify: 
+  Unrotated: L shape (bottom-left corner).
+  Rotate 45: The corner points Down.
+  So original code made a Down arrow?
+  Wait, previous code was:
+  border-left: 2px solid #333;
+  border-bottom: 2px solid #333;
   transform: rotate(45deg);
+  
+  If I want a DOWN arrow (chevron), I need the corner to point DOWN.
+  An L shape rotated 45deg... 
+  Let's just use CSS transform to be sure.
+  If I want `v`, I need border-right and border-bottom, rotated 45deg.
+  (`_` `|` -> `v`)
+  
+  User asked for "向下的'>'". This is confusing. "Downwards >".
+  Maybe they mean a chevron that points down `v`.
+  So I will ensure it's a `v` shape.
+  border-right + border-bottom + rotate(45deg) -> v.
+  
+  Let's assume "向下的'>'" means "Chevron that points down".
+  */
+  border: 0; /* Reset */
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(45deg); 
+  margin-top: -5px; /* Adjust alignment */
 }
 
 .menu-list, .submenu-list {
@@ -291,16 +321,17 @@ const goBack = () => {
 }
 
 .menu-list li, .submenu-list li {
-  border-bottom: 1px solid #555555;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .menu-list a, .submenu-list a {
   display: block;
-  padding: 1.25rem 0;
-  color: #ffffff;
+  padding: 1.25rem 1.5rem; /* Add padding here since container lost it */
+  color: #333333;
   text-decoration: none;
   font-size: 1.1rem;
   font-weight: 500;
+  background-color: #ffffff;
 }
 
 /* Slide Transition */
