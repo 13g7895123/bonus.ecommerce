@@ -64,17 +64,19 @@ const handleLogin = async () => {
       <AuthHeader title="登錄阿聯酋航空" description="每次跟我們或合作夥伴聯乘都能賺取哩程數。還能使用 Skywards 會員哩程數換取各種獎勵。" />
       
       <div class="login-form">
-        <AppInput v-model="email" type="email" placeholder="電子郵件" />
-        <div class="password-group">
-          <AppInput v-model="password" type="password" placeholder="密碼" />
-          <router-link to="/forgot-password" class="forgot-password">忘記您的密碼了嗎?</router-link>
-        </div>
-        
-        <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
+        <form @submit.prevent="handleLogin">
+          <AppInput v-model="email" type="email" placeholder="電子郵件" autocomplete="email" />
+          <div class="password-group">
+            <AppInput v-model="password" type="password" placeholder="密碼" autocomplete="current-password" />
+            <router-link to="/forgot-password" class="forgot-password">忘記您的密碼了嗎?</router-link>
+          </div>
+          
+          <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
 
-        <button class="login-submit-btn" :disabled="loading" @click="handleLogin">
-          {{ loading ? '登入中...' : '登入' }}
-        </button>
+          <button type="submit" class="login-submit-btn" :disabled="loading">
+            {{ loading ? '登入中...' : '登入' }}
+          </button>
+        </form>
         
         <hr class="login-divider" />
         
