@@ -1,3 +1,59 @@
+<script setup>
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useApi } from '../composables/useApi'
+
+const router = useRouter()
+const api = useApi()
+
+const form = reactive({
+  email: '',
+  firstName: '',
+  lastName: '',
+  password: '',
+  dob: '',
+  country: '',
+  countryCode: '',
+  phone: '',
+  inviteCode: '',
+  terms: false
+})
+
+const loading = ref(false)
+const errorMessage = ref('')
+
+const handleRegister = async () => {
+  if (!form.terms) {
+    errorMessage.value = '請同意服務條款及隱私政策'
+    return
+  }
+
+  // 簡單驗證
+  if (!form.email || !form.password || !form.firstName || !form.lastName) {
+    errorMessage.value = '請填寫必填欄位'
+    return
+  }
+
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    const response = await api.auth.register({
+      ...form
+    })
+    console.log('Register success:', response)
+    // 註冊成功，導向首頁
+    router.push('/')
+  } catch (error) {
+    console.error('Register failed:', error)
+    const errObj = error.response?.data || error
+    errorMessage.value = errObj.message || '註冊失敗，請稍後再試'
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
 <template>
   <div class="standalone-login-page">
     <div class="login-header-nav">
@@ -14,38 +70,42 @@
       
       <div class="login-form">
         <div class="form-field">
-          <input type="email" placeholder="電子郵件" class="login-input" />
+          <input v-model="form.email" type="email" placeholder="電子郵件" class="login-input" />
         </div>
         <div class="form-field">
-          <input type="text" placeholder="名字" class="login-input" />
+          <input v-model="form.firstName" type="text" placeholder="名字 (First Name)" class="login-input" />
         </div>
         <div class="form-field">
-          <input type="text" placeholder="姓名" class="login-input" />
+          <input v-model="form.lastName" type="text" placeholder="姓氏 (Last Name)" class="login-input" />
           <p class="field-instruction">您必須以英文輸入輸入姓名,且須與護照上顯示的完全相同。</p>
         </div>
         <div class="form-field">
-          <input type="password" placeholder="密碼" class="login-input" />
+          <input v-model="form.password" type="password" placeholder="密碼" class="login-input" />
         </div>
         <div class="form-field">
-          <input type="text" placeholder="出生日期" class="login-input" />
+          <input v-model="form.dob" type="text" placeholder="出生日期 (YYYY-MM-DD)" class="login-input" />
         </div>
         <div class="form-field">
-          <input type="text" placeholder="居住國家/地區" class="login-input" />
+          <input v-model="form.country" type="text" placeholder="居住國家/地區" class="login-input" />
         </div>
         <div class="form-row">
-          <input type="text" placeholder="國家/地區代碼" class="login-input half" />
-          <input type="tel" placeholder="手機號碼" class="login-input half" />
+          <input v-model="form.countryCode" type="text" placeholder="國家/地區代碼" class="login-input half" />
+          <input v-model="form.phone" type="tel" placeholder="手機號碼" class="login-input half" />
         </div>
         <div class="form-field">
-          <input type="text" placeholder="輸入邀請碼(選填)" class="login-input" />
+          <input v-model="form.inviteCode" type="text" placeholder="輸入邀請碼(選填)" class="login-input" />
         </div>
         
         <div class="checkbox-group">
-          <input type="checkbox" id="terms" />
+          <input v-model="form.terms" type="checkbox" id="terms" />
           <label for="terms">我同意<span class="red-text">網站服務條款</span>及<span class="red-text">隱私政策</span></label>
         </div>
         
-        <button class="login-submit-btn">註冊</button>
+        <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
+
+        <button class="login-submit-btn" :disabled="loading" @click="handleRegister">
+          {{ loading ? '註冊中...' : '註冊' }}
+        </button>
         
         <div class="footer-note">
           我已有帳號 <router-link to="/login" class="login-link-red">登入</router-link>
@@ -192,6 +252,19 @@
   font-weight: 700;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.login-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error-msg {
+  color: #d71921;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  text-align: center;
 }
 
 .footer-note {
