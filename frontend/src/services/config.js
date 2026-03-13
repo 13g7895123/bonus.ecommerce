@@ -7,4 +7,6 @@ const config = {
   hideDebugButtons: false, // Set to true to hide the "Fill Random Data" button
 };
 
+console.log('App Config:', config); // Debug loaded configuration
+
 export default config;

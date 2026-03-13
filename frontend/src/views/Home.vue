@@ -1,5 +1,12 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+
+const isLoggedIn = ref(false)
+
+onMounted(() => {
+  const token = localStorage.getItem('token')
+  isLoggedIn.value = !!token
+})
 
 const announcements = ref([
   { id: 1, date: '2024-03-09', title: '阿聯酋航空最新航班資訊公告' },
@@ -9,7 +16,7 @@ const announcements = ref([
 </script>
 
 <template>
-  <main class="hero-section">
+  <main v-if="!isLoggedIn" class="hero-section">
     <div class="hero-content">
       <img src="/coin.png" alt="Coin" class="coin-image" />
       <h2 class="hero-subtitle">加入阿聯酋航空 Skywards</h2>
@@ -142,7 +149,7 @@ const announcements = ref([
 
 .upgrade-subtitle {
   font-family: 'Playfair Display', serif;
-  font-size: 3.5rem;
+  font-size: 2.5rem;
   font-weight: 500;
   margin-bottom: 0.75rem;
   text-transform: uppercase;
@@ -151,7 +158,7 @@ const announcements = ref([
 
 .upgrade-title {
   font-family: 'Playfair Display', serif;
-  font-size: 4.5rem;
+  font-size: 4rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
   line-height: 1.2;
@@ -161,6 +168,7 @@ const announcements = ref([
   font-size: 2.2rem;
   font-weight: 800;
   margin-bottom: 2.5rem;
+  padding: 1rem 5rem;
   line-height: 1.4;
   opacity: 0.9;
   text-align: justify;
@@ -174,7 +182,7 @@ const announcements = ref([
   color: black;
   border: 2px solid white;
   padding: 1rem 3rem;
-  font-size: 2.1rem;
+  font-size: 2rem;
   font-weight: 800;
   border-radius: 0;
   cursor: pointer;
