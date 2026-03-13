@@ -51,26 +51,26 @@ const goBack = () => {
     <template v-if="isHomePage">
       <transition name="slide">
         <div v-if="isMenuOpen" class="full-menu-overlay">
-          <div class="menu-container-outer">
-            <div class="menu-container">
-              <div class="menu-header">
-                <div v-if="activeMenu" class="header-left">
-                  <button class="back-button" @click="goBack">
-                    <span class="arrow-left-icon"></span>
-                  </button>
-                  <h2 class="menu-header-title">
+          <div class="menu-clipper">
+            <div class="menu-container-outer" :class="{ 'is-main-menu': !activeMenu }">
+              <div class="menu-container">
+                <div class="menu-header">
+                  <div class="header-left-area">
+                    <button v-if="activeMenu" class="back-button" @click="goBack">
+                      <span class="arrow-left-icon"></span>
+                    </button>
+                  </div>
+                  <h2 v-if="activeMenu" class="menu-header-title">
                     {{ activeMenu === 'member' ? '會員' : activeMenu === 'help' ? '協助' : activeMenu === 'news' ? '公告' : '語言' }}
                   </h2>
+                  <div class="header-right-area">
+                    <button class="close-button" @click="toggleMenu">
+                      <span class="cross-icon"></span>
+                    </button>
+                  </div>
                 </div>
-                <div v-else class="header-left">
-                  <!-- 主選單不顯示標題 -->
-                </div>
-                <button class="close-button" @click="toggleMenu">
-                  <span class="cross-icon"></span>
-                </button>
-              </div>
 
-              <ul v-if="!activeMenu" class="menu-list">
+                <ul v-if="!activeMenu" class="menu-list">
                 <li><a href="#" @click.prevent="activeMenu = 'member'">會員</a></li>
                 <li><a href="#" @click.prevent="activeMenu = 'help'">協助</a></li>
                 <li><a href="#" @click.prevent="activeMenu = 'news'">公告</a></li>
@@ -102,6 +102,7 @@ const goBack = () => {
             </div>
           </div>
         </div>
+      </div>
       </transition>
     </template>
 
@@ -219,9 +220,38 @@ const goBack = () => {
   position: relative;
 }
 
+/* 主選單 (Main Menu) 黑色風格 */
+.menu-container-outer.is-main-menu {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.menu-container-outer.is-main-menu .menu-list a {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.menu-container-outer.is-main-menu .menu-list li {
+  border-bottom: 1px solid #333333;
+}
+
+.menu-container-outer.is-main-menu .menu-header {
+  border-bottom: 1px solid #333333;
+}
+
+.menu-clipper {
+  width: 100%;
+  max-width: var(--app-max-width);
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
 .menu-container {
   padding: 0;
   color: #333;
+  width: 100%;
+  height: 100%;
 }
 
 .menu-header {
@@ -234,7 +264,18 @@ const goBack = () => {
   color: #ffffff;
 }
 
+.header-left-area, .header-right-area {
+  flex: 0 0 44px; /* fixed width ensure title is centered relative to container */
+  display: flex;
+  align-items: center;
+}
+.header-right-area {
+  justify-content: flex-end;
+}
+
 .menu-header-title {
+  flex-grow: 1;
+  text-align: center;
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
