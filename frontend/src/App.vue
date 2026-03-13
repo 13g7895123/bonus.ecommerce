@@ -1,11 +1,36 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 const isMenuOpen = ref(false)
 const isLoggedIn = ref(false)
 const activeMenu = ref(null)
+
+// 檢查登入狀態
+const checkLoginStatus = () => {
+  const token = localStorage.getItem('token')
+  isLoggedIn.value = !!token
+}
+
+// 監聽路由變更以更新狀態
+watch(route, () => {
+  checkLoginStatus()
+})
+
+onMounted(() => {
+  checkLoginStatus()
+})
+
+// 登出處理
+const handleLogout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  isLoggedIn.value = false
+  isMenuOpen.value = false
+  router.push('/login')
+}
 
 // 判斷當前頁面
 const isHomePage = computed(() => route.path === '/')
@@ -75,15 +100,17 @@ const goBack = () => {
                 <li><a href="#" @click.prevent="activeMenu = 'help'">協助</a></li>
                 <li><a href="#" @click.prevent="activeMenu = 'news'">公告</a></li>
                 <li><a href="#" @click.prevent="activeMenu = 'lang'">語言</a></li>
-                <li v-if="isLoggedIn"><a href="#" @click.prevent="toggleMenu" class="logout-link">登出</a></li>
+                <li v-if="isLoggedIn"><a href="#" @click.prevent="handleLogout" class="logout-link">登出</a></li>
               </ul>
 
               <div v-else class="submenu-content">
                 <ul v-if="activeMenu === 'member'" class="submenu-list">
                   <li v-if="!isLoggedIn">
-                    <router-link to="/login" @click="isMenuOpen = false">註冊/登入 阿聯酋航空 Skywards</router-link>
+                    <router-link to="/register" @click="isMenuOpen = false">註冊/登入 阿聯酋航空 Skywards</router-link>
                   </li>
-                  <li v-else><a href="#">Skywards 會員資訊</a></li>
+                  <li v-else>
+                     <router-link to="/skywards" @click="isMenuOpen = false">Skywards 會員資訊</router-link>
+                  </li>
                 </ul>
                 <ul v-if="activeMenu === 'help'" class="submenu-list">
                   <li><a href="#">在線客服</a></li>
