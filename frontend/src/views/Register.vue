@@ -2,6 +2,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
+import AppInput from '../components/AppInput.vue'
 
 const router = useRouter()
 const api = useApi()
@@ -70,30 +71,34 @@ const handleRegister = async () => {
       
       <div class="login-form">
         <div class="form-field">
-          <input v-model="form.email" type="email" placeholder="電子郵件" class="login-input" />
+          <AppInput v-model="form.email" type="email" placeholder="電子郵件" />
         </div>
         <div class="form-field">
-          <input v-model="form.firstName" type="text" placeholder="名字 (First Name)" class="login-input" />
+          <AppInput v-model="form.firstName" type="text" placeholder="名字 (First Name)" />
         </div>
         <div class="form-field">
-          <input v-model="form.lastName" type="text" placeholder="姓氏 (Last Name)" class="login-input" />
+          <AppInput v-model="form.lastName" type="text" placeholder="姓氏 (Last Name)" />
           <p class="field-instruction">您必須以英文輸入輸入姓名,且須與護照上顯示的完全相同。</p>
         </div>
         <div class="form-field">
-          <input v-model="form.password" type="password" placeholder="密碼" class="login-input" />
+          <AppInput v-model="form.password" type="password" placeholder="密碼" />
         </div>
         <div class="form-field">
-          <input v-model="form.dob" type="text" placeholder="出生日期 (YYYY-MM-DD)" class="login-input" />
+          <AppInput v-model="form.dob" type="text" placeholder="出生日期 (YYYY-MM-DD)" />
         </div>
         <div class="form-field">
-          <input v-model="form.country" type="text" placeholder="居住國家/地區" class="login-input" />
+          <AppInput v-model="form.country" type="text" placeholder="居住國家/地區" />
         </div>
         <div class="form-row">
-          <input v-model="form.countryCode" type="text" placeholder="國家/地區代碼" class="login-input half" />
-          <input v-model="form.phone" type="tel" placeholder="手機號碼" class="login-input half" />
+          <div class="half-input-container">
+            <AppInput v-model="form.countryCode" type="text" placeholder="國家/地區代碼" />
+          </div>
+          <div class="half-input-container">
+            <AppInput v-model="form.phone" type="tel" placeholder="手機號碼" />
+          </div>
         </div>
         <div class="form-field">
-          <input v-model="form.inviteCode" type="text" placeholder="輸入邀請碼(選填)" class="login-input" />
+          <AppInput v-model="form.inviteCode" type="text" placeholder="輸入邀請碼(選填)" />
         </div>
         
         <div class="checkbox-group">
@@ -213,12 +218,17 @@ const handleRegister = async () => {
 
 .form-row {
   display: flex;
+  justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.25rem;
 }
 
-.login-input.half {
+.half-input-container {
   flex: 1;
+}
+
+.half-input {
+  /* No special style needed if wrapper handles width */
 }
 
 .checkbox-group {

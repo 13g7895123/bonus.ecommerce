@@ -37,14 +37,18 @@ defineEmits(['update:modelValue'])
 .app-input {
   width: 100%;
   padding: 0.875rem 1rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #a8a8a9;
   border-radius: 8px;
   font-size: 0.95rem;
   color: #333;
-  background-color: #f9f9f9;
+  background-color: #f3f3f3;
   box-sizing: border-box;
   outline: none;
   transition: border-color 0.2s;
+}
+
+.app-input::placeholder {
+  color: #676767;
 }
 
 .app-input:focus {

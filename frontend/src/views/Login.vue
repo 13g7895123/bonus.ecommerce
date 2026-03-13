@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
+import AppInput from '../components/AppInput.vue'
 
 const router = useRouter()
 const api = useApi()
@@ -54,9 +55,9 @@ const handleLogin = async () => {
       <p class="login-desc">每次跟我們或合作夥伴聯乘都能賺取哩程數。還能使用 Skywards 會員哩程數換取各種獎勵。</p>
       
       <div class="login-form">
-        <input v-model="email" type="email" placeholder="電子郵件" class="login-input" />
+        <AppInput v-model="email" type="email" placeholder="電子郵件" />
         <div class="password-group">
-          <input v-model="password" type="password" placeholder="密碼" class="login-input" />
+          <AppInput v-model="password" type="password" placeholder="密碼" />
           <router-link to="/forgot-password" class="forgot-password">忘記您的密碼了嗎?</router-link>
         </div>
         

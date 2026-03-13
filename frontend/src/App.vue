@@ -222,17 +222,18 @@ const goBack = () => {
 
 /* 主選單 (Main Menu) 黑色風格 */
 .menu-container-outer.is-main-menu {
-  background-color: #000000;
+  background-color: #333333;
   color: #ffffff;
 }
 
 .menu-container-outer.is-main-menu .menu-list a {
-  background-color: #000000;
+  background-color: #333333;
   color: #ffffff;
+  text-align: center;
 }
 
 .menu-container-outer.is-main-menu .menu-list li {
-  border-bottom: 1px solid #333333;
+  border-bottom: 1px solid #777777; /* Light grey separator for dark theme */
 }
 
 .menu-container-outer.is-main-menu .menu-header {
@@ -260,7 +261,7 @@ const goBack = () => {
   align-items: center;
   margin-bottom: 0;
   padding: 1rem 1.5rem;
-  background-color: #000000;
+  background-color: #333333;
   color: #ffffff;
 }
 
@@ -369,8 +370,9 @@ const goBack = () => {
   display: block;
   padding: 1.25rem 1.5rem; /* Add padding here since container lost it */
   color: #333333;
+  text-align: left; /* Ensure text aligns left */
   text-decoration: none;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 500;
   background-color: #ffffff;
 }
