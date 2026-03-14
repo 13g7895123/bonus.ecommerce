@@ -150,7 +150,7 @@ onMounted(() => {
     <section v-if="activeTab === 'tier'" class="cards-section">
       <div class="benefit-cards">
         <div class="benefit-card">
-          <img src="/upgrade-bg.png" alt="Silver Tier" class="benefit-img" />
+          <img src="/go-silver.png" alt="Silver Tier" class="benefit-img" />
           <div class="benefit-content">
             <h4 class="benefit-title">達到 <span class="silver-text">銀卡</span></h4>
             <p class="benefit-desc">在2027年2月28日之前賺取25,000級哩程數,或再搭乘 25 次合格航班</p>
@@ -272,18 +272,21 @@ onMounted(() => {
   cursor: pointer; 
   border-bottom: 3px solid transparent; 
   transition: border-color 0.3s;
+  justify-content: flex-end; /* Align content to bottom so values align if needed, or use space-between */
 }
 .stat-box.active {
   border-bottom-color: #E6007E; /* Peach/Pink Highlight */
 }
-.stat-value { font-size: 3rem; font-weight: 700; color: #000; margin-bottom: 5px; line-height: 1; }
-.stat-value.large { font-size: 2rem; color: #000; } /* Smaller and Black */
+.stat-value { font-size: 3rem; font-weight: 700; color: #000; margin-bottom: 5px; line-height: 1; min-height: 3rem; display: flex; align-items: flex-end; justify-content: center; } /* Add min-height to ensure alignment */
+.stat-value.large { font-size: 2rem; color: #000; padding-bottom: 0.4rem; } /* Adjust padding to visual align with larger text baseline if needed */
+
 /* .stat-divider { width: 60%; height: 1px; background-color: #ddd; margin: 0 auto 10px; } */
 .stat-divider-vertical {
   width: 1px;
-  height: 90%; /* 90% height */
+  height: 90%; 
   background-color: #ddd;
-  align-self: center; /* Center horizontally in the flex container (cross axis) */
+  align-self: center; 
+  margin: 0 10px; /* Add margin to avoid touching */
 }
 .stat-label { font-size: 0.85rem; color: #666; }
 .stat-label.small { font-size: 0.75rem; }
