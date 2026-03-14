@@ -6,8 +6,16 @@
       <!-- 說明文字 -->
       <p class="iv-desc">為了保障帳戶安全體驗 請您綁定個人身份資訊</p>
 
-      <UploadBox side="正面" hint="上傳您正面身分證" v-model="frontImage" />
-      <UploadBox side="背面" hint="上傳您背面身分證" v-model="backImage" />
+      <UploadBox side="正面" hint="上傳您正面身分證"
+        v-model="frontPreview"
+        :uploading="frontUploading"
+        @file-selected="handleFrontSelected"
+      />
+      <UploadBox side="背面" hint="上傳您背面身分證"
+        v-model="backPreview"
+        :uploading="backUploading"
+        @file-selected="handleBackSelected"
+      />
 
       <AppInput v-model="idNumber" label="身份證字號" placeholder="請輸入身份證號" />
       <AppInput v-model="fullName" label="代表人姓名" placeholder="請輸入代表人姓名" />
@@ -45,6 +53,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '../composables/useToast'
+import { fileService } from '../services/FileService'
 import PageHeader from '../components/PageHeader.vue'
 import UploadBox from '../components/UploadBox.vue'
 import NoticeBox from '../components/NoticeBox.vue'
@@ -52,7 +61,7 @@ import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import DebugFillButton from '../components/DebugFillButton.vue'
 import { getRandomName } from '../utils/random'
-import { useApi } from '../composables/useApi' 
+import { useApi } from '../composables/useApi'
 
 const router = useRouter()
 const { user: userService } = useApi()
@@ -60,26 +69,61 @@ const toast = useToast()
 
 const idNumber = ref('')
 const fullName = ref('')
-const frontImage = ref('')
-const backImage = ref('')
+// preview 字串（base64 或 URL），用於 UploadBox v-model
+const frontPreview = ref('')
+const backPreview  = ref('')
+// 上傳後從 API 取得的 file ID
+const frontFileId  = ref(null)
+const backFileId   = ref(null)
+// 各別上傳狀態
+const frontUploading = ref(false)
+const backUploading  = ref(false)
 
 onMounted(async () => {
-  // 從當前使用者資料中讀取
   const userStr = localStorage.getItem('user')
   if (userStr) {
     try {
       const user = JSON.parse(userStr)
       if (user.verificationData) {
-        idNumber.value = user.verificationData.idNumber || ''
-        fullName.value = user.verificationData.fullName || ''
-        frontImage.value = user.verificationData.frontImage || ''
-        backImage.value = user.verificationData.backImage || ''
+        idNumber.value     = user.verificationData.idNumber || ''
+        fullName.value     = user.verificationData.fullName || ''
+        frontPreview.value = user.verificationData.frontPreview || ''
+        backPreview.value  = user.verificationData.backPreview || ''
+        frontFileId.value  = user.verificationData.frontFileId || null
+        backFileId.value   = user.verificationData.backFileId  || null
       }
     } catch (e) {
       toast.error('載入資料失敗')
     }
   }
 })
+
+/** UploadBox @file-selected 回調：立即上傳並記錄 file ID */
+const handleFrontSelected = async (file) => {
+  frontUploading.value = true
+  try {
+    const result = await fileService.upload(file, 'kyc')
+    frontFileId.value  = result.id
+    frontPreview.value = result.url  // 遠端 URL 取代 base64
+  } catch (e) {
+    toast.error('正面身分證上傳失敗')
+  } finally {
+    frontUploading.value = false
+  }
+}
+
+const handleBackSelected = async (file) => {
+  backUploading.value = true
+  try {
+    const result = await fileService.upload(file, 'kyc')
+    backFileId.value  = result.id
+    backPreview.value = result.url
+  } catch (e) {
+    toast.error('背面身分證上傳失敗')
+  } finally {
+    backUploading.value = false
+  }
+}
 
 const fillRandomData = () => {
   idNumber.value = 'A123456789'
@@ -95,33 +139,39 @@ const handleNext = async () => {
       return
     }
 
-    const currentUser = JSON.parse(userStr)
-    const verificationData = {
-      idNumber: idNumber.value,
-      fullName: fullName.value,
-      frontImage: frontImage.value,
-      backImage: backImage.value,
-      updatedAt: new Date().toISOString()
+    if (!frontFileId.value || !backFileId.value) {
+      toast.warning('請上傳正、反面身分證圖片')
+      return
     }
 
-    // 呼叫 API 儲存
-    await userService.verifyIdentity(currentUser.id, verificationData)
+    const currentUser = JSON.parse(userStr)
 
-    // 同步更新本地使用者資訊 (為了即時顯示)
+    // 將 file ID 傳給後端，後端直接查 files 表
+    await userService.verifyIdentity(currentUser.id, {
+      idNumber:    idNumber.value,
+      fullName:    fullName.value,
+      frontFileId: frontFileId.value,
+      backFileId:  backFileId.value,
+    })
+
+    // 同步本地快取
+    const verificationData = {
+      idNumber:    idNumber.value,
+      fullName:    fullName.value,
+      frontPreview: frontPreview.value,
+      backPreview:  backPreview.value,
+      frontFileId: frontFileId.value,
+      backFileId:  backFileId.value,
+      updatedAt:   new Date().toISOString(),
+    }
     currentUser.verificationData = verificationData
-    currentUser.isVerified = true // 假設送出即驗證或進入審核中
+    currentUser.isVerified = true
     localStorage.setItem('user', JSON.stringify(currentUser))
-    
-    // 清除舊的髒資料 (Migration purpose)
-    localStorage.removeItem('iv_idNumber')
-    localStorage.removeItem('iv_fullName')
-    localStorage.removeItem('iv_frontImage')
-    localStorage.removeItem('iv_backImage')
 
     toast.success('實名認證資料已送出')
     router.push('/settings')
   } catch (error) {
-    toast.error('儲存失敗: ' + error.message)
+    toast.error('儲存失敗: ' + (error?.message || ''))
   }
 }
 </script>

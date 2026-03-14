@@ -41,6 +41,19 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('me/avatar',    'Api\UserController::uploadAvatar');
     });
 
+    // ── Files ──
+    $routes->group('files', static function ($routes) {
+        // 公開查詢（不需 JWT）
+        $routes->get('(:num)',                    'Api\FileController::show/$1');
+        $routes->get('by-uuid/(:segment)',        'Api\FileController::showByUuid/$1');
+        $routes->get('(:segment)/serve',          'Api\FileController::serve/$1');  // 直接提供檔案內容
+
+        // 需要 JWT
+        $routes->post('upload',   'Api\FileController::upload',      ['filter' => 'jwt']);
+        $routes->get('mine',      'Api\FileController::mine',         ['filter' => 'jwt']);
+        $routes->delete('(:num)', 'Api\FileController::destroy/$1',   ['filter' => 'jwt']);
+    });
+
     // ── Wallet (JWT required) ──
     $routes->group('wallet', ['filter' => 'jwt'], static function ($routes) {
         $routes->get('info',         'Api\WalletController::info');

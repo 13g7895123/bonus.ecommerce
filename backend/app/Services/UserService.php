@@ -10,6 +10,7 @@ class UserService
     public function __construct(
         private readonly UserRepository       $userRepo   = new UserRepository(),
         private readonly UserWalletRepository $walletRepo = new UserWalletRepository(),
+        private readonly FileService          $fileService = new FileService(),
     ) {}
 
     public function getProfile(int $userId): ?array
@@ -41,41 +42,33 @@ class UserService
 
     public function uploadAvatar(int $userId, $file): array
     {
-        $uploadDir = ROOTPATH . 'public/uploads/avatars/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+        $result = $this->fileService->upload($userId, $file, 'avatar');
+        if (!$result['success']) {
+            return $result;
         }
 
-        if (!$file || !$file->isValid() || $file->hasMoved()) {
-            return ['success' => false, 'message' => 'Invalid file'];
-        }
+        $avatarUrl = $result['file']['url'];
+        $this->userRepo->update($userId, [
+            'avatar'         => $avatarUrl,
+            'avatar_file_id' => $result['file']['id'],
+        ]);
 
-        $name = $userId . '_' . $file->getRandomName();
-        $file->move($uploadDir, $name);
-
-        $avatarUrl = base_url('uploads/avatars/' . $name);
-        $this->userRepo->update($userId, ['avatar' => $avatarUrl]);
-
-        return ['success' => true, 'avatar_url' => $avatarUrl];
+        return ['success' => true, 'avatar_url' => $avatarUrl, 'file' => $result['file']];
     }
 
     public function submitVerification(int $userId, array $files, array $data): array
     {
-        $uploadDir = WRITEPATH . 'uploads/kyc/' . $userId . '/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        $paths = [];
+        $fileIds = [];
         foreach ($files as $key => $file) {
-            if ($file->isValid() && !$file->hasMoved()) {
-                $name = $file->getRandomName();
-                $file->move($uploadDir, $name);
-                $paths[$key] = 'kyc/' . $userId . '/' . $name;
+            if ($file && $file->isValid() && !$file->hasMoved()) {
+                $result = $this->fileService->upload($userId, $file, 'kyc');
+                if ($result['success']) {
+                    $fileIds[$key] = $result['file']['id'];
+                }
             }
         }
 
-        $verificationData = array_merge($data, ['files' => $paths]);
+        $verificationData = array_merge($data, ['file_ids' => $fileIds]);
         $this->userRepo->update($userId, [
             'verify_status'     => 'pending',
             'verification_data' => json_encode($verificationData),

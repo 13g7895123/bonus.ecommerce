@@ -1,5 +1,6 @@
 // src/services/UserService.js
 import { BaseService } from './BaseService';
+import { fileService } from './FileService';
 import { mockDb } from './mockDb';
 
 export class UserService extends BaseService {
@@ -50,30 +51,26 @@ export class UserService extends BaseService {
     return this._put('/me', payload);
   }
 
-  /* 上傳頭像 — POST /users/me/avatar (multipart) */
+  /* 上傳頭像 — 透過 FileService，POST /files/upload (type=avatar) */
   async uploadAvatar(userId, file) {
-    if (this.useMock) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const avatarUrl = e.target.result;
-          mockDb.findOne(this.table, u => u.id === userId).then(user => {
-            if (user) mockDb.update(this.table, userId, { avatar: avatarUrl });
-          });
-          resolve({ avatar_url: avatarUrl });
-        };
-        reader.readAsDataURL(file);
-      });
+    const result = await fileService.upload(file, 'avatar')
+    // 真實模式：呼叫 users/me/avatar 更新 DB 中的 avatar 欄位
+    if (!this.useMock) {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      await this.http.post('/users/me/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    } else {
+      // Mock 模式：更新 localStorage
+      await mockDb.findOne(this.table, u => u.id === userId).then(user => {
+        if (user) mockDb.update(this.table, userId, { avatar: result.url })
+      })
     }
-    const formData = new FormData();
-    formData.append('avatar', file);
-    const response = await this.http.post('/users/me/avatar', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return response.data;
+    return { avatar_url: result.url, file: result }
   }
 
-  /* 提交身份驗證 — POST /users/me/verify (multipart) */
+  /* 提交身份驗證 — 接受 file ID（由 FileService 預先上傳） */
   async verifyIdentity(userId, data) {
     if (this.useMock) {
       return this._post(`/${userId}/verify`, data, async () => {
@@ -83,16 +80,14 @@ export class UserService extends BaseService {
         return { message: '身份驗證資料已送出' };
       });
     }
-    // 使用 FormData 上傳
-    const formData = new FormData();
-    if (data.real_name || data.fullName) formData.append('real_name', data.real_name || data.fullName);
-    if (data.id_front || data.frontImage) formData.append('id_front', data.id_front || data.frontImage);
-    if (data.id_back || data.backImage) formData.append('id_back', data.id_back || data.backImage);
-    if (data.selfie) formData.append('selfie', data.selfie);
-    const response = await this.http.post('/users/me/verify', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return response.data;
+    // 使用 JSON 傳送（file 已由 FileService 預先上傳，只傳 ID）
+    const response = await this.http.post('/users/me/verify', {
+      real_name:    data.real_name    || data.fullName   || '',
+      id_number:    data.id_number    || data.idNumber   || '',
+      front_file_id: data.frontFileId || data.front_file_id || null,
+      back_file_id:  data.backFileId  || data.back_file_id  || null,
+    })
+    return response.data
   }
 
   /* 取得使用者列表（管理員）— GET /admin/users */
