@@ -5,7 +5,15 @@
     <div class="ws-content">
       <p class="ws-desc">為了保障帳戶安全體驗 請您綁定個人身份資訊</p>
 
+      <!-- 已上傳過存摺 → 顯示已上傳狀態 -->
+      <div v-if="hasExistingPassbook" class="passbook-uploaded">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span>銀行存摺 已上傳</span>
+      </div>
       <UploadBox
+        v-else
         v-model="passbookPreview"
         hint="上傳銀行存摺"
         :uploading="uploading"
@@ -68,10 +76,14 @@ const accountName        = ref('')
 const withdrawalPassword = ref('')
 const loading            = ref(false)
 const hasExistingBank    = ref(false)
+const hasExistingPassbook = ref(false)
 
 onMounted(async () => {
   try {
     const wallet = await walletService.getWalletInfo()
+    if (wallet?.has_passbook) {
+      hasExistingPassbook.value = true
+    }
     if (wallet?.has_bank_account) {
       hasExistingBank.value = true
       bankName.value    = wallet.bank_name        || ''
@@ -158,6 +170,20 @@ const fillRandomData = () => {
   font-weight: 700;
   color: #333;
   margin-bottom: 1rem;
+}
+
+.passbook-uploaded {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #a5d6a7;
+  border-radius: 8px;
+  background-color: #f1f8f1;
+  color: #2e7d32;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .notice-title {
