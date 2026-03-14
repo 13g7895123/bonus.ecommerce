@@ -18,6 +18,8 @@ class WalletService
         if (!$wallet) {
             return null;
         }
+        $wallet['has_bank_account'] = !empty($wallet['bank_account']);
+        $wallet['has_withdrawal_pw'] = !empty($wallet['withdrawal_password_hash']);
         if (!empty($wallet['bank_account'])) {
             $acc = $wallet['bank_account'];
             $wallet['bank_account_masked'] = str_repeat('*', max(0, strlen($acc) - 4)) . substr($acc, -4);
