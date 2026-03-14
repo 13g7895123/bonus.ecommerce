@@ -10,11 +10,31 @@ const http = axios.create({
   },
 });
 
-http.interceptors.request.use(config => {
+http.interceptors.request.use(cfg => {
   const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
+  if (token) cfg.headers.Authorization = `Bearer ${token}`;
+  return cfg;
 });
+
+// 解包後端統一回應格式 { code, message, data } → data
+http.interceptors.response.use(
+  response => {
+    if (
+      response.data &&
+      typeof response.data === 'object' &&
+      'code' in response.data &&
+      'data' in response.data
+    ) {
+      return { ...response, data: response.data.data };
+    }
+    return response;
+  },
+  error => {
+    const message = error.response?.data?.message || error.message || '請求失敗';
+    const status = error.response?.status || 500;
+    return Promise.reject({ response: { data: { message }, status } });
+  }
+);
 
 // 模擬 API 實作
 import { mockDb } from './mockDb';
@@ -28,40 +48,50 @@ export class BaseService {
     this.db = mockDb;
   }
 
-  // 通用方法
-  
-  // 為了支持切換，我們每一個業務方法都需要檢查 this.useMock
-  // 這裡提供一些 helper
-  
   async _post(path, data, mockHandler) {
     if (this.useMock) {
       if (!mockHandler) throw new Error('Mock handler not implemented');
       try {
-        const result = await mockHandler(data);
-        return { data: result, status: 200, statusText: 'OK' }; // Mimic axios response structure
-      } catch (err) {
-        // Mimic axios error
-        throw { 
-          response: { 
-            data: { message: err.message }, 
-            status: 400 
-          } 
-        };
-      }
-    }
-    return this.http.post(this.endpoint + path, data);
-  }
-
-  async _get(path, mockHandler) {
-    if (this.useMock) {
-      if (!mockHandler) throw new Error('Mock handler not implemented');
-       try {
-        const result = await mockHandler();
-        return { data: result, status: 200 };
+        return await mockHandler(data);
       } catch (err) {
         throw { response: { data: { message: err.message }, status: 400 } };
       }
     }
-    return this.http.get(this.endpoint + path);
+    const response = await this.http.post(this.endpoint + path, data);
+    return response.data;
+  }
+
+  async _put(path, data, mockHandler) {
+    if (this.useMock) {
+      if (!mockHandler) throw new Error('Mock handler not implemented');
+      try {
+        return await mockHandler(data);
+      } catch (err) {
+        throw { response: { data: { message: err.message }, status: 400 } };
+      }
+    }
+    const response = await this.http.put(this.endpoint + path, data);
+    return response.data;
+  }
+
+  // _get(path, mockHandler) 或 _get(path, params, mockHandler)
+  async _get(path, paramsOrMock, mockHandler) {
+    let params = {};
+    if (typeof paramsOrMock === 'function') {
+      mockHandler = paramsOrMock;
+    } else if (paramsOrMock && typeof paramsOrMock === 'object') {
+      params = paramsOrMock;
+    }
+    if (this.useMock) {
+      if (!mockHandler) throw new Error('Mock handler not implemented');
+      try {
+        return await mockHandler();
+      } catch (err) {
+        throw { response: { data: { message: err.message }, status: 400 } };
+      }
+    }
+    const response = await this.http.get(this.endpoint + path, { params });
+    return response.data;
   }
 }
+

@@ -5,65 +5,89 @@ import { mockDb } from './mockDb';
 export class WalletService extends BaseService {
   constructor() {
     super('/wallet', 'users');
-    this.table = 'users'; // 錢包資料放在 Users 表的 wallet 欄位
+    this.table = 'users';
   }
 
-  /* 提款申請 */
+  /* 取得錢包資訊 — GET /wallet/info */
+  async getWalletInfo() {
+    if (this.useMock) {
+      return this._get('/info', async () => {
+        const token = localStorage.getItem('token');
+        const userId = token ? parseInt(token.replace('mock-jwt-token-', '')) : null;
+        const user = userId ? await mockDb.findOne(this.table, u => u.id === userId) : null;
+        if (!user) throw new Error('用戶不存在');
+        return user.wallet || {};
+      });
+    }
+    return this._get('/info');
+  }
+
+  /* 提款申請 — POST /wallet/withdraw */
   async applyWithdrawal(userId, amount, withdrawPassword) {
     if (this.useMock) {
       return this._post('/withdraw', { userId, amount, withdrawPassword }, async () => {
         const user = await mockDb.findOne(this.table, u => u.id === userId);
-        
         if (!user) throw new Error('用戶不存在');
         if (!user.wallet.password) throw new Error('請先設定提款密碼');
         if (user.wallet.password !== withdrawPassword) throw new Error('提款密碼錯誤');
         if (amount <= 0) throw new Error('提款金額必須大於0');
         if (user.wallet.balance < amount) throw new Error('餘額不足');
-        
-        // 扣款
         user.wallet.balance -= amount;
         await mockDb.update(this.table, userId, { wallet: user.wallet });
-        
         return { message: '提款申請成功', balance: user.wallet.balance };
       });
-    } else {
-      return this._post('/withdraw', { userId, amount, withdrawPassword });
     }
+    // Real API: userId 由 JWT 決定，body 使用 snake_case
+    return this._post('/withdraw', {
+      amount,
+      withdrawal_password: withdrawPassword,
+    });
   }
 
-  /* 設定提款密碼 */
-  async setWithdrawPassword(userId, password) {
+  /* 設定提款密碼 — POST /wallet/password */
+  async setWithdrawPassword(userId, password, oldPassword) {
     if (this.useMock) {
       return this._post('/password', { userId, password }, async () => {
         const user = await mockDb.findOne(this.table, u => u.id === userId);
         if (!user) throw new Error('用戶不存在');
-        
         if (!user.wallet) user.wallet = {};
         user.wallet.password = password;
-        
         await mockDb.update(this.table, userId, { wallet: user.wallet });
         return { message: '提款密碼設定成功' };
       });
-    } else {
-      return this._post('/password', { userId, password });
     }
+    const body = { password };
+    if (oldPassword) body.old_password = oldPassword;
+    return this._post('/password', body);
   }
 
-  /* 綁定銀行帳戶 */
+  /* 綁定銀行帳戶 — POST /wallet/bank */
   async setupBank(userId, bankData) {
     if (this.useMock) {
       return this._post('/bank', { userId, ...bankData }, async () => {
         const user = await mockDb.findOne(this.table, u => u.id === userId);
         if (!user) throw new Error('用戶不存在');
-        
         if (!user.wallet) user.wallet = {};
-        user.wallet.bank = bankData; // bankData: { name, branch, account, ownerName }
-        
+        user.wallet.bank = bankData;
         await mockDb.update(this.table, userId, { wallet: user.wallet });
         return { message: '銀行帳戶綁定成功' };
       });
-    } else {
-      return this._post('/bank', { userId, ...bankData });
     }
+    // Real API: snake_case 欄位
+    return this._post('/bank', {
+      bank_name: bankData.bankName || bankData.bank_name,
+      bank_account: bankData.accountNo || bankData.bank_account,
+      bank_account_name: bankData.accountName || bankData.bank_account_name,
+      withdrawal_password: bankData.withdrawalPassword || bankData.withdrawal_password,
+    });
+  }
+
+  /* 交易紀錄 — GET /wallet/transactions */
+  async getTransactions({ type, page = 1, limit = 20 } = {}) {
+    if (this.useMock) {
+      return this._get('/transactions', async () => ({ items: [], total: 0 }));
+    }
+    return this._get('/transactions', { type, page, limit });
   }
 }
+
