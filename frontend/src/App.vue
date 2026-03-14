@@ -51,6 +51,10 @@ const toggleMenu = () => {
 const goBack = () => {
   activeMenu.value = null
 }
+
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 </script>
 
 <template>
@@ -58,7 +62,7 @@ const goBack = () => {
     <!-- Navbar 僅在首頁顯示 -->
     <nav v-if="isHomePage" class="navbar">
       <div class="logo">
-        <router-link to="/">
+        <router-link to="/" @click="scrollToTop">
           <img src="/logo.png" alt="Logo" class="logo-image" />
         </router-link>
       </div>
@@ -180,7 +184,8 @@ const goBack = () => {
   align-items: center;
   padding: 1rem 1.5rem;
   background-color: white;
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 10;
 }
 
@@ -201,6 +206,11 @@ const goBack = () => {
   align-items: center;
   justify-content: center;
   z-index: 1001;
+  transition: background-color 0.3s ease;
+}
+
+.hamburger:hover {
+  background-color: #d0d0d0;
 }
 
 .hamburger .icon {
@@ -222,7 +232,10 @@ const goBack = () => {
 }
 
 .hamburger .icon::before { top: -8px; }
-.hamburger .icon::after { bottom: -8px; }
+.hamburger .icon::after { 
+  bottom: -8px; 
+  width: 16px;
+}
 
 /* 菜單覆蓋層 */
 .full-menu-overlay {
