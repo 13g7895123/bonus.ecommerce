@@ -10,14 +10,15 @@ $routes->get('/', 'Home::index');
 // ─────────────────────────────────────────
 // Admin Panel (免登入後台)
 // ─────────────────────────────────────────
-$routes->group('admin-panel', static function ($routes) {
-    $routes->get('/',              'AdminPanelController::index');
-    $routes->get('api/stats',      'AdminPanelController::stats');
-    $routes->get('api/logs',       'AdminPanelController::logs');
-    $routes->get('api/logs/(:num)','AdminPanelController::logDetail/$1');
-    $routes->get('api/users',      'AdminPanelController::users');
-    $routes->get('api/users/(:num)',     'AdminPanelController::userDetail/$1');
-    $routes->get('api/users/(:num)/logs','AdminPanelController::userLogs/$1');
+$routes->get('admin-panel', 'AdminPanelController::index');
+$routes->group('api/v1/admin-panel', static function ($routes) {
+    $routes->get('stats',                     'AdminPanelController::stats');
+    $routes->get('logs',                      'AdminPanelController::logs');
+    $routes->get('logs/(:num)',               'AdminPanelController::logDetail/$1');
+    $routes->get('users',                     'AdminPanelController::users');
+    $routes->get('users/(:num)',              'AdminPanelController::userDetail/$1');
+    $routes->get('users/(:num)/logs',         'AdminPanelController::userLogs/$1');
+    $routes->post('users/(:num)/deposit',     'AdminPanelController::deposit/$1');
 });
 
 // ─────────────────────────────────────────

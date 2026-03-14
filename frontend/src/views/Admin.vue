@@ -63,29 +63,50 @@
       <div class="admin-main">
         <div v-if="selectedKey === 'users'" class="content-panel">
             <div class="panel-header">
-                <h2>User Management</h2>
+                <h2>使用者管理</h2>
+                <button class="refresh-btn" :disabled="loadingUsers" @click="loadUsers">
+                  {{ loadingUsers ? '載入中...' : '重新整理' }}
+                </button>
             </div>
             <div class="panel-body">
-                <table class="user-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Email</th>
-                            <th>Balance</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="user in usersList" :key="user.id">
-                            <td>{{ user.id }}</td>
-                            <td>{{ user.email }}</td>
-                            <td>${{ user.wallet?.balance?.toLocaleString() || 0 }}</td>
-                            <td>
-                                <button class="action-btn" @click="editBalance(user)">Edit Balance</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div v-if="loadingUsers" class="loading-state">載入中...</div>
+                <div v-else-if="usersList.length === 0" class="empty-state">尚無使用者資料</div>
+                <div v-else class="table-container">
+                  <table class="user-table">
+                      <thead>
+                          <tr>
+                              <th>ID</th>
+                              <th>姓名</th>
+                              <th>Email</th>
+                              <th>電話</th>
+                              <th>國家</th>
+                              <th>角色</th>
+                              <th>驗證狀態</th>
+                              <th>餘額</th>
+                              <th>里程數</th>
+                              <th>銀行綁定</th>
+                              <th>操作</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr v-for="user in usersList" :key="user.id">
+                              <td>{{ user.id }}</td>
+                              <td>{{ user.full_name || '-' }}</td>
+                              <td>{{ user.email }}</td>
+                              <td>{{ user.phone || '-' }}</td>
+                              <td>{{ user.country || '-' }}</td>
+                              <td><span :class="['role-badge', user.role]">{{ user.role || 'user' }}</span></td>
+                              <td><span :class="['verify-badge', user.verify_status || 'none']">{{ verifyLabel(user.verify_status) }}</span></td>
+                              <td class="amount-cell">${{ user.balance?.toLocaleString() || '0' }}</td>
+                              <td class="amount-cell">{{ user.miles_balance?.toLocaleString() || '0' }}</td>
+                              <td><span :class="['bank-badge', user.has_bank_account ? 'yes' : 'no']">{{ user.has_bank_account ? '已綁定' : '未綁定' }}</span></td>
+                              <td>
+                                  <button class="deposit-btn" @click="openDeposit(user)">儲值</button>
+                              </td>
+                          </tr>
+                      </tbody>
+                  </table>
+                </div>
             </div>
         </div>
 
@@ -180,6 +201,46 @@
       </div>
     </div>
   </div>
+
+  <!-- 儲值 Modal -->
+  <div v-if="depositModal.show" class="modal-overlay" @click.self="depositModal.show = false">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>儲值</h3>
+        <button class="modal-close" @click="depositModal.show = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-user-info">
+          <div class="modal-user-name">{{ depositModal.user?.full_name || '(無姓名)' }}</div>
+          <div class="modal-user-email">{{ depositModal.user?.email }}</div>
+          <div class="modal-user-balance">目前餘額：<strong>${{ depositModal.user?.balance?.toLocaleString() || '0' }}</strong></div>
+        </div>
+        <label class="modal-label">儲值金額</label>
+        <input
+          v-model="depositModal.amount"
+          type="number"
+          min="1"
+          step="1"
+          placeholder="請輸入金額"
+          class="modal-input"
+          @keyup.enter="submitDeposit"
+        />
+        <label class="modal-label" style="margin-top: 0.75rem;">備註（選填）</label>
+        <input
+          v-model="depositModal.description"
+          type="text"
+          placeholder="例：測試儲值"
+          class="modal-input"
+        />
+      </div>
+      <div class="modal-footer">
+        <button class="modal-cancel-btn" @click="depositModal.show = false">取消</button>
+        <button class="modal-submit-btn" :disabled="depositModal.submitting" @click="submitDeposit">
+          {{ depositModal.submitting ? '處理中...' : '確認儲值' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -191,6 +252,73 @@ const items = ref([])
 const selectedKey = ref(null)
 
 const selectedItem = computed(() => items.value.find(i => i.key === selectedKey.value))
+
+// ── 使用者列表 (from API) ──────────────────────────────────────────────────
+const usersList    = ref([])
+const loadingUsers = ref(false)
+
+const loadUsers = async () => {
+  loadingUsers.value = true
+  try {
+    const res  = await fetch('/api/v1/admin-panel/users?limit=100')
+    const data = await res.json()
+    usersList.value = data.items || []
+  } catch (e) {
+    console.error('載入使用者失敗', e)
+  } finally {
+    loadingUsers.value = false
+  }
+}
+
+// ── 儲值 Modal ──────────────────────────────────────────────────────────────
+const depositModal = ref({
+  show: false,
+  user: null,
+  amount: '',
+  description: '',
+  submitting: false,
+})
+
+const openDeposit = (user) => {
+  depositModal.value = { show: true, user, amount: '', description: '', submitting: false }
+}
+
+const submitDeposit = async () => {
+  const amount = parseFloat(depositModal.value.amount)
+  if (!amount || amount <= 0) {
+    alert('請輸入有效的正數金額')
+    return
+  }
+  depositModal.value.submitting = true
+  try {
+    const res = await fetch(`/api/v1/admin-panel/users/${depositModal.value.user.id}/deposit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, description: depositModal.value.description || 'Admin 儲值 (demo)' }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      alert(data.message || '儲值失敗')
+      return
+    }
+    // 更新本地列表中的餘額
+    const user = usersList.value.find(u => u.id === depositModal.value.user.id)
+    if (user) user.balance = data.balance
+    depositModal.value.user.balance = data.balance
+    alert(`儲值成功！新餘額：$${data.balance.toLocaleString()}`)
+    depositModal.value.show = false
+  } catch (e) {
+    alert('儲值失敗，請稍後再試')
+  } finally {
+    depositModal.value.submitting = false
+  }
+}
+
+// ── 驗證狀態標籤 ────────────────────────────────────────────────────────────
+const verifyLabel = (status) => {
+  const map = { approved: '已驗證', pending: '審核中', rejected: '已拒絕', none: '未提交' }
+  return map[status] || '未提交'
+}
 
 // Dictionary for Labels
 const fieldMap = {
@@ -391,6 +519,7 @@ onMounted(() => {
   }
 
   updateView()
+  loadUsers()
 
   // Select first item by default if available
   if (items.value.length > 0) {
@@ -856,4 +985,203 @@ tr:hover td {
   word-break: break-all;
   font-family: monospace;
 }
+
+/* User table specifics */
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.user-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.user-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #1f2937;
+  vertical-align: middle;
+  max-width: none;
+}
+
+.user-table tr:hover td {
+  background: #f9fafb;
+}
+
+.amount-cell {
+  font-family: monospace;
+  font-weight: 600;
+  color: #065f46;
+}
+
+.role-badge, .verify-badge, .bank-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.role-badge.admin { background: #fef3c7; color: #92400e; }
+.role-badge.user  { background: #eff6ff; color: #1d4ed8; }
+
+.verify-badge.approved { background: #d1fae5; color: #065f46; }
+.verify-badge.pending  { background: #fef9c3; color: #854d0e; }
+.verify-badge.rejected { background: #fee2e2; color: #991b1b; }
+.verify-badge.none     { background: #f3f4f6; color: #6b7280; }
+
+.bank-badge.yes { background: #d1fae5; color: #065f46; }
+.bank-badge.no  { background: #f3f4f6; color: #6b7280; }
+
+.deposit-btn {
+  background: #d71921;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.deposit-btn:hover { background: #b71418; }
+
+.refresh-btn {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #374151;
+}
+.refresh-btn:hover { background: #e5e7eb; }
+.refresh-btn:disabled { opacity: 0.6; cursor: default; }
+
+.loading-state, .empty-state {
+  padding: 3rem;
+  text-align: center;
+  color: #9ca3af;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 12px;
+  width: 420px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 0.25rem;
+}
+.modal-close:hover { color: #374151; }
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-user-info {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid #e5e7eb;
+}
+
+.modal-user-name  { font-weight: 700; color: #111827; font-size: 1rem; }
+.modal-user-email { font-size: 0.85rem; color: #6b7280; margin-top: 0.2rem; }
+.modal-user-balance { font-size: 0.875rem; color: #374151; margin-top: 0.5rem; }
+
+.modal-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.4rem;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #111827;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.modal-input:focus { border-color: #d71921; }
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modal-cancel-btn {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #374151;
+}
+.modal-cancel-btn:hover { background: #e5e7eb; }
+
+.modal-submit-btn {
+  background: #d71921;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.4rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.modal-submit-btn:hover:not(:disabled) { background: #b71418; }
+.modal-submit-btn:disabled { opacity: 0.6; cursor: default; }
 </style>

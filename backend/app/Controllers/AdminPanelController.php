@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Models\UserModel;
 use App\Repositories\ApiLogRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\UserWalletRepository;
+use App\Services\AdminService;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -90,13 +92,49 @@ class AdminPanelController extends Controller
         $limit  = min((int) ($this->request->getGet('limit') ?? 20), 100);
         $result = (new UserRepository())->paginate($page, $limit);
 
-        // Remove password_hash from all users
-        $result['items'] = array_map(static function (array $u): array {
+        // Batch load wallets — single query, no N+1
+        $userIds = array_column($result['items'], 'id');
+        $wallets = [];
+        if (!empty($userIds)) {
+            $rawWallets = model(\App\Models\UserWalletModel::class)
+                ->whereIn('user_id', $userIds)
+                ->findAll();
+            foreach ($rawWallets as $w) {
+                $wallets[(int) $w['user_id']] = $w;
+            }
+        }
+
+        $result['items'] = array_map(static function (array $u) use ($wallets): array {
             unset($u['password_hash']);
+            $wallet = $wallets[$u['id']] ?? null;
+            $u['balance']          = $wallet ? (float) $wallet['balance'] : 0;
+            $u['miles_balance']    = $wallet ? (int) $wallet['miles_balance'] : 0;
+            $u['has_bank_account'] = $wallet ? !empty($wallet['bank_account']) : false;
             return $u;
         }, $result['items']);
 
         return $this->json(['page' => $page, 'limit' => $limit, ...$result]);
+    }
+
+    public function deposit(int $userId): ResponseInterface
+    {
+        $data   = $this->request->getJSON(true) ?? [];
+        $amount = $data['amount'] ?? null;
+
+        if (!is_numeric($amount) || (float) $amount <= 0) {
+            return $this->json(['message' => 'amount 必須為正數'], 400);
+        }
+
+        $result = (new AdminService())->adjustBalance(
+            $userId,
+            (float) $amount,
+            $data['description'] ?? 'Admin 儲值 (demo)'
+        );
+
+        if (!$result['success']) {
+            return $this->json(['message' => $result['message']], 400);
+        }
+        return $this->json(['message' => '儲值成功', 'balance' => $result['data']['balance']]);
     }
 
     public function userDetail(int $id): ResponseInterface
