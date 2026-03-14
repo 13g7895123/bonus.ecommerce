@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 DOCKER_DIR="$PROJECT_DIR/docker"
 ENV_FILE="$DOCKER_DIR/.env"
-ENV_TEMPLATE="$DOCKER_DIR/envs/${ENV}.env"
+ENV_TEMPLATE="$DOCKER_DIR/envs/.env.${ENV}"
 COMPOSE_FILE="$DOCKER_DIR/docker-compose.yml"
 
 # 確認環境參數所對應的範本存在

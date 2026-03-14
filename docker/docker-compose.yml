@@ -10,16 +10,16 @@ services:
   db:
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE: ecommerce_db
-      MYSQL_USER: ecommerce
-      MYSQL_PASSWORD: ecommerce123
-      MYSQL_ROOT_PASSWORD: rootpassword123
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
-      - "${DB_PORT:-9209}:3306"
+      - "${DB_PORT:-9307}:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword123"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -35,21 +35,21 @@ services:
     environment:
       CI_ENVIRONMENT: development
       DB_HOSTNAME: db
-      DB_DATABASE: ecommerce_db
-      DB_USERNAME: ecommerce
-      DB_PASSWORD: ecommerce123
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
     command: >
       /bin/bash -c "
         composer install --no-interaction &&
         echo 'CI_ENVIRONMENT = development' > /var/www/html/.env &&
         echo 'database.default.hostname = db' >> /var/www/html/.env &&
-        echo 'database.default.database = ecommerce_db' >> /var/www/html/.env &&
-        echo 'database.default.username = ecommerce' >> /var/www/html/.env &&
-        echo 'database.default.password = ecommerce123' >> /var/www/html/.env &&
+        echo 'database.default.database = ${DB_DATABASE}' >> /var/www/html/.env &&
+        echo 'database.default.username = ${DB_USERNAME}' >> /var/www/html/.env &&
+        echo 'database.default.password = ${DB_PASSWORD}' >> /var/www/html/.env &&
         echo 'database.default.DBDriver = MySQLi' >> /var/www/html/.env &&
         echo 'database.default.port = 3306' >> /var/www/html/.env &&
-        echo 'JWT_SECRET = supersecretjwtkey12345678901234567890ab' >> /var/www/html/.env &&
-        echo 'JWT_EXPIRE = 86400' >> /var/www/html/.env &&
+        echo 'JWT_SECRET = ${JWT_SECRET}' >> /var/www/html/.env &&
+        echo 'JWT_EXPIRE = ${JWT_EXPIRE:-86400}' >> /var/www/html/.env &&
         php spark migrate --all &&
         php spark db:seed InitialDataSeeder &&
         chown -R www-data:www-data writable &&
@@ -78,7 +78,7 @@ services:
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
-      MYSQL_ROOT_PASSWORD: rootpassword123
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
