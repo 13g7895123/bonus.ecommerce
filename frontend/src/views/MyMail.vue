@@ -21,11 +21,16 @@
     <div v-if="selectedMail" class="mail-modal" @click="closeMail">
       <div class="mail-modal-content" @click.stop>
         <div class="modal-header">
-          <h3>{{ selectedMail.subject }}</h3>
+          <div class="mail-logo">
+            <img src="/logo.png" alt="Logo" class="logo-img" />
+          </div>
+          <div class="header-info">
+            <h3 class="header-subject">{{ selectedMail.subject }}</h3>
+            <p class="header-time">{{ selectedMail.time }}</p>
+          </div>
           <button class="close-btn" @click="closeMail">&times;</button>
         </div>
         <div class="modal-body">
-          <p class="modal-time">{{ selectedMail.time }}</p>
           <div class="modal-text">
             {{ selectedMail.content }}
           </div>
@@ -150,15 +155,29 @@ const mails = [
   padding: 1rem;
   border-bottom: 1px solid #eee;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.1rem;
+.header-info {
   flex: 1;
-  padding-right: 1rem;
+  text-align: left;
+  min-width: 0;
+}
+
+.header-subject {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+  line-height: 1.4;
+}
+
+.header-time {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.85rem;
+  color: #999;
+  font-family: 'Avram Sans', sans-serif;
 }
 
 .close-btn {
@@ -168,6 +187,13 @@ const mails = [
   cursor: pointer;
   padding: 0;
   line-height: 1;
+  color: #999;
+  align-self: flex-start; /* Align with top if multi-line title */
+  margin-top: -5px;
+}
+
+.close-btn:focus {
+  outline: none;
 }
 
 .modal-body {
@@ -175,14 +201,8 @@ const mails = [
   overflow-y: auto;
 }
 
-.modal-time {
-  color: #999;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-  font-family: 'Avram Sans', sans-serif;
-}
-
 .modal-text {
+  text-align: left;
   white-space: pre-wrap;
   line-height: 1.6;
   color: #333;
