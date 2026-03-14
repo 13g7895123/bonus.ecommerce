@@ -1,7 +1,12 @@
 <template>
   <PageLayout title="信件" back-to="/settings" theme="white">
     <ContentList>
-      <ContentListItem v-for="mail in mails" :key="mail.id" class="mail-item">
+      <ContentListItem 
+        v-for="mail in mails" 
+        :key="mail.id" 
+        class="mail-item"
+        @click="openMail(mail)"
+      >
         <div class="mail-logo">
           <img src="/logo.png" alt="Logo" class="logo-img" />
         </div>
@@ -11,19 +16,56 @@
         </div>
       </ContentListItem>
     </ContentList>
+
+    <!-- Mail Detail Modal -->
+    <div v-if="selectedMail" class="mail-modal" @click="closeMail">
+      <div class="mail-modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ selectedMail.subject }}</h3>
+          <button class="close-btn" @click="closeMail">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-time">{{ selectedMail.time }}</p>
+          <div class="modal-text">
+            {{ selectedMail.content }}
+          </div>
+        </div>
+      </div>
+    </div>
   </PageLayout>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import PageLayout from '../components/PageLayout.vue'
 import ContentList from '../components/ContentList.vue'
 import ContentListItem from '../components/ContentListItem.vue'
+
+const selectedMail = ref(null)
+
+const openMail = (mail) => {
+  selectedMail.value = mail
+}
+
+const closeMail = () => {
+  selectedMail.value = null
+}
 
 const mails = [
   {
     id: 1,
     subject: '【賣家交易安全提醒】請賣家勿點選可疑QRcode或Line連結:',
     time: '2026/03/11 10:30',
+    content: `親愛的用戶您好：
+
+近期詐騙集團猖獗，常假冒買家要求賣家點選不明連結或QRcode進行匯款或個資驗證。
+在此這別提醒您：
+1. 本平臺不會要求您私下加Line聯繫。
+2. 請勿點選不明連結或掃描QRcode。
+3. 若有疑慮，請直接聯繫客服中心確認。
+
+感謝您的配合！
+`
   },
 ]
 </script>
@@ -31,6 +73,11 @@ const mails = [
 <style scoped>
 .mail-item {
   gap: 1rem;
+  cursor: pointer; /* indicate clickable */
+  display: flex;
+  align-items: center; /* Ensure vertical centering */
+  justify-content: flex-start; /* Ensure left alignment */
+  text-align: left; /* Ensure text alignment */
 }
 
 .mail-logo {
@@ -58,18 +105,86 @@ const mails = [
 }
 
 .mail-subject {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #222;
-  margin: 0 0 0.35rem 0;
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 0.2rem;
+  /* Add ellipsis for long subjects */
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: ellipsis; 
 }
 
 .mail-time {
-  font-size: 0.775rem;
+  font-size: 0.85rem;
   color: #999;
+  font-family: 'Avram Sans', sans-serif;
+}
+
+/* Modal Styles */
+.mail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.mail-modal-content {
+  background-color: white;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+}
+
+.modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
   margin: 0;
+  font-size: 1.1rem;
+  flex: 1;
+  padding-right: 1rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.modal-time {
+  color: #999;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  font-family: 'Avram Sans', sans-serif;
+}
+
+.modal-text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: #333;
 }
 </style>
