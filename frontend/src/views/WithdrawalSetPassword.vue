@@ -33,10 +33,15 @@ onMounted(() => {
 
   const userStr = localStorage.getItem('user')
   if (userStr) {
-    const user = JSON.parse(userStr)
-    // Check if user has wallet password set
-    if (user.wallet && user.wallet.password) {
-      router.replace('/withdrawal/setup')
+    try {
+      const user = JSON.parse(userStr)
+      // Check if user has wallet password set
+      // Some versions of user object might not have wallet property initialized
+      if (user.wallet && user.wallet.password) {
+        router.replace('/withdrawal/setup')
+      }
+    } catch (e) {
+      console.error('Failed to parse user from localStorage', e)
     }
   }
 })

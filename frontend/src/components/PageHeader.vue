@@ -77,8 +77,8 @@ const goBack = () => {
 
 .header-title {
   color: black;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 900;
   margin: 0;
 }
 
