@@ -76,4 +76,26 @@ class UserService
 
         return ['success' => true, 'message' => 'Verification submitted'];
     }
+
+    public function changePassword(int $userId, string $currentPassword, string $newPassword): array
+    {
+        $user = $this->userRepo->find($userId);
+        if (!$user) {
+            return ['success' => false, 'message' => 'User not found'];
+        }
+
+        if (!password_verify($currentPassword, $user['password_hash'])) {
+            return ['success' => false, 'message' => '目前密碼不正確'];
+        }
+
+        if (strlen($newPassword) < 6 || strlen($newPassword) > 12) {
+            return ['success' => false, 'message' => '新密碼須為 6-12 位'];
+        }
+
+        $this->userRepo->update($userId, [
+            'password_hash' => password_hash($newPassword, PASSWORD_BCRYPT),
+        ]);
+
+        return ['success' => true, 'message' => '密碼已更新'];
+    }
 }

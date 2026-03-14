@@ -35,6 +35,29 @@ class UserController extends BaseApiController
         return $this->success(null, $result['message']);
     }
 
+    public function changePassword()
+    {
+        $data = $this->getJson();
+
+        $current = $data['current_password'] ?? '';
+        $new     = $data['new_password']     ?? '';
+        $confirm = $data['confirm_password'] ?? '';
+
+        if (!$current || !$new || !$confirm) {
+            return $this->error('請填寫所有欄位', 422);
+        }
+
+        if ($new !== $confirm) {
+            return $this->error('新密碼與確認密碼不一致', 422);
+        }
+
+        $result = (new UserService())->changePassword(Auth::id(), $current, $new);
+        if (!$result['success']) {
+            return $this->error($result['message'], 422);
+        }
+        return $this->success(null, $result['message']);
+    }
+
     public function uploadAvatar()
     {
         $file   = $this->request->getFile('avatar');

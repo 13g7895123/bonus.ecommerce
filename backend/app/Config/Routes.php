@@ -35,10 +35,11 @@ $routes->group('api/v1', static function ($routes) {
 
     // ── Users (JWT required) ──
     $routes->group('users', ['filter' => 'jwt'], static function ($routes) {
-        $routes->get('me',            'Api\UserController::me');
-        $routes->put('me',            'Api\UserController::updateMe');
-        $routes->post('me/verify',    'Api\UserController::verify');
-        $routes->post('me/avatar',    'Api\UserController::uploadAvatar');
+        $routes->get('me',              'Api\UserController::me');
+        $routes->put('me',              'Api\UserController::updateMe');
+        $routes->put('me/password',     'Api\UserController::changePassword');
+        $routes->post('me/verify',      'Api\UserController::verify');
+        $routes->post('me/avatar',      'Api\UserController::uploadAvatar');
     });
 
     // ── Files ──
