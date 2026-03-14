@@ -9,7 +9,7 @@ const handleLogout = () => {
     router.push('/login')
 }
 </script>
-
+z
 <template>
   <div class="settings-page">
     <div class="settings-header">
@@ -21,9 +21,9 @@ const handleLogout = () => {
     </div>
 
     <!-- 旅行必需品區塊 -->
-    <div class="section" style="background-color: transparent;">
+    <div class="section" style="background-color: transparent; padding: 0 4rem;">
       <h3 class="section-title">旅行必需品</h3>
-      <div class="essentials-grid" style="padding: 0 2rem;">
+      <div class="essentials-grid">
         <router-link to="/identity-verification" class="essential-card">
           <div class="icon-circle">
             <svg class="card-icon" viewBox="0 0 24 24" width="28" height="28" stroke="#d71921" stroke-width="1.5" fill="none">
@@ -86,9 +86,9 @@ const handleLogout = () => {
     </div>
 
     <!-- 設定區塊 (標題再次顯示) -->
-    <div class="section" style="background-color: transparent;">
-      <h3 class="section-title" style="padding-left: 2rem;">設定</h3>
-      <div style="padding: 0 2rem;">
+    <div class="section" style="background-color: transparent; padding: 0 4rem;">
+      <h3 class="section-title">設定</h3>
+      <div>
         <button class="settings-rounded-btn">
           <span class="btn-label">國家/地區和語言</span>
         </button>
@@ -168,6 +168,7 @@ const handleLogout = () => {
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 1.25rem;
+  padding-left: 1rem; /* Add left padding for better alignment */
   color: #000;
   text-align: left; /* Ensure left alignment */
 }
