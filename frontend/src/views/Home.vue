@@ -116,7 +116,7 @@ const announcements = ref([
   color: #000000;
   border: none;
   padding: 0.5rem 7rem;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 900;
   border-radius: 0;
   cursor: pointer;
@@ -131,7 +131,7 @@ const announcements = ref([
 .upgrade-section {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: 84vh;
   background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/upgrade-bg.png');
   background-size: cover;
   background-position: center;
