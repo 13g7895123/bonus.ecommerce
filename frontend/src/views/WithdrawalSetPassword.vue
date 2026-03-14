@@ -37,22 +37,22 @@ const password        = ref('')
 const confirmPassword = ref('')
 const loading         = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
   if (route.query.reset === 'true') {
     return // 忘記密碼流程，允許重設
   }
 
-  const userStr = localStorage.getItem('user')
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr)
-      // 以後端回傳的 has_withdrawal_pw 判斷是否已設定提款密碼
-      if (user.wallet && user.wallet.has_withdrawal_pw) {
-        router.replace('/withdrawal/setup')
-      }
-    } catch (e) {
-      toast.error('載入資料失敗')
+  try {
+    const userStr = localStorage.getItem('user')
+    const userId  = userStr ? JSON.parse(userStr).id : null
+    if (!userId) return
+    // 從 API 取得最新 wallet 狀態，避免 localStorage 快取過舊
+    const wallet = await walletService.getWalletInfo()
+    if (wallet?.has_withdrawal_pw) {
+      router.replace('/withdrawal/setup')
     }
+  } catch (e) {
+    // 載入失敗不阻斷，依然顯示設定頁面
   }
 })
 

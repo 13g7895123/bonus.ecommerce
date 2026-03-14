@@ -15,4 +15,23 @@ class MileageController extends BaseApiController
         $result = (new MileageService())->getHistory(Auth::id(), $page, $limit);
         return $this->success($result);
     }
+
+    public function redeem()
+    {
+        $data = $this->getJson();
+        $code = trim($data['code'] ?? '');
+
+        if (!$code) {
+            return $this->error('請輸入里程代碼', 422);
+        }
+
+        $result = (new MileageService())->redeem(Auth::id(), $code);
+        if (!$result['success']) {
+            return $this->error($result['message'], 422);
+        }
+        return $this->success([
+            'miles_earned'  => $result['miles_earned'],
+            'miles_balance' => $result['miles_balance'],
+        ], $result['message']);
+    }
 }

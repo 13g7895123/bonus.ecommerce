@@ -40,22 +40,20 @@ import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import { UserService } from '../services/UserService'
 
-const fileInput = ref(null)
+const fileInput   = ref(null)
 const localAvatar = ref(null)
-const uploading = ref(false)
-const toast = useToast()
+const uploading   = ref(false)
+const toast       = useToast()
+const userService = new UserService()
 
-onMounted(() => {
-  const userStr = localStorage.getItem('user')
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr)
-      if (user.avatar) {
-        localAvatar.value = user.avatar
-      }
-    } catch (e) {
-      toast.error('載入場我資料失敗')
-    }
+onMounted(async () => {
+  try {
+    const userStr = localStorage.getItem('user')
+    const userId  = userStr ? JSON.parse(userStr).id : null
+    const user    = await userService.getProfile(userId)
+    if (user?.avatar) localAvatar.value = user.avatar
+  } catch (e) {
+    // 載入失敗不顯示錯誤，頭像維持空白即可
   }
 })
 
@@ -70,18 +68,11 @@ const handleFileChange = async (event) => {
   uploading.value = true
   try {
     const userStr = localStorage.getItem('user')
-    const user = userStr ? JSON.parse(userStr) : null
+    const userId  = userStr ? JSON.parse(userStr).id : null
 
-    const userService = new UserService()
-    const result = await userService.uploadAvatar(user?.id, file)
-
+    const result = await userService.uploadAvatar(userId, file)
     localAvatar.value = result.avatar_url
-
-    // 更新 localStorage 中的頭像網址
-    if (user) {
-      user.avatar = result.avatar_url
-      localStorage.setItem('user', JSON.stringify(user))
-    }
+    toast.success('頭像已更新')
   } catch (e) {
     toast.error('頭像上傳失敗')
   } finally {

@@ -91,58 +91,30 @@ import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
+import { MileageService } from '../services/MileageService'
 
 const toast = useToast()
+const mileageService = new MileageService()
 const activeTab = ref('spending')
 const mileageCode = ref('')
 const loading = ref(false)
 
-const submitCode = () => {
+const submitCode = async () => {
   if (!mileageCode.value) {
     toast.warning('請輸入代碼')
     return
   }
 
   loading.value = true
-
-  // Simulate API call
-  setTimeout(() => {
-    try {
-      // Mock logic: Update generic "miles" in localStorage for demo
-      // Validation: assume code starting with "BONUS" gives miles
-      if (mileageCode.value.toUpperCase().startsWith('BONUS')) {
-         const bonus = 500
-         const userStr = localStorage.getItem('user')
-         if (userStr) {
-             const user = JSON.parse(userStr)
-             user.miles = (user.miles || 0) + bonus
-             localStorage.setItem('user', JSON.stringify(user))
-             
-             // Also update mock_db
-             const mockUsersStr = localStorage.getItem('mock_db_users')
-             if (mockUsersStr) {
-                 const mockUsers = JSON.parse(mockUsersStr)
-                 const dbUserIdx = mockUsers.findIndex(u => u.id === user.id)
-                 if (dbUserIdx !== -1) {
-                     mockUsers[dbUserIdx].miles = user.miles
-                     localStorage.setItem('mock_db_users', JSON.stringify(mockUsers))
-                 }
-             }
-             
-             toast.success(`成功兑換! 獲得 ${bonus} 哩程數`)
-             mileageCode.value = ''
-         } else {
-             toast.error('用戶未登入')
-         }
-      } else {
-          toast.error('無效的里程代碼 (試試 BONUS)')
-      }
-    } catch (e) {
-      toast.error('發生錯誤，請稍後再試')
-    } finally {
-      loading.value = false
-    }
-  }, 1000)
+  try {
+    const result = await mileageService.redeem(mileageCode.value.trim())
+    toast.success(result.message || `成功兌換 ${result.miles_earned} 哩程數`)
+    mileageCode.value = ''
+  } catch (e) {
+    toast.error(e?.response?.data?.message || '無效的里程代碼')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

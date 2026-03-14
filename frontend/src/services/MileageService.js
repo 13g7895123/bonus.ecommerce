@@ -13,4 +13,15 @@ export class MileageService extends BaseService {
     }
     return this._get('/history', { page, limit });
   }
+
+  /* 兌換里程代碼 — POST /mileage/redeem */
+  async redeem(code) {
+    if (this.useMock) {
+      if (code.toUpperCase().startsWith('BONUS')) {
+        return { miles_earned: 500, miles_balance: 500, message: '成功兌換 500 哩程數（mock）' };
+      }
+      throw new Error('無效的里程代碼');
+    }
+    return this._post('/redeem', { code });
+  }
 }

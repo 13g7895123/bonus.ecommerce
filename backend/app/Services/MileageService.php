@@ -20,6 +20,35 @@ class MileageService
         return $result;
     }
 
+    public function redeem(int $userId, string $code): array
+    {
+        // 简單校驗：以 BONUS 開頭的代碼給予 500 哩程
+        if (strlen($code) < 4) {
+            return ['success' => false, 'message' => '無效的里程代碼'];
+        }
+        if (strtoupper(substr($code, 0, 5)) !== 'BONUS') {
+            return ['success' => false, 'message' => '無效的里程代碼'];
+        }
+
+        $bonus  = 500;
+        $wallet = $this->walletRepo->findByUserId($userId);
+        if (!$wallet) {
+            return ['success' => false, 'message' => 'Wallet not found'];
+        }
+
+        $newMiles = (int) $wallet['miles_balance'] + $bonus;
+        $this->walletRepo->updateByUserId($userId, ['miles_balance' => $newMiles]);
+        $this->repo->createBatch([[
+            'user_id'    => $userId,
+            'type'       => 'earn',
+            'amount'     => $bonus,
+            'source'     => 'code_redeem',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]]);
+
+        return ['success' => true, 'message' => "成功兌換 {$bonus} 哩程數", 'miles_earned' => $bonus, 'miles_balance' => $newMiles];
+    }
+
     /**
      * Batch award mileage — single insertBatch + single updateBatch (no loop queries).
      *

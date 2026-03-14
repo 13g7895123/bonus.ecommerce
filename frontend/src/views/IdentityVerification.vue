@@ -80,21 +80,24 @@ const frontUploading = ref(false)
 const backUploading  = ref(false)
 
 onMounted(async () => {
-  const userStr = localStorage.getItem('user')
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr)
-      if (user.verificationData) {
-        idNumber.value     = user.verificationData.idNumber || ''
-        fullName.value     = user.verificationData.fullName || ''
-        frontPreview.value = user.verificationData.frontPreview || ''
-        backPreview.value  = user.verificationData.backPreview || ''
-        frontFileId.value  = user.verificationData.frontFileId || null
-        backFileId.value   = user.verificationData.backFileId  || null
-      }
-    } catch (e) {
-      toast.error('載入資料失敗')
+  try {
+    const userStr = localStorage.getItem('user')
+    const userId  = userStr ? JSON.parse(userStr).id : null
+    if (!userId) return
+    const { user: userService } = useApi()
+    const profile = await userService.getProfile(userId)
+    // 從 API 返回的 verification_data 預填表單
+    const vd = profile?.verification_data
+      ? (typeof profile.verification_data === 'string'
+          ? JSON.parse(profile.verification_data)
+          : profile.verification_data)
+      : null
+    if (vd) {
+      idNumber.value = vd.idNumber || vd.id_number || ''
+      fullName.value = vd.fullName || vd.full_name || ''
     }
+  } catch (e) {
+    // 預填失敗不阻斷流程
   }
 })
 
@@ -153,20 +156,6 @@ const handleNext = async () => {
       frontFileId: frontFileId.value,
       backFileId:  backFileId.value,
     })
-
-    // 同步本地快取
-    const verificationData = {
-      idNumber:    idNumber.value,
-      fullName:    fullName.value,
-      frontPreview: frontPreview.value,
-      backPreview:  backPreview.value,
-      frontFileId: frontFileId.value,
-      backFileId:  backFileId.value,
-      updatedAt:   new Date().toISOString(),
-    }
-    currentUser.verificationData = verificationData
-    currentUser.isVerified = true
-    localStorage.setItem('user', JSON.stringify(currentUser))
 
     toast.success('實名認證資料已送出')
     router.push('/settings')

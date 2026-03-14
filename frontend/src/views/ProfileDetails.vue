@@ -67,15 +67,16 @@ const user = ref({})
 const formData = ref({})
 const toast = useToast()
 
-onMounted(() => {
-  const userStr = localStorage.getItem('user')
-  if (userStr) {
-    try {
-      user.value = JSON.parse(userStr)
-      formData.value = { ...user.value }
-    } catch (e) {
-      toast.error('載入場我資料失敗')
-    }
+onMounted(async () => {
+  try {
+    const userStr = localStorage.getItem('user')
+    const userId  = userStr ? JSON.parse(userStr).id : null
+    const userService = new UserService()
+    const data = await userService.getProfile(userId)
+    user.value     = data || {}
+    formData.value = { ...user.value }
+  } catch (e) {
+    toast.error('載入個人資料失敗')
   }
 })
 
@@ -107,18 +108,12 @@ const saveChanges = async () => {
       dob: formData.value.dob,
       country: formData.value.country,
     })
+    // 更新本地 reactive 狀態（不再寫 localStorage）
+    user.value = { ...user.value, ...formData.value, full_name, name: full_name }
+    toast.success('個人資料已更新')
   } catch (e) {
     toast.error('更新個人資料失敗')
   }
-
-  // 更新本地 user 物件與 localStorage
-  user.value = {
-    ...user.value,
-    ...formData.value,
-    full_name,
-    name: full_name,
-  }
-  localStorage.setItem('user', JSON.stringify(user.value))
 
   isEditing.value = false
 }

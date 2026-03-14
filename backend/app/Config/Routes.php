@@ -66,7 +66,8 @@ $routes->group('api/v1', static function ($routes) {
 
     // ── Mileage (JWT required) ──
     $routes->group('mileage', ['filter' => 'jwt'], static function ($routes) {
-        $routes->get('history', 'Api\MileageController::history');
+        $routes->get('history',  'Api\MileageController::history');
+        $routes->post('redeem',  'Api\MileageController::redeem');
     });
 
     // ── Announcements (JWT required) ──
