@@ -146,14 +146,14 @@ const announcements = ref([
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 1.5rem;
+  padding: 0 5rem;
   width: 100%;
   max-width: var(--app-max-width);
 }
 
 .upgrade-subtitle {
   font-family: 'Playfair Display', serif;
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 500;
   margin-bottom: 0.75rem;
   text-transform: uppercase;
@@ -162,7 +162,7 @@ const announcements = ref([
 
 .upgrade-title {
   font-family: 'Playfair Display', serif;
-  font-size: 4rem;
+  font-size: 3.5rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
   line-height: 1.2;
@@ -172,21 +172,19 @@ const announcements = ref([
   font-size: 2.2rem;
   font-weight: 800;
   margin-bottom: 2.5rem;
-  padding: 1rem 5rem;
   line-height: 1.4;
   opacity: 0.9;
   text-align: justify;
   text-align-last: center;
   text-justify: inter-word;
-  width: 100%;
+  /* width: 100%; */
 }
 
 .upgrade-button {
   background-color: white;
   color: black;
   border: 2px solid white;
-  padding: 1rem 3rem;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 800;
   border-radius: 0;
   cursor: pointer;
