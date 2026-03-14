@@ -1,6 +1,6 @@
 <template>
   <div class="ws-page">
-    <PageHeader title="提款申請" back-to="/transactions" />
+    <PageHeader title="提款申請" back-to="/settings" />
 
     <div class="ws-content">
       <p class="ws-desc">為了保障帳戶安全體驗 請您綁定個人身份資訊</p>

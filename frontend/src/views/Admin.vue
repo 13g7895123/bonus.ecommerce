@@ -72,7 +72,7 @@
                   <table>
                     <thead>
                       <tr>
-                        <th v-for="header in getHeaders(selectedItem.parsedValue[0])" :key="header">
+                        <th v-for="header in getHeaders(selectedItem.parsedValue)" :key="header">
                           {{ getLabel(header) }}
                           <span class="sub-header">{{ header }}</span>
                         </th>
@@ -80,7 +80,7 @@
                     </thead>
                     <tbody>
                       <tr v-for="(row, idx) in selectedItem.parsedValue" :key="idx">
-                        <td v-for="header in getHeaders(selectedItem.parsedValue[0])" :key="header" :title="String(row[header])">
+                        <td v-for="header in getHeaders(selectedItem.parsedValue)" :key="header" :title="String(row[header])">
                           <template v-if="isImage(row[header])">
                             <img :src="row[header]" class="thumbnail" />
                           </template>
@@ -290,9 +290,16 @@ const isObject = (val) => {
   return val && typeof val === 'object' && !Array.isArray(val)
 }
 
-const getHeaders = (obj) => {
-  if (!obj || typeof obj !== 'object') return []
-  return Object.keys(obj)
+const getHeaders = (data) => {
+  if (!Array.isArray(data) || data.length === 0) return []
+  // Collect all unique keys from all objects in the data array
+  const keys = new Set()
+  data.forEach(item => {
+    if (isObject(item)) {
+      Object.keys(item).forEach(k => keys.add(k))
+    }
+  })
+  return Array.from(keys)
 }
 
 const formatCell = (val) => {

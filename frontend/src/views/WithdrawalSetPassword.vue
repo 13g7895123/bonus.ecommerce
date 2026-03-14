@@ -1,6 +1,6 @@
 <template>
   <div class="wsp-page">
-    <PageHeader title="提款申請" back-to="/transactions" />
+    <PageHeader title="提款申請" back-to="/settings" />
 
     <div class="wsp-content">
       <p class="wsp-desc">為保護您的帳戶安全，請先設定提款密碼</p>

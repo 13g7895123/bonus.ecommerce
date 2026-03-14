@@ -47,6 +47,28 @@ export function usePasswordForm() {
       target[fields[fields.length - 1]] = password.value
       
       localStorage.setItem('user', JSON.stringify(user))
+
+      // Also update mock_db_users if user exists there
+      const mockUsersStr = localStorage.getItem('mock_db_users')
+      if (mockUsersStr) {
+        try {
+          const mockUsers = JSON.parse(mockUsersStr)
+          const dbUser = mockUsers.find(u => u.id === user.id)
+          if (dbUser) {
+             let dbTarget = dbUser
+             for (let i = 0; i < fields.length - 1; i++) {
+                if (!dbTarget[fields[i]]) {
+                    dbTarget[fields[i]] = {}
+                }
+                dbTarget = dbTarget[fields[i]]
+             }
+             dbTarget[fields[fields.length - 1]] = password.value
+             localStorage.setItem('mock_db_users', JSON.stringify(mockUsers))
+          }
+        } catch (e) {
+          console.error('Failed to update mock_db_users', e)
+        }
+      }
       return true
     }
     return false

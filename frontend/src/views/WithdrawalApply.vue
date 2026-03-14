@@ -1,6 +1,6 @@
 <template>
   <div class="wa-page">
-    <PageHeader title="提款申請" back-to="/withdrawal/setup" />
+    <PageHeader title="提款申請" back-to="/settings" />
 
     <div class="wa-content">
       <!-- 可提款現金 -->

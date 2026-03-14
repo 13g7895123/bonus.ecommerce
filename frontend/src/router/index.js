@@ -17,6 +17,7 @@ import WithdrawalSetup from '../views/WithdrawalSetup.vue'
 import WithdrawalApply from '../views/WithdrawalApply.vue'
 import MyMail from '../views/MyMail.vue'
 import MileageRewards from '../views/MileageRewards.vue'
+import MileageRecords from '../views/MileageRecords.vue'
 import AnnouncementDetail from '../views/AnnouncementDetail.vue'
 import Admin from '../views/Admin.vue'
 
@@ -125,6 +126,11 @@ const routes = [
     path: '/mileage-rewards',
     name: 'MileageRewards',
     component: MileageRewards
+  },
+  {
+    path: '/mileage-records',
+    name: 'MileageRecords',
+    component: MileageRecords
   }
 ]
 

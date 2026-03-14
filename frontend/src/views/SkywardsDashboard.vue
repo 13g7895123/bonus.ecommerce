@@ -62,7 +62,7 @@ onMounted(() => {
           <span class="amount">{{ user?.wallet?.balance?.toLocaleString() || '0' }}</span>
         </div>
       </div>
-      <button class="details-btn">我的明細表</button>
+      <button class="details-btn" @click="$router.push('/mileage-records')">我的明細表</button>
     </header>
 
     <!-- 狀態切換與等級區塊 -->
