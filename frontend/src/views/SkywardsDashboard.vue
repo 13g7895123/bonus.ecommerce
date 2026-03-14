@@ -27,11 +27,11 @@ const getTierName = (tier) => {
   return tiers[tier] || '藍卡'
 }
 
-onMounted(() => {
+onMounted(async () => {
   try {
-    const currentUser = api.auth.getCurrentUser()
-    if (currentUser) {
-      user.value = currentUser
+    const data = await api.user.getProfile()
+    if (data) {
+      user.value = data
     }
   } catch (e) {
     toast.error('無法載入使用者資訊')
