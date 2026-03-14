@@ -126,6 +126,7 @@ const saveChanges = () => {
   padding: 2rem 1.5rem;
   margin: 1rem;
   border-radius: 12px; /* Rounded corners */
+  text-align: left; /* Ensure left alignment */
 }
 
 .title-row {

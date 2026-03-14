@@ -35,7 +35,11 @@ const announcements = ref([
   </section>
 
   <section class="cabins-section">
-    <img src="/cabins.png" alt="Cabins" class="full-width-image" />
+    <img src="/home/dubai.png" alt="Dubai" class="full-width-image" />
+    <img src="/home/first.png" alt="First Class" class="full-width-image" />
+    <img src="/home/business.png" alt="Business Class" class="full-width-image" />
+    <img src="/home/rich-classic.png" alt="Premium Economy" class="full-width-image" />
+    <img src="/home/classic.png" alt="Economy" class="full-width-image" />
   </section>
 
   <section class="about-section">
@@ -197,6 +201,7 @@ const announcements = ref([
 
 .cabins-section {
   width: 100%;
+  background-color: #ffffff;
 }
 
 .full-width-image {
