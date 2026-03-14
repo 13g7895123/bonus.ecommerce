@@ -9,7 +9,9 @@
       <AppInput v-model="confirmPassword" type="password" label="確認提款密碼" placeholder="再次輸入密碼" />
 
       <div style="margin-top: 20px;">
-        <AppButton block @click="handleSubmit">確認</AppButton>
+        <AppButton block :disabled="loading" @click="handleSubmit">
+          {{ loading ? '處理中...' : '確認' }}
+        </AppButton>
       </div>
       <DebugFillButton @fill="fillRandomData" />
     </div>
@@ -17,32 +19,35 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import DebugFillButton from '../components/DebugFillButton.vue'
-import { usePasswordForm } from '../composables/usePasswordForm.js'
+import { WalletService } from '../services/WalletService'
 
-const router = useRouter()
-const route = useRoute()
-const toast = useToast()
-const { password, confirmPassword, validate, saveToLocalStorage } = usePasswordForm()
+const router  = useRouter()
+const route   = useRoute()
+const toast   = useToast()
+const walletService = new WalletService()
+
+const password        = ref('')
+const confirmPassword = ref('')
+const loading         = ref(false)
 
 onMounted(() => {
   if (route.query.reset === 'true') {
-     return; // Allow password reset
+    return // 忘記密碼流程，允許重設
   }
 
   const userStr = localStorage.getItem('user')
   if (userStr) {
     try {
       const user = JSON.parse(userStr)
-      // Check if user has wallet password set
-      // Some versions of user object might not have wallet property initialized
-      if (user.wallet && user.wallet.password) {
+      // 以後端回傳的 has_withdrawal_pw 判斷是否已設定提款密碼
+      if (user.wallet && user.wallet.has_withdrawal_pw) {
         router.replace('/withdrawal/setup')
       }
     } catch (e) {
@@ -51,15 +56,36 @@ onMounted(() => {
   }
 })
 
-const handleSubmit = () => {
-  if (validate()) {
-    saveToLocalStorage('wallet.password')
+const handleSubmit = async () => {
+  if (!password.value || !confirmPassword.value) {
+    toast.warning('請填寫所有欄位')
+    return
+  }
+  if (password.value !== confirmPassword.value) {
+    toast.error('密碼與確認密碼不一致')
+    return
+  }
+  if (password.value.length < 6 || password.value.length > 12) {
+    toast.error('密碼長度須為 6-12 位')
+    return
+  }
+
+  loading.value = true
+  try {
+    const userStr = localStorage.getItem('user')
+    const userId  = userStr ? JSON.parse(userStr).id : null
+    await walletService.setWithdrawPassword(userId, password.value)
+    toast.success('提款密碼設定成功')
     router.push('/withdrawal/setup')
+  } catch (e) {
+    toast.error(e?.response?.data?.message || '設定失敗')
+  } finally {
+    loading.value = false
   }
 }
 
 const fillRandomData = () => {
-  password.value = '123456'
+  password.value        = '123456'
   confirmPassword.value = '123456'
 }
 </script>
