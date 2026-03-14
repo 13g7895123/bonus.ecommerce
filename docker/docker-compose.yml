@@ -13,9 +13,18 @@ services:
       dockerfile: docker/backend/Dockerfile
     volumes:
       - ../backend:/var/www/html
-    ports:
-      - "${BACKEND_PORT:-8080}:80"
     environment:
       CI_ENVIRONMENT: development
-    command: /bin/bash -c "if [ ! -d vendor ]; then composer install; fi && chown -R www-data:www-data /var/www/html && apache2-foreground"
+    command: /bin/bash -c "if [ ! -d vendor ]; then composer install; fi && chown -R www-data:www-data /var/www/html && php-fpm"
     restart: unless-stopped
+
+  backend-web:
+    image: nginx:alpine
+    ports:
+      - "${BACKEND_PORT:-8080}:80"
+    volumes:
+      - ../backend:/var/www/html
+      - ./backend/nginx.conf:/etc/nginx/conf.d/default.conf
+    restart: unless-stopped
+    depends_on:
+      - backend
