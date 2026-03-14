@@ -1,9 +1,7 @@
 <template>
-  <div class="mail-page">
-    <PageHeader title="信件" back-to="/settings" />
-
-    <div class="mail-list">
-      <div class="mail-item" v-for="mail in mails" :key="mail.id">
+  <PageLayout title="信件" back-to="/settings" theme="white">
+    <ContentList>
+      <ContentListItem v-for="mail in mails" :key="mail.id" class="mail-item">
         <div class="mail-logo">
           <img src="/logo.png" alt="Logo" class="logo-img" />
         </div>
@@ -11,13 +9,15 @@
           <p class="mail-subject">{{ mail.subject }}</p>
           <p class="mail-time">{{ mail.time }}</p>
         </div>
-      </div>
-    </div>
-  </div>
+      </ContentListItem>
+    </ContentList>
+  </PageLayout>
 </template>
 
 <script setup>
-import PageHeader from '../components/PageHeader.vue'
+import PageLayout from '../components/PageLayout.vue'
+import ContentList from '../components/ContentList.vue'
+import ContentListItem from '../components/ContentListItem.vue'
 
 const mails = [
   {
@@ -29,31 +29,17 @@ const mails = [
 </script>
 
 <style scoped>
-.mail-page {
-  background-color: #f5f5f5;
-  min-height: 100vh;
-}
-
-.mail-list {
-  margin-top: 1rem;
-  background-color: #ffffff;
-}
-
 .mail-item {
-  display: flex;
-  align-items: center;
   gap: 1rem;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
-  cursor: pointer;
 }
 
 .mail-logo {
   flex-shrink: 0;
   width: 44px;
   height: 44px;
-  background-color: #f5f5f5;
-  border-radius: 50%;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;

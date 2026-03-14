@@ -32,6 +32,10 @@
       <!-- 提款申請按鈕 -->
       <button class="apply-btn">提款申請</button>
       
+      <div class="forgot-pwd-link">
+        <router-link :to="{ path: '/transactions/withdrawal', query: { reset: 'true' }}" class="link-text">忘記提款密碼?</router-link>
+      </div>
+
       <DebugFillButton @fill="fillRandomData" />
     </div>
   </div>
@@ -120,5 +124,17 @@ const fillRandomData = () => {
 
 .apply-btn:hover {
   background-color: #b8151b;
+}
+
+.forgot-pwd-link {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.link-text {
+  color: #666;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  cursor: pointer;
 }
 </style>

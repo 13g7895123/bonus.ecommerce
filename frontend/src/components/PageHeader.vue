@@ -1,6 +1,9 @@
 <template>
-  <div class="page-header">
-    <router-link v-if="backTo" :to="backTo" class="back-btn">
+  <div class="page-header" :class="{ 'no-border': !bordered }">
+    <a href="#" v-if="useHistoryBack" @click.prevent="goBack" class="back-btn">
+      <span class="arrow-left"></span>
+    </a>
+    <router-link v-else-if="backTo" :to="backTo" class="back-btn">
       <span class="arrow-left"></span>
     </router-link>
     <div v-else class="header-placeholder"></div>
@@ -14,10 +17,28 @@
 </template>
 
 <script setup>
-defineProps({
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const props = defineProps({
   title: { type: String, required: true },
   backTo: { type: String, default: '' },
+  useHistoryBack: { type: Boolean, default: false },
+  bordered: { type: Boolean, default: true }
 })
+
+const goBack = () => {
+    if (window.history.state && window.history.state.back) {
+        router.back();
+    } else {
+        // Fallback or do nothing if no history. 
+        // Or if props.backTo is provided as a fallback? 
+        // The user specifically asked for history back to work.
+        // If there is no history, we might want to go to home or just stay?
+        // Let's assume standard router.back() is what is wanted.
+        router.back();
+    }
+}
 </script>
 
 <style scoped>
@@ -31,6 +52,10 @@ defineProps({
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.page-header.no-border {
+  border-bottom: none;
 }
 
 .back-btn {
