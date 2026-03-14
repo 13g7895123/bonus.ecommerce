@@ -18,12 +18,18 @@ import WithdrawalApply from '../views/WithdrawalApply.vue'
 import MyMail from '../views/MyMail.vue'
 import MileageRewards from '../views/MileageRewards.vue'
 import AnnouncementDetail from '../views/AnnouncementDetail.vue'
+import Admin from '../views/Admin.vue'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: Home
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: Admin
   },
   {
     path: '/announcement/:id',

@@ -30,7 +30,9 @@
       <AppInput v-model="password" type="password" placeholder="請輸入提款密碼" />
 
       <!-- 提款申請按鈕 -->
-      <button class="apply-btn">提款申請</button>
+      <div style="margin-top: 20px;">
+          <AppButton block>提款申請</AppButton>
+      </div>
       
       <div class="forgot-pwd-link">
         <router-link :to="{ path: '/transactions/withdrawal', query: { reset: 'true' }}" class="link-text">忘記提款密碼?</router-link>
@@ -45,6 +47,7 @@
 import { ref } from 'vue'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
+import AppButton from '../components/AppButton.vue'
 import DebugFillButton from '../components/DebugFillButton.vue'
 
 const amount = ref('')

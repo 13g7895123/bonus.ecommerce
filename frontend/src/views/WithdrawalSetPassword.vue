@@ -8,7 +8,9 @@
       <AppInput v-model="password" type="password" label="設定提款密碼" placeholder="請設定6-12位數字密碼" />
       <AppInput v-model="confirmPassword" type="password" label="確認提款密碼" placeholder="再次輸入密碼" />
 
-      <button class="submit-btn" @click="handleSubmit">確認</button>
+      <div style="margin-top: 20px;">
+        <AppButton block @click="handleSubmit">確認</AppButton>
+      </div>
       <DebugFillButton @fill="fillRandomData" />
     </div>
   </div>
@@ -19,6 +21,7 @@ import { onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
+import AppButton from '../components/AppButton.vue'
 import DebugFillButton from '../components/DebugFillButton.vue'
 import { usePasswordForm } from '../composables/usePasswordForm.js'
 

@@ -15,7 +15,7 @@
       <AppInput v-model="accountName" placeholder="請輸入銀行姓名" />
 
       <NoticeBox>
-        <p class="notice-title">新增帳戶注意事項：</p>
+        <p class="notice-title">新增帳戶注意事項</p>
         <ul class="notice-list">
           <li>會員首次填寫帳號後，即永久綁定，恕不任意變更。</li>
           <li>為防止有心人勢利用本站作為詐騙工具：</li>
@@ -23,7 +23,9 @@
         </ul>
       </NoticeBox>
 
-      <router-link to="/withdrawal/apply" class="submit-btn">送出</router-link>
+      <div style="margin-top: 20px;">
+        <AppButton block @click="router.push('/withdrawal/apply')">送出</AppButton>
+      </div>
       <DebugFillButton @fill="fillRandomData" />
     </div>
   </div>
@@ -31,13 +33,16 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import PageHeader from '../components/PageHeader.vue'
 import UploadBox from '../components/UploadBox.vue'
 import NoticeBox from '../components/NoticeBox.vue'
 import AppInput from '../components/AppInput.vue'
+import AppButton from '../components/AppButton.vue'
 import DebugFillButton from '../components/DebugFillButton.vue'
 import { getRandomName } from '../utils/random'
 
+const router = useRouter()
 const bankName = ref('')
 const branchName = ref('')
 const accountNo = ref('')
@@ -76,49 +81,36 @@ const fillRandomData = () => {
 }
 
 .notice-title {
-  font-size: 0.875rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #d71921;
-  margin: 0 0 0.5rem 0;
+  text-align: center;
+  margin: 0 0 1rem 0;
 }
 
 .notice-list {
-  padding-left: 1.25rem;
+  padding-left: 0;
   margin: 0;
+  list-style: none;
 }
 
 .notice-list li {
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: #555;
   line-height: 1.6;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.8rem;
+  text-align: left;
 }
 
 .notice-list li:last-child {
   margin-bottom: 0;
 }
 
-.submit-btn {
-  display: block;
-  width: 100%;
-  padding: 1rem;
-  background-color: #d71921;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 0.5rem;
-  text-align: center;
-  text-decoration: none;
-  box-sizing: border-box;
-  transition: background-color 0.2s;
+:deep(.upload-hint) {
+  color: #c60c33 !important;
+  font-weight: 700 !important;
 }
 
-.submit-btn:hover {
-  background-color: #b8151b;
-}
 </style>
 
 <style scoped>
