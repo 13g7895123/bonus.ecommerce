@@ -3,12 +3,6 @@
     <PageHeader title="重設密碼" back-to="/profile" />
     
     <div class="cp-content">
-      <AppInput
-        v-model="currentPassword"
-        type="password"
-        label="目前密碼"
-        placeholder="請輸入目前的密碼"
-      />
       <AppInput 
         v-model="newPassword" 
         type="password" 
@@ -42,13 +36,12 @@ const router = useRouter()
 const toast = useToast()
 const userService = new UserService()
 
-const currentPassword = ref('')
 const newPassword     = ref('')
 const confirmPassword = ref('')
 const loading         = ref(false)
 
 const handleSubmit = async () => {
-  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
+  if (!newPassword.value || !confirmPassword.value) {
     toast.warning('請填寫所有欄位')
     return
   }
@@ -63,7 +56,7 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    await userService.changePassword(currentPassword.value, newPassword.value, confirmPassword.value)
+    await userService.changePassword(newPassword.value, confirmPassword.value)
     toast.success('密碼更新成功')
     router.push('/profile')
   } catch (e) {

@@ -71,13 +71,11 @@ export class UserService extends BaseService {
   }
 
   /* 更改登入密碼 — PUT /users/me/password */
-  async changePassword(currentPassword, newPassword, confirmPassword) {
+  async changePassword(newPassword, confirmPassword) {
     if (this.useMock) {
-      // Mock 模式：直接回假設成功
       return { message: '密碼已更新' }
     }
     const response = await this.http.put('/users/me/password', {
-      current_password: currentPassword,
       new_password:     newPassword,
       confirm_password: confirmPassword,
     })
