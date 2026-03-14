@@ -77,8 +77,8 @@ const news = computed(() => {
 
 <template>
   <div class="announcement-detail-page">
-    <!-- 使用 PageHeader，backTo 設為首頁 '/' -->
-    <PageHeader title="公告詳情" backTo="/" />
+    <!-- 使用 PageHeader，backTo 設為首頁並帶參數開啟公告選單 -->
+    <PageHeader title="公告詳情" backTo="/?openMenu=news" />
     
     <div v-if="news" class="content-container">
       <h1 class="news-title">{{ news.title }}</h1>
@@ -104,6 +104,7 @@ const news = computed(() => {
 
 .content-container {
   padding: 1.5rem;
+  text-align: left;
 }
 
 .news-title {

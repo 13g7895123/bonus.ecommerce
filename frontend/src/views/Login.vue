@@ -35,8 +35,12 @@ const handleLogin = async () => {
       password: password.value
     })
     console.log('Login success:', response)
+    if (response.token) {
+        localStorage.setItem('token', response.token)
+    }
     if (response.user) {
         console.log('Member Info:', response.user);
+        localStorage.setItem('user', JSON.stringify(response.user))
     }
     // 登入成功，導向首頁
     router.push('/')

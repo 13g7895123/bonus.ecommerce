@@ -15,12 +15,24 @@ const checkLoginStatus = () => {
 }
 
 // 監聽路由變更以更新狀態
-watch(route, () => {
+watch(route, (newRoute) => {
   checkLoginStatus()
+  if (newRoute.query.openMenu === 'news') {
+    isMenuOpen.value = true
+    activeMenu.value = 'news'
+  } else {
+    isMenuOpen.value = false
+    activeMenu.value = null
+  }
 })
 
 onMounted(() => {
   checkLoginStatus()
+  // 處理重新整理頁面時的狀態
+  if (route.query.openMenu === 'news') {
+    isMenuOpen.value = true
+    activeMenu.value = 'news'
+  }
 })
 
 // 登出處理
@@ -117,7 +129,9 @@ const scrollToTop = () => {
                   </li>
                 </ul>
                 <ul v-if="activeMenu === 'help'" class="submenu-list">
-                  <li><a href="#">在線客服</a></li>
+                  <li>
+                    <router-link to="/customer-service" @click="isMenuOpen = false">在線客服</router-link>
+                  </li>
                 </ul>
                 <ul v-if="activeMenu === 'lang'" class="submenu-list">
                   <li><a href="#">中文</a></li>
