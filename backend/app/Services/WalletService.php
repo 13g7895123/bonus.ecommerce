@@ -56,13 +56,17 @@ class WalletService
         if (!password_verify($withdrawalPassword, $wallet['withdrawal_password_hash'])) {
             return ['success' => false, 'message' => 'Withdrawal password incorrect'];
         }
-        $this->walletRepo->updateByUserId($userId, [
+        $updateData = [
             'bank_name'              => $data['bank_name'],
             'bank_branch'            => $data['bank_branch'] ?? null,
-            'bank_account'           => $data['bank_account'],
             'bank_account_name'      => $data['bank_account_name'],
             'bank_passbook_file_id'  => $data['bank_passbook_file_id'] ?? null,
-        ]);
+        ];
+        // 銀行帳號一旦設定，不允許透過此介面修改
+        if (empty($wallet['bank_account'])) {
+            $updateData['bank_account'] = $data['bank_account'];
+        }
+        $this->walletRepo->updateByUserId($userId, $updateData);
         return ['success' => true, 'message' => 'Bank account bound'];
     }
 

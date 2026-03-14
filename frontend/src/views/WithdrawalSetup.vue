@@ -14,10 +14,10 @@
 
       <div class="section-label">銀行認證資訊</div>
 
-      <AppInput v-model="bankName"    placeholder="請輸入銀行名稱" />
-      <AppInput v-model="branchName"  placeholder="請輸入分行資訊" />
-      <AppInput v-model="accountNo"   placeholder="請輸入銀行帳號" />
-      <AppInput v-model="accountName" placeholder="請輸入銀行姓名" />
+      <AppInput v-model="bankName"    placeholder="請輸入銀行名稱" :readonly="hasExistingBank" />
+      <AppInput v-model="branchName"  placeholder="請輸入分行資訊" :readonly="hasExistingBank" />
+      <AppInput v-model="accountNo"   placeholder="請輸入銀行帳號" :readonly="hasExistingBank" />
+      <AppInput v-model="accountName" placeholder="請輸入銀行姓名" :readonly="hasExistingBank" />
       <AppInput v-model="withdrawalPassword" type="password" placeholder="請輸入提款密碼" />
 
       <NoticeBox>
@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHeader from '../components/PageHeader.vue'
 import UploadBox from '../components/UploadBox.vue'
@@ -67,6 +67,22 @@ const accountNo          = ref('')
 const accountName        = ref('')
 const withdrawalPassword = ref('')
 const loading            = ref(false)
+const hasExistingBank    = ref(false)
+
+onMounted(async () => {
+  try {
+    const wallet = await walletService.getWalletInfo()
+    if (wallet?.has_bank_account) {
+      hasExistingBank.value = true
+      bankName.value    = wallet.bank_name        || ''
+      branchName.value  = wallet.bank_branch      || ''
+      accountNo.value   = wallet.bank_account_masked || ''
+      accountName.value = wallet.bank_account_name  || ''
+    }
+  } catch (e) {
+    // 讀取失敗不阻斷，讓使用者依然可以填入資料
+  }
+})
 
 const handleFileSelected = async (file) => {
   uploading.value = true

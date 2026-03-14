@@ -5,8 +5,11 @@
       :type="type"
       :placeholder="placeholder"
       class="app-input"
+      :class="{ 'app-input--readonly': readonly }"
       :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value)"
+      :readonly="readonly"
+      :disabled="disabled"
+      @input="!readonly && $emit('update:modelValue', $event.target.value)"
     />
   </div>
 </template>
@@ -17,6 +20,8 @@ defineProps({
   placeholder: { type: String, default: '' },
   label: { type: String, default: '' },
   modelValue: { type: String, default: '' },
+  readonly: { type: Boolean, default: false },
+  disabled: { type: Boolean, default: false },
 })
 defineEmits(['update:modelValue'])
 </script>

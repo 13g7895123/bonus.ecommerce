@@ -46,8 +46,8 @@ onMounted(async () => {
   try {
     const wallet = await walletService.getWalletInfo()
     if (wallet?.has_withdrawal_pw) {
-      // 已設定提款密碼 → 跳過此頁，依銀行帳戶狀態決定下一步
-      router.replace(wallet.has_bank_account ? '/withdrawal/apply' : '/withdrawal/setup')
+      // 已設定提款密碼 → 跳過此頁，一律到下一步（綁定/確認銀行資料）
+      router.replace('/withdrawal/setup')
     }
   } catch (e) {
     // 載入失敗不阻斷，依然顯示設定頁面
