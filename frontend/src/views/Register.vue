@@ -3,6 +3,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import AppInput from '../components/AppInput.vue'
+import AppButton from '../components/AppButton.vue'
 import AuthHeader from '../components/AuthHeader.vue'
 import DebugFillButton from '../components/DebugFillButton.vue'
 import { 
@@ -128,9 +129,9 @@ const handleRegister = async () => {
         
         <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
 
-        <button class="login-submit-btn" :disabled="loading" @click="handleRegister">
+        <AppButton class="login-submit-btn" :disabled="loading" @click="handleRegister" block>
           {{ loading ? '註冊中...' : '註冊' }}
-        </button>
+        </AppButton>
         
         <div class="footer-note">
           我已有帳號 <router-link to="/login" class="login-link-red">登入</router-link>
@@ -274,20 +275,7 @@ const handleRegister = async () => {
 }
 
 .login-submit-btn {
-  width: 100%;
-  background-color: #d71921;
-  color: white;
-  border: none;
-  padding: 1.1rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.login-submit-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+  margin-top: 1rem;
 }
 
 .error-msg {

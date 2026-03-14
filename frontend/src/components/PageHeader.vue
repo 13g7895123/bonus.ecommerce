@@ -51,6 +51,7 @@ defineProps({
 }
 
 .header-title {
+  color: black;
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0;

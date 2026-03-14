@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import AppInput from '../components/AppInput.vue'
+import AppButton from '../components/AppButton.vue'
 import AuthHeader from '../components/AuthHeader.vue'
 import DebugFillButton from '../components/DebugFillButton.vue'
 
@@ -73,9 +74,9 @@ const handleLogin = async () => {
           
           <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
 
-          <button type="submit" class="login-submit-btn" :disabled="loading">
+          <AppButton type="submit" block :disabled="loading" class="login-submit-btn">
             {{ loading ? '登入中...' : '登入' }}
-          </button>
+          </AppButton>
         </form>
         
         <hr class="login-divider" />
@@ -198,20 +199,7 @@ const handleLogin = async () => {
 }
 
 .login-submit-btn {
-  width: 100%;
-  background-color: #d71921;
-  color: white;
-  border: none;
-  padding: 1.1rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.login-submit-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+  margin-top: 1rem;
 }
 
 .login-divider {
