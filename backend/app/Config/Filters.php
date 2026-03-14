@@ -36,6 +36,7 @@ class Filters extends BaseFilters
         'performance'   => PerformanceMetrics::class,
         'jwt'           => \App\Filters\JwtFilter::class,
         'apicors'       => \App\Filters\CorsFilter::class,
+        'apilog'        => \App\Filters\ApiLogFilter::class,
     ];
 
     /**
@@ -109,5 +110,7 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        'apilog' => ['before' => ['api/*'], 'after' => ['api/*']],
+    ];
 }

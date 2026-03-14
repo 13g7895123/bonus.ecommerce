@@ -45,7 +45,32 @@ export class UserService extends BaseService {
     const payload = {};
     if (updates.full_name !== undefined) payload.full_name = updates.full_name;
     if (updates.phone !== undefined) payload.phone = updates.phone;
+    if (updates.dob !== undefined) payload.dob = updates.dob;
+    if (updates.country !== undefined) payload.country = updates.country;
     return this._put('/me', payload);
+  }
+
+  /* 上傳頭像 — POST /users/me/avatar (multipart) */
+  async uploadAvatar(userId, file) {
+    if (this.useMock) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const avatarUrl = e.target.result;
+          mockDb.findOne(this.table, u => u.id === userId).then(user => {
+            if (user) mockDb.update(this.table, userId, { avatar: avatarUrl });
+          });
+          resolve({ avatar_url: avatarUrl });
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await this.http.post('/users/me/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
   }
 
   /* 提交身份驗證 — POST /users/me/verify (multipart) */

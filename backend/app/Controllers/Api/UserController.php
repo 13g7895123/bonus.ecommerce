@@ -34,4 +34,14 @@ class UserController extends BaseApiController
         $result = (new UserService())->submitVerification(Auth::id(), $files, $data ?? []);
         return $this->success(null, $result['message']);
     }
+
+    public function uploadAvatar()
+    {
+        $file   = $this->request->getFile('avatar');
+        $result = (new UserService())->uploadAvatar(Auth::id(), $file);
+        if (!$result['success']) {
+            return $this->error($result['message']);
+        }
+        return $this->success(['avatar_url' => $result['avatar_url']], 'Avatar updated');
+    }
 }

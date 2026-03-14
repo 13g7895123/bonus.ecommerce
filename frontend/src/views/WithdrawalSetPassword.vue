@@ -19,6 +19,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
@@ -27,6 +28,7 @@ import { usePasswordForm } from '../composables/usePasswordForm.js'
 
 const router = useRouter()
 const route = useRoute()
+const toast = useToast()
 const { password, confirmPassword, validate, saveToLocalStorage } = usePasswordForm()
 
 onMounted(() => {
@@ -44,7 +46,7 @@ onMounted(() => {
         router.replace('/withdrawal/setup')
       }
     } catch (e) {
-      console.error('Failed to parse user from localStorage', e)
+      toast.error('載入資料失敗')
     }
   }
 })

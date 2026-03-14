@@ -2,6 +2,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
+import { useToast } from '../composables/useToast'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import AuthHeader from '../components/AuthHeader.vue'
@@ -43,22 +44,22 @@ const fillRandomData = () => {
 }
 
 const loading = ref(false)
-const errorMessage = ref('')
+
+const toast = useToast()
 
 const handleRegister = async () => {
   if (!form.terms) {
-    errorMessage.value = '請同意服務條款及隱私政策'
+    toast.error('請同意服務時款及隱私政策')
     return
   }
 
   // 簡單驗證
   if (!form.email || !form.password || !form.firstName || !form.lastName) {
-    errorMessage.value = '請填寫必填欄位'
+    toast.error('請填寫必填欄位')
     return
   }
 
   loading.value = true
-  errorMessage.value = ''
 
   try {
     const response = await api.auth.register({
@@ -68,9 +69,8 @@ const handleRegister = async () => {
     // 註冊成功，導向首頁
     router.push('/')
   } catch (error) {
-    console.error('Register failed:', error)
     const errObj = error.response?.data || error
-    errorMessage.value = errObj.message || '註冊失敗，請稍後再試'
+    toast.error(errObj.message || '註冊失敗，請稍後再試')
   } finally {
     loading.value = false
   }
@@ -127,8 +127,6 @@ const handleRegister = async () => {
           <label for="terms">我同意<span class="red-text">網站服務條款</span>及<span class="red-text">隱私政策</span></label>
         </div>
         
-        <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
-
         <AppButton class="login-submit-btn" :disabled="loading" @click="handleRegister" block>
           {{ loading ? '註冊中...' : '註冊' }}
         </AppButton>

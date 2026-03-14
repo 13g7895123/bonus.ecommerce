@@ -91,11 +91,14 @@ export class AuthService extends BaseService {
 
   /* 映射後端欄位到前端慣用欄位 */
   _mapUser(user) {
+    const nameParts = (user.full_name || '').trim().split(/\s+/)
     return {
       ...user,
       name: user.full_name || user.name || '',
+      firstName: nameParts[0] || '',
+      lastName: nameParts.slice(1).join(' ') || '',
       miles: user.wallet?.miles_balance ?? user.miles ?? 0,
-    };
+    }
   }
 }
 

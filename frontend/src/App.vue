@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import ToastNotification from '@/components/ToastNotification.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -71,6 +72,7 @@ const scrollToTop = () => {
 
 <template>
   <div class="app-container" :class="{ 'menu-active': isMenuOpen, 'white-bg': !isHomePage && !isSkywardsPage }">
+    <ToastNotification />
     <!-- Navbar 僅在首頁顯示 -->
     <nav v-if="isHomePage" class="navbar">
       <div class="logo">

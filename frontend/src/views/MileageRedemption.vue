@@ -80,7 +80,6 @@
         >
           {{ loading ? '處理中...' : '送出' }}
         </AppButton>
-        <p v-if="message" :class="['message', messageType]">{{ message }}</p>
       </div>
     </div>
   </div>
@@ -88,25 +87,23 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 
+const toast = useToast()
 const activeTab = ref('spending')
 const mileageCode = ref('')
 const loading = ref(false)
-const message = ref('')
-const messageType = ref('success') // success or error
 
 const submitCode = () => {
   if (!mileageCode.value) {
-    message.value = '請輸入代碼'
-    messageType.value = 'error'
+    toast.warning('請輸入代碼')
     return
   }
 
   loading.value = true
-  message.value = ''
 
   // Simulate API call
   setTimeout(() => {
@@ -132,21 +129,16 @@ const submitCode = () => {
                  }
              }
              
-             message.value = `成功兌換! 獲得 ${bonus} 哩程數`
-             messageType.value = 'success'
+             toast.success(`成功兑換! 獲得 ${bonus} 哩程數`)
              mileageCode.value = ''
          } else {
-             message.value = '用戶未登入'
-             messageType.value = 'error'
+             toast.error('用戶未登入')
          }
       } else {
-          message.value = '無效的里程代碼 (試試 BONUS)'
-          messageType.value = 'error'
+          toast.error('無效的里程代碼 (試試 BONUS)')
       }
     } catch (e) {
-      console.error(e)
-      message.value = '發生錯誤，請稍後再試'
-      messageType.value = 'error'
+      toast.error('發生錯誤，請稍後再試')
     } finally {
       loading.value = false
     }

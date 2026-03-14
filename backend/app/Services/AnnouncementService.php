@@ -2,13 +2,17 @@
 
 namespace App\Services;
 
-use App\Models\AnnouncementModel;
+use App\Repositories\AnnouncementRepository;
 
 class AnnouncementService
 {
+    public function __construct(
+        private readonly AnnouncementRepository $repo = new AnnouncementRepository(),
+    ) {}
+
     public function getList(int $page = 1, int $limit = 20): array
     {
-        $result = model(AnnouncementModel::class)->getPublished($page, $limit);
+        $result = $this->repo->getPublished($page, $limit);
         // Return only title + date for list view
         $result['items'] = array_map(fn($a) => [
             'id'           => $a['id'],
@@ -20,8 +24,22 @@ class AnnouncementService
 
     public function getById(int $id): ?array
     {
-        $model = model(AnnouncementModel::class);
-        $row   = $model->where('id', $id)->where('is_published', 1)->first();
-        return $row ?: null;
+        $row = $this->repo->find($id);
+        if (!$row || !$row['is_published']) {
+            return null;
+        }
+        return $row;
+    }
+
+    /**
+     * Batch create announcements — single INSERT (no loop queries).
+     */
+    public function createBatch(array $announcements): array
+    {
+        if (empty($announcements)) {
+            return ['success' => true, 'created' => 0];
+        }
+        $this->repo->createBatch($announcements);
+        return ['success' => true, 'created' => count($announcements)];
     }
 }

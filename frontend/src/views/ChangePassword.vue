@@ -23,18 +23,20 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import { usePasswordForm } from '../composables/usePasswordForm.js'
 
 const router = useRouter()
+const toast = useToast()
 const { password: newPassword, confirmPassword, validate, saveToLocalStorage } = usePasswordForm()
 
 const handleSubmit = () => {
   if (validate()) {
     saveToLocalStorage('password')
-    alert('密碼重設成功')
+    toast.success('密碼重設成功')
     router.push('/profile')
   }
 }

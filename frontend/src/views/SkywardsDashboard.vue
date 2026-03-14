@@ -1,8 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useApi } from '../composables/useApi'
+import { useToast } from '../composables/useToast'
 
 const api = useApi()
+const toast = useToast()
 const user = ref(null)
 const activeTab = ref('miles') // 'miles' or 'tier'
 const showModal = ref(false)
@@ -32,7 +34,7 @@ onMounted(() => {
       user.value = currentUser
     }
   } catch (e) {
-    console.error('Failed to load user info', e)
+    toast.error('無法載入使用者資訊')
   }
 })
 </script>

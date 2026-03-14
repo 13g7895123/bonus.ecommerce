@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
+import { useToast } from '../composables/useToast'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import AuthHeader from '../components/AuthHeader.vue'
@@ -9,11 +10,11 @@ import DebugFillButton from '../components/DebugFillButton.vue'
 
 const router = useRouter()
 const api = useApi()
+const toast = useToast()
 
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
-const errorMessage = ref('')
 
 const fillRandomData = () => {
   email.value = 'admin@example.com'
@@ -22,12 +23,11 @@ const fillRandomData = () => {
 
 const handleLogin = async () => {
   if (!email.value || !password.value) {
-    errorMessage.value = '請輸入電子郵件和密碼'
+    toast.error('請輸入電子郵件和密碼')
     return
   }
 
   loading.value = true
-  errorMessage.value = ''
 
   try {
     const response = await api.auth.login({
@@ -45,9 +45,8 @@ const handleLogin = async () => {
     // 登入成功，導向首頁
     router.push('/')
   } catch (error) {
-    console.error('Login failed:', error)
     const errObj = error.response?.data || error
-    errorMessage.value = errObj.message || '登入失敗，請稍後再試'
+    toast.error(errObj.message || '登入失敗，請稍後再試')
   } finally {
     loading.value = false
   }
@@ -76,8 +75,6 @@ const handleLogin = async () => {
             <router-link to="/forgot-password" class="forgot-password">忘記您的密碼了嗎?</router-link>
           </div>
           
-          <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
-
           <AppButton type="submit" block :disabled="loading" class="login-submit-btn">
             {{ loading ? '登入中...' : '登入' }}
           </AppButton>

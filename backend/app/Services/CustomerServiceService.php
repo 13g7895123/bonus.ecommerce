@@ -2,25 +2,27 @@
 
 namespace App\Services;
 
-use App\Models\CustomerServiceMessageModel;
+use App\Repositories\CustomerServiceMessageRepository;
 
 class CustomerServiceService
 {
+    public function __construct(
+        private readonly CustomerServiceMessageRepository $repo = new CustomerServiceMessageRepository(),
+    ) {}
+
     public function getMessages(int $userId, int $page = 1, int $limit = 50): array
     {
-        $model    = model(CustomerServiceMessageModel::class);
-        $ticketId = $model->getOrCreateTicket($userId);
-        $result   = $model->getByTicket($ticketId, $page, $limit);
+        $ticketId = $this->repo->getOrCreateTicket($userId);
+        $result   = $this->repo->getByTicket($ticketId, $page, $limit);
         $result['ticket_id'] = $ticketId;
         return $result;
     }
 
     public function sendMessage(int $userId, ?string $content, $imageFile = null): array
     {
-        $model    = model(CustomerServiceMessageModel::class);
-        $ticketId = $model->getOrCreateTicket($userId);
-
+        $ticketId  = $this->repo->getOrCreateTicket($userId);
         $imagePath = null;
+
         if ($imageFile && $imageFile->isValid() && !$imageFile->hasMoved()) {
             $uploadDir = WRITEPATH . 'uploads/cs/' . $userId . '/';
             if (!is_dir($uploadDir)) {
@@ -31,7 +33,7 @@ class CustomerServiceService
             $imagePath = 'cs/' . $userId . '/' . $name;
         }
 
-        $model->insert([
+        $this->repo->create([
             'ticket_id'   => $ticketId,
             'sender_type' => 'user',
             'sender_id'   => $userId,
@@ -40,5 +42,17 @@ class CustomerServiceService
         ]);
 
         return ['success' => true, 'data' => ['ticket_id' => $ticketId]];
+    }
+
+    /**
+     * Batch send messages (e.g. admin broadcast) — single INSERT.
+     */
+    public function sendBatch(array $messages): array
+    {
+        if (empty($messages)) {
+            return ['success' => true, 'sent' => 0];
+        }
+        $this->repo->createBatch($messages);
+        return ['success' => true, 'sent' => count($messages)];
     }
 }

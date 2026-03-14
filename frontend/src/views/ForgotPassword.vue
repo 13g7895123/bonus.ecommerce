@@ -25,22 +25,19 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from '../composables/useToast'
 import AppInput from '../components/AppInput.vue'
-import Swal from 'sweetalert2'
 import config from '../services/config'
 import { mockDb } from '../services/mockDb'
 
 const router = useRouter()
+const toast = useToast()
 const phone = ref('')
 const loading = ref(false)
 
 const handleSubmit = async () => {
     if (!phone.value) {
-        Swal.fire({
-            icon: 'warning',
-            title: '請輸入電話號碼',
-            confirmButtonColor: '#d71921'
-        })
+        toast.warning('請輸入電話號碼')
         return
     }
 
@@ -56,45 +53,17 @@ const handleSubmit = async () => {
                 const user = await mockDb.findOne('users', u => u.phone === phone.value)
                 
                 if (user) {
-                    Swal.fire({
-                        title: '模擬簡訊發送成功',
-                        html: `
-                            <p>親愛的用戶，您的密碼是：<strong>${user.password}</strong></p>
-                            <p style="color: red; margin-top: 10px;">請登入後務必修改密碼！</p>
-                        `,
-                        icon: 'info',
-                        confirmButtonText: '前往登入',
-                        confirmButtonColor: '#d71921'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            router.push('/login')
-                        }
-                    })
+                    toast.info(`模擬簡訊發送成功，您的密碼是：${user.password}`)
+                    router.push('/login')
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: '找不到使用者',
-                        text: '該電話號碼未註冊',
-                        confirmButtonColor: '#d71921'
-                    })
+                    toast.error('找不到該電話號碼對應的使用者')
                 }
             } catch (error) {
-                console.error(error)
-                Swal.fire({
-                    icon: 'error',
-                    title: '發生錯誤',
-                    text: '請稍後再試',
-                    confirmButtonColor: '#d71921'
-                })
+                toast.error('發生錯誤，請稍後再試')
             }
         } else {
             // 真實 API 模式 (暫未實作)
-            Swal.fire({
-                icon: 'info',
-                title: '訊息已發送',
-                text: '如果該號碼已註冊，您將收到重設密碼簡訊',
-                confirmButtonColor: '#d71921'
-            })
+            toast.info('如果該號碼已註冊，您將收到重設密碼簡訊')
         }
     }, 1000)
 }

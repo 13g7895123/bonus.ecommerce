@@ -58,57 +58,67 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
+import { UserService } from '../services/UserService'
 
 const isEditing = ref(false)
 const user = ref({})
 const formData = ref({})
+const toast = useToast()
 
 onMounted(() => {
   const userStr = localStorage.getItem('user')
   if (userStr) {
     try {
       user.value = JSON.parse(userStr)
-      // Initialize form data
       formData.value = { ...user.value }
     } catch (e) {
-      console.error(e)
+      toast.error('載入場我資料失敗')
     }
   }
 })
 
 const toggleEdit = () => {
   if (isEditing.value) {
-    // Save changes
     saveChanges()
   } else {
-    // Enter edit mode
-    formData.value = { ...user.value }
+    // 進入編輯模式時，確保 firstName/lastName 從 full_name 拆分
+    const u = { ...user.value }
+    if (!u.firstName && u.full_name) {
+      const parts = u.full_name.trim().split(/\s+/)
+      u.firstName = parts[0] || ''
+      u.lastName = parts.slice(1).join(' ') || ''
+    }
+    formData.value = u
     isEditing.value = true
   }
 }
 
-const saveChanges = () => {
-  // Update local user object
-  user.value = { ...user.value, ...formData.value }
-  
-  // Update localStorage
-  localStorage.setItem('user', JSON.stringify(user.value))
+const saveChanges = async () => {
+  // 合併 firstName + lastName → full_name
+  const full_name = [formData.value.firstName, formData.value.lastName].filter(Boolean).join(' ')
 
-  // Update mock db if exists
   try {
-      const mockUsersStr = localStorage.getItem('mock_db_users')
-      if (mockUsersStr) {
-        const mockUsers = JSON.parse(mockUsersStr)
-        const dbUserIdx = mockUsers.findIndex(u => u.id === user.value.id || u.email === user.value.email)
-        if (dbUserIdx !== -1) {
-             mockUsers[dbUserIdx] = { ...mockUsers[dbUserIdx], ...formData.value }
-             localStorage.setItem('mock_db_users', JSON.stringify(mockUsers))
-        }
-      }
-  } catch(e) {
-      console.error(e)
+    const userService = new UserService()
+    await userService.updateProfile(user.value.id, {
+      full_name,
+      phone: formData.value.phone,
+      dob: formData.value.dob,
+      country: formData.value.country,
+    })
+  } catch (e) {
+    toast.error('更新個人資料失敗')
   }
+
+  // 更新本地 user 物件與 localStorage
+  user.value = {
+    ...user.value,
+    ...formData.value,
+    full_name,
+    name: full_name,
+  }
+  localStorage.setItem('user', JSON.stringify(user.value))
 
   isEditing.value = false
 }

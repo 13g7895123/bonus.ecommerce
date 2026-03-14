@@ -44,6 +44,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import UploadBox from '../components/UploadBox.vue'
 import NoticeBox from '../components/NoticeBox.vue'
@@ -55,6 +56,7 @@ import { useApi } from '../composables/useApi'
 
 const router = useRouter()
 const { user: userService } = useApi()
+const toast = useToast()
 
 const idNumber = ref('')
 const fullName = ref('')
@@ -74,7 +76,7 @@ onMounted(async () => {
         backImage.value = user.verificationData.backImage || ''
       }
     } catch (e) {
-      console.error('Failed to load user data', e)
+      toast.error('載入資料失敗')
     }
   }
 })
@@ -88,7 +90,7 @@ const handleNext = async () => {
   try {
     const userStr = localStorage.getItem('user')
     if (!userStr) {
-      alert('請先登入')
+      toast.error('請先登入')
       router.push('/login')
       return
     }
@@ -116,11 +118,10 @@ const handleNext = async () => {
     localStorage.removeItem('iv_frontImage')
     localStorage.removeItem('iv_backImage')
 
-    alert('實名認證資料已送出')
+    toast.success('實名認證資料已送出')
     router.push('/settings')
   } catch (error) {
-    console.error(error)
-    alert('儲存失敗: ' + error.message)
+    toast.error('儲存失敗: ' + error.message)
   }
 }
 </script>

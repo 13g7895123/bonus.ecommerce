@@ -3,20 +3,23 @@
 namespace App\Services;
 
 use App\Libraries\JwtHelper;
-use App\Models\UserModel;
-use App\Models\UserWalletModel;
+use App\Repositories\UserRepository;
+use App\Repositories\UserWalletRepository;
 
 class AuthService
 {
+    public function __construct(
+        private readonly UserRepository       $userRepo   = new UserRepository(),
+        private readonly UserWalletRepository $walletRepo = new UserWalletRepository(),
+    ) {}
+
     public function register(array $data): array
     {
-        $userModel = model(UserModel::class);
-
-        if ($userModel->findByEmail($data['email'])) {
+        if ($this->userRepo->findByEmail($data['email'])) {
             return ['success' => false, 'message' => 'Email already registered'];
         }
 
-        $userId = $userModel->insert([
+        $userId = $this->userRepo->create([
             'email'         => $data['email'],
             'password_hash' => password_hash($data['password'], PASSWORD_BCRYPT),
             'full_name'     => $data['full_name'] ?? null,
@@ -27,13 +30,13 @@ class AuthService
             return ['success' => false, 'message' => 'Registration failed'];
         }
 
-        model(UserWalletModel::class)->insert([
-            'user_id'  => $userId,
-            'balance'  => 0.00,
+        $this->walletRepo->create([
+            'user_id'       => $userId,
+            'balance'       => 0.00,
             'miles_balance' => 0,
         ]);
 
-        $user  = $userModel->find($userId);
+        $user  = $this->userRepo->find($userId);
         $token = JwtHelper::generate(['user_id' => $userId, 'role' => $user['role']]);
 
         return ['success' => true, 'data' => ['token' => $token, 'user' => $this->sanitize($user)]];
@@ -41,8 +44,7 @@ class AuthService
 
     public function login(string $email, string $password): array
     {
-        $userModel = model(UserModel::class);
-        $user      = $userModel->findByEmail($email);
+        $user = $this->userRepo->findByEmail($email);
 
         if (!$user || !password_verify($password, $user['password_hash'])) {
             return ['success' => false, 'message' => 'Invalid email or password'];

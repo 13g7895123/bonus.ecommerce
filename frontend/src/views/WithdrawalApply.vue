@@ -47,6 +47,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
+import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
@@ -60,6 +61,7 @@ const password = ref('')
 const bankAccount = ref('')
 const balance = ref(0)
 const loading = ref(false)
+const toast = useToast()
 
 const fetchProfile = async () => {
     try {
@@ -79,7 +81,7 @@ const fetchProfile = async () => {
             }
         }
     } catch (error) {
-        console.error('Fetch profile failed:', error)
+        toast.error('無法載入帳戶資訊')
     }
 }
 
@@ -94,10 +96,10 @@ const handleWithdraw = async () => {
         const localUser = JSON.parse(userStr);
         
         await api.wallet.applyWithdrawal(localUser.id, Number(amount.value), password.value);
-        alert('提款申請已送出');
+        toast.success('提款申請已送出');
         router.push('/settings');
     } catch(err) {
-        alert(err.message || '申請失敗');
+        toast.error(err.message || '申請失敗');
     } finally {
         loading.value = false;
     }

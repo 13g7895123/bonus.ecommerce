@@ -36,10 +36,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
+import { UserService } from '../services/UserService'
 
 const fileInput = ref(null)
 const localAvatar = ref(null)
+const uploading = ref(false)
+const toast = useToast()
 
 onMounted(() => {
   const userStr = localStorage.getItem('user')
@@ -50,7 +54,7 @@ onMounted(() => {
         localAvatar.value = user.avatar
       }
     } catch (e) {
-      console.error(e)
+      toast.error('載入場我資料失敗')
     }
   }
 })
@@ -59,38 +63,30 @@ const triggerFileUpload = () => {
   fileInput.value.click()
 }
 
-const handleFileChange = (event) => {
+const handleFileChange = async (event) => {
   const file = event.target.files[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const base64Image = e.target.result
-      localAvatar.value = base64Image
-      
-      // Update localStorage
-      const userStr = localStorage.getItem('user')
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr)
-          user.avatar = base64Image
-          localStorage.setItem('user', JSON.stringify(user))
+  if (!file) return
 
-          // Also update mock_db_users
-           const mockUsersStr = localStorage.getItem('mock_db_users')
-           if (mockUsersStr) {
-            const mockUsers = JSON.parse(mockUsersStr)
-            const dbUser = mockUsers.find(u => u.id === user.id)
-            if (dbUser) {
-                dbUser.avatar = base64Image
-                localStorage.setItem('mock_db_users', JSON.stringify(mockUsers))
-            }
-           }
-        } catch (e) {
-          console.error('Failed to update user avatar', e)
-        }
-      }
+  uploading.value = true
+  try {
+    const userStr = localStorage.getItem('user')
+    const user = userStr ? JSON.parse(userStr) : null
+
+    const userService = new UserService()
+    const result = await userService.uploadAvatar(user?.id, file)
+
+    localAvatar.value = result.avatar_url
+
+    // 更新 localStorage 中的頭像網址
+    if (user) {
+      user.avatar = result.avatar_url
+      localStorage.setItem('user', JSON.stringify(user))
     }
-    reader.readAsDataURL(file)
+  } catch (e) {
+    toast.error('頭像上傳失敗')
+  } finally {
+    uploading.value = false
+    event.target.value = ''
   }
 }
 </script>
