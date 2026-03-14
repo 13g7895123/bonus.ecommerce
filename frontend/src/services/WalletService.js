@@ -75,10 +75,12 @@ export class WalletService extends BaseService {
     }
     // Real API: snake_case 欄位
     return this._post('/bank', {
-      bank_name: bankData.bankName || bankData.bank_name,
-      bank_account: bankData.accountNo || bankData.bank_account,
-      bank_account_name: bankData.accountName || bankData.bank_account_name,
-      withdrawal_password: bankData.withdrawalPassword || bankData.withdrawal_password,
+      bank_name:             bankData.bankName             || bankData.bank_name,
+      bank_branch:           bankData.branchName           || bankData.bank_branch || null,
+      bank_account:          bankData.accountNo            || bankData.bank_account,
+      bank_account_name:     bankData.accountName          || bankData.bank_account_name,
+      bank_passbook_file_id: bankData.passbookFileId       || bankData.bank_passbook_file_id || null,
+      withdrawal_password:   bankData.withdrawalPassword   || bankData.withdrawal_password,
     });
   }
 

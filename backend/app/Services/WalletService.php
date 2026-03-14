@@ -55,9 +55,11 @@ class WalletService
             return ['success' => false, 'message' => 'Withdrawal password incorrect'];
         }
         $this->walletRepo->updateByUserId($userId, [
-            'bank_name'         => $data['bank_name'],
-            'bank_account'      => $data['bank_account'],
-            'bank_account_name' => $data['bank_account_name'],
+            'bank_name'              => $data['bank_name'],
+            'bank_branch'            => $data['bank_branch'] ?? null,
+            'bank_account'           => $data['bank_account'],
+            'bank_account_name'      => $data['bank_account_name'],
+            'bank_passbook_file_id'  => $data['bank_passbook_file_id'] ?? null,
         ]);
         return ['success' => true, 'message' => 'Bank account bound'];
     }

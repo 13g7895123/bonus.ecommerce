@@ -28,6 +28,9 @@ $RECYCLE.BIN/
 *.lnk
 
 # Linux
+
+# Uploaded files
+public/uploads/
 *~
 
 # KDE directory preferences

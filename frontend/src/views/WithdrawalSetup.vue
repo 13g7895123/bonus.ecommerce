@@ -5,14 +5,20 @@
     <div class="ws-content">
       <p class="ws-desc">為了保障帳戶安全體驗 請您綁定個人身份資訊</p>
 
-      <UploadBox hint="上傳銀行存摺" />
+      <UploadBox
+        v-model="passbookPreview"
+        hint="上傳銀行存摺"
+        :uploading="uploading"
+        @file-selected="handleFileSelected"
+      />
 
       <div class="section-label">銀行認證資訊</div>
 
-      <AppInput v-model="bankName" placeholder="請輸入銀行名稱" />
-      <AppInput v-model="branchName" placeholder="請輸入分行資訊" />
-      <AppInput v-model="accountNo" placeholder="請輸入銀行帳號" />
+      <AppInput v-model="bankName"    placeholder="請輸入銀行名稱" />
+      <AppInput v-model="branchName"  placeholder="請輸入分行資訊" />
+      <AppInput v-model="accountNo"   placeholder="請輸入銀行帳號" />
       <AppInput v-model="accountName" placeholder="請輸入銀行姓名" />
+      <AppInput v-model="withdrawalPassword" type="password" placeholder="請輸入提款密碼" />
 
       <NoticeBox>
         <p class="notice-title">新增帳戶注意事項</p>
@@ -24,7 +30,9 @@
       </NoticeBox>
 
       <div style="margin-top: 20px;">
-        <AppButton block @click="router.push('/withdrawal/apply')">送出</AppButton>
+        <AppButton block :disabled="loading" @click="handleSubmit">
+          {{ loading ? '處理中...' : '送出' }}
+        </AppButton>
       </div>
       <DebugFillButton @fill="fillRandomData" />
     </div>
@@ -40,19 +48,75 @@ import NoticeBox from '../components/NoticeBox.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import DebugFillButton from '../components/DebugFillButton.vue'
+import { useToast } from '../composables/useToast'
 import { getRandomName } from '../utils/random'
+import { FileService } from '../services/FileService'
+import { WalletService } from '../services/WalletService'
 
 const router = useRouter()
-const bankName = ref('')
-const branchName = ref('')
-const accountNo = ref('')
-const accountName = ref('')
+const toast = useToast()
+const fileService = new FileService()
+const walletService = new WalletService()
+
+const passbookPreview    = ref('')
+const passbookFileId     = ref(null)
+const uploading          = ref(false)
+const bankName           = ref('')
+const branchName         = ref('')
+const accountNo          = ref('')
+const accountName        = ref('')
+const withdrawalPassword = ref('')
+const loading            = ref(false)
+
+const handleFileSelected = async (file) => {
+  uploading.value = true
+  try {
+    const result = await fileService.upload(file, 'passbook')
+    passbookFileId.value = result.id
+    toast.success('存摺上傳成功')
+  } catch (e) {
+    toast.error(e?.response?.data?.message || '存摺上傳失敗')
+    passbookPreview.value = ''
+  } finally {
+    uploading.value = false
+  }
+}
+
+const handleSubmit = async () => {
+  if (!bankName.value || !accountNo.value || !accountName.value) {
+    toast.warning('請填寫銀行名稱、帳號與姓名')
+    return
+  }
+  if (!withdrawalPassword.value) {
+    toast.warning('請輸入提款密碼')
+    return
+  }
+
+  loading.value = true
+  try {
+    await walletService.setupBank(null, {
+      bankName:           bankName.value,
+      branchName:         branchName.value,
+      accountNo:          accountNo.value,
+      accountName:        accountName.value,
+      passbookFileId:     passbookFileId.value,
+      withdrawalPassword: withdrawalPassword.value,
+    })
+    toast.success('銀行帳戶綁定成功')
+    router.push('/withdrawal/apply')
+  } catch (e) {
+    toast.error(e?.response?.data?.message || '綁定失敗，請確認提款密碼是否正確')
+  } finally {
+    loading.value = false
+  }
+}
 
 const fillRandomData = () => {
-  bankName.value = '玉山銀行'
-  branchName.value = '信義分行'
-  accountNo.value = '1234567890123'
-  accountName.value = getRandomName()
+  bankName.value           = '玉山銀行'
+  branchName.value         = '信義分行'
+  accountNo.value          = '1234567890123'
+  accountName.value        = getRandomName()
+  withdrawalPassword.value = '123456'
 }
 </script>
 

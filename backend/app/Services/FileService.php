@@ -14,6 +14,7 @@ use App\Repositories\FileRepository;
  *   avatar      → public/uploads/avatars/
  *   kyc         → public/uploads/kyc/
  *   cs_message  → public/uploads/cs/
+ *   passbook    → public/uploads/passbook/
  *   general     → public/uploads/general/
  */
 class FileService
@@ -29,6 +30,7 @@ class FileService
         'avatar'     => 'uploads/avatars',
         'kyc'        => 'uploads/kyc',
         'cs_message' => 'uploads/cs',
+        'passbook'   => 'uploads/passbook',
         'general'    => 'uploads/general',
     ];
 

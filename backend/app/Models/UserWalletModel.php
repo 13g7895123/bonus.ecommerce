@@ -12,7 +12,7 @@ class UserWalletModel extends Model
     protected $allowedFields = [
         'user_id', 'balance', 'miles_balance',
         'withdrawal_password_hash',
-        'bank_name', 'bank_account', 'bank_account_name',
+        'bank_name', 'bank_branch', 'bank_account', 'bank_account_name', 'bank_passbook_file_id',
     ];
 
     public function findByUserId(int $userId): ?array
