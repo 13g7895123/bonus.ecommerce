@@ -47,6 +47,14 @@ export class UserService extends BaseService {
         user.verified = true;
         user.verificationData = data;
         
+        await mockDb.update(this.table, userId, { verified: true, verificationData: data });
+        return { message: '身份驗證資料已送出' };
+      });
+    } else {
+      return this._post(`/${userId}/verify`, data);
+    }
+  }
+
   async listUsers() {
     if (this.useMock) {
         // mockDb only has generic list
