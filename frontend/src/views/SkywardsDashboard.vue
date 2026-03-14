@@ -50,7 +50,8 @@ onMounted(() => {
           </svg>
         </router-link>
         <div class="avatar-circle">
-          <svg class="avatar-icon" viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <img v-if="user?.avatar" :src="user.avatar" class="avatar-img" alt="Avatar" />
+          <svg v-else class="avatar-icon" viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
@@ -77,6 +78,9 @@ onMounted(() => {
           <span class="stat-value">{{ user?.miles?.toLocaleString() || '0' }}</span>
           <p class="stat-label">Skywards會員里程數</p>
         </div>
+        
+        <div class="stat-divider-vertical"></div>
+
         <div 
           class="stat-box" 
           :class="{ active: activeTab === 'tier' }"
@@ -122,22 +126,22 @@ onMounted(() => {
 
     <!-- 分頁內容 -->
     <section v-if="activeTab === 'miles'" class="cards-section">
-      <h3 class="section-hint">用哩程數享受更多好康</h3>
+      <!-- <h3 class="section-hint">用哩程數享受更多好康</h3> -->
       <div class="benefit-cards">
-        <div class="benefit-card">
-          <img src="/upgrade-bg.png" alt="Spend" class="benefit-img" />
+        <div class="benefit-card" @click="$router.push('/mileage-redemption')">
+          <img src="/use-now.png" alt="Spend" class="benefit-img" />
           <div class="benefit-content">
             <h4 class="benefit-title">立即使用</h4>
             <p class="benefit-desc">將您的 Skywards會員里程使用在我們和全球夥伴提供的專屬優惠</p>
-            <a href="#" class="benefit-link">探索優惠</a>
+            <a href="#" class="benefit-link" @click.prevent="$router.push('/mileage-redemption')">探索優惠</a>
           </div>
         </div>
-        <div class="benefit-card">
-          <img src="/join-background.png" alt="Earn" class="benefit-img" />
+        <div class="benefit-card" @click="$router.push('/customer-service')">
+          <img src="/make-now.png" alt="Earn" class="benefit-img" />
           <div class="benefit-content">
             <h4 class="benefit-title">立即賺取</h4>
             <p class="benefit-desc">探索透過我們和全球夥伴賺取 Skywards 會員里程數的多種方法</p>
-            <a href="#" class="benefit-link">開始賺取</a>
+            <a href="#" class="benefit-link" @click.prevent="$router.push('/customer-service')">開始賺取</a>
           </div>
         </div>
       </div>
@@ -218,13 +222,25 @@ onMounted(() => {
   justify-content: center;
   margin: 0 auto 1rem;
   border: 2px solid white;
+  overflow: hidden; /* Ensure image fits in circle */
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .avatar-icon { font-size: 2.5rem; }
 .user-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
 .user-id { font-size: 0.9rem; opacity: 0.8; margin-bottom: 1.5rem; }
-.user-balance { margin-bottom: 1.5rem; }
-.currency { font-size: 1.25rem; vertical-align: top; margin-right: 4px; }
+.user-balance { 
+  margin-bottom: 1.5rem; 
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+.currency { font-size: 1.25rem; margin-right: 4px; font-weight: 700; }
 .amount { font-size: 2.5rem; font-weight: 700; }
 
 .details-btn {
@@ -247,7 +263,7 @@ onMounted(() => {
 /* .toggle-container { display: flex; background-color: #f0f0f0; border-radius: 30px; padding: 4px; margin-bottom: 2rem; } */
 /* .toggle-btn { flex: 1; padding: 0.75rem; border: none; background: transparent; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer; } */
 /* .toggle-btn.active { background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); } */
-.stats-container { display: flex; justify-content: space-between; text-align: center; margin-bottom: 2rem; }
+.stats-container { display: flex; justify-content: space-between; text-align: center; margin-bottom: 2rem; position: relative; }
 .stat-box { 
   flex: 1; 
   display: flex; 
@@ -261,8 +277,14 @@ onMounted(() => {
   border-bottom-color: #E6007E; /* Peach/Pink Highlight */
 }
 .stat-value { font-size: 3rem; font-weight: 700; color: #000; margin-bottom: 5px; line-height: 1; }
-.stat-value.large { font-size: 3rem; color: #00205B; }
+.stat-value.large { font-size: 2rem; color: #000; } /* Smaller and Black */
 /* .stat-divider { width: 60%; height: 1px; background-color: #ddd; margin: 0 auto 10px; } */
+.stat-divider-vertical {
+  width: 1px;
+  height: 90%; /* 90% height */
+  background-color: #ddd;
+  align-self: center; /* Center horizontally in the flex container (cross axis) */
+}
 .stat-label { font-size: 0.85rem; color: #666; }
 .stat-label.small { font-size: 0.75rem; }
 
@@ -282,9 +304,20 @@ onMounted(() => {
 
 .cards-section { padding: 1.5rem; }
 .benefit-cards { display: flex; flex-direction: column; gap: 1.5rem; }
-.benefit-card { background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-.benefit-img { width: 100%; height: 140px; object-fit: cover; }
-.benefit-content { padding: 1.25rem; }
+.benefit-card { 
+  background-color: #ffffff; 
+  border-radius: 12px; 
+  overflow: hidden; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+.benefit-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+.benefit-img { width: 100%; height: 340px; object-fit: cover; }
+.benefit-content { padding: 1.25rem; padding-top: 0; }
 .benefit-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem; }
 .benefit-desc { font-size: 0.95rem; color: #666; line-height: 1.4; margin-bottom: 1rem; }
 .benefit-link { display: block; font-weight: 700; color: #000; text-decoration: none; font-size: 1rem; text-transform: uppercase; }

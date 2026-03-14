@@ -6,7 +6,12 @@
     <div class="section-container">
       <div class="title-row">
         <h3 class="contact-title">聯絡詳細資料</h3>
-        <button class="edit-btn">✎</button>
+        <button class="edit-btn" @click="toggleEdit">
+          <svg v-if="!isEditing" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+          </svg>
+           <span v-else style="font-size: 0.9rem; font-weight: 700;">完成</span>
+        </button>
       </div>
 
       <!-- 個人資訊子區塊 -->
@@ -14,23 +19,28 @@
         <h4 class="sub-title">個人資訊</h4>
         <div class="form-group">
           <label>名字</label>
-          <div class="field-value">Admin</div>
+          <div v-if="!isEditing" class="field-value">{{ user?.firstName || 'Admin' }}</div>
+          <input v-else v-model="formData.firstName" class="edit-input" />
         </div>
         <div class="form-group">
           <label>姓氏</label>
-          <div class="field-value">User</div>
+          <div v-if="!isEditing" class="field-value">{{ user?.lastName || 'User' }}</div>
+          <input v-else v-model="formData.lastName" class="edit-input" />
         </div>
         <div class="form-group">
           <label>你的出生日期</label>
-          <div class="field-value">1990/01/01</div>
+          <div v-if="!isEditing" class="field-value">{{ user?.dob || '1990/01/01' }}</div>
+          <input v-else v-model="formData.dob" type="date" class="edit-input" />
         </div>
         <div class="form-group">
           <label>居住國家/地區</label>
-          <div class="field-value">Taiwan</div>
+          <div v-if="!isEditing" class="field-value">{{ user?.country || 'Taiwan' }}</div>
+           <input v-else v-model="formData.country" class="edit-input" />
         </div>
         <div class="form-group">
           <label>行動號碼(偏好的聯絡方式)</label>
-          <div class="field-value">+886 0912345678</div>
+          <div v-if="!isEditing" class="field-value">{{ user?.phone || '+886 0912345678' }}</div>
+           <input v-else v-model="formData.phone" class="edit-input" />
         </div>
       </div>
 
@@ -38,7 +48,7 @@
       <div class="sub-section">
         <h4 class="sub-title">電子郵件</h4>
         <div class="email-group">
-          <div class="email-value">admin@emirates.com</div>
+          <div class="email-value">{{ user?.email || 'admin@emirates.com' }}</div>
           <span class="verified-tag">已驗證</span>
         </div>
       </div>
@@ -47,7 +57,61 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import PageHeader from '../components/PageHeader.vue'
+
+const isEditing = ref(false)
+const user = ref({})
+const formData = ref({})
+
+onMounted(() => {
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    try {
+      user.value = JSON.parse(userStr)
+      // Initialize form data
+      formData.value = { ...user.value }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+})
+
+const toggleEdit = () => {
+  if (isEditing.value) {
+    // Save changes
+    saveChanges()
+  } else {
+    // Enter edit mode
+    formData.value = { ...user.value }
+    isEditing.value = true
+  }
+}
+
+const saveChanges = () => {
+  // Update local user object
+  user.value = { ...user.value, ...formData.value }
+  
+  // Update localStorage
+  localStorage.setItem('user', JSON.stringify(user.value))
+
+  // Update mock db if exists
+  try {
+      const mockUsersStr = localStorage.getItem('mock_db_users')
+      if (mockUsersStr) {
+        const mockUsers = JSON.parse(mockUsersStr)
+        const dbUserIdx = mockUsers.findIndex(u => u.id === user.value.id || u.email === user.value.email)
+        if (dbUserIdx !== -1) {
+             mockUsers[dbUserIdx] = { ...mockUsers[dbUserIdx], ...formData.value }
+             localStorage.setItem('mock_db_users', JSON.stringify(mockUsers))
+        }
+      }
+  } catch(e) {
+      console.error(e)
+  }
+
+  isEditing.value = false
+}
 </script>
 
 <style scoped>
@@ -60,6 +124,8 @@ import PageHeader from '../components/PageHeader.vue'
 .section-container {
   background-color: #ffffff;
   padding: 2rem 1.5rem;
+  margin: 1rem;
+  border-radius: 12px; /* Rounded corners */
 }
 
 .title-row {
@@ -75,14 +141,36 @@ import PageHeader from '../components/PageHeader.vue'
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
+  position: relative;
+  display: inline-block;
+}
+
+/* Peach/Fuchsia underline */
+.contact-title::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 3px;
+  background-color: #E6007E; 
+  margin-top: 4px;
 }
 
 .edit-btn {
-  background: none;
+  background-color: #e0e0e0; /* Light gray background */
   border: none;
-  font-size: 1.5rem;
-  color: #666;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  padding: 0;
+}
+
+/* Ensure svg within button is black */
+.edit-btn svg {
+  stroke: #000000;
 }
 
 .sub-section {
@@ -124,6 +212,14 @@ import PageHeader from '../components/PageHeader.vue'
 .email-value {
   font-size: 1rem;
   font-weight: 500;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .verified-tag {
