@@ -51,18 +51,32 @@ import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import DebugFillButton from '../components/DebugFillButton.vue'
 import { getRandomName } from '../utils/random'
+import { useApi } from '../composables/useApi' 
 
 const router = useRouter()
+const { user: userService } = useApi()
+
 const idNumber = ref('')
 const fullName = ref('')
 const frontImage = ref('')
 const backImage = ref('')
 
-onMounted(() => {
-  idNumber.value = localStorage.getItem('iv_idNumber') || ''
-  fullName.value = localStorage.getItem('iv_fullName') || ''
-  frontImage.value = localStorage.getItem('iv_frontImage') || ''
-  backImage.value = localStorage.getItem('iv_backImage') || ''
+onMounted(async () => {
+  // 從當前使用者資料中讀取
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr)
+      if (user.verificationData) {
+        idNumber.value = user.verificationData.idNumber || ''
+        fullName.value = user.verificationData.fullName || ''
+        frontImage.value = user.verificationData.frontImage || ''
+        backImage.value = user.verificationData.backImage || ''
+      }
+    } catch (e) {
+      console.error('Failed to load user data', e)
+    }
+  }
 })
 
 const fillRandomData = () => {
@@ -70,13 +84,44 @@ const fillRandomData = () => {
   fullName.value = getRandomName()
 }
 
-const handleNext = () => {
-  localStorage.setItem('iv_idNumber', idNumber.value)
-  localStorage.setItem('iv_fullName', fullName.value)
-  localStorage.setItem('iv_frontImage', frontImage.value)
-  localStorage.setItem('iv_backImage', backImage.value)
-  alert('資料已暫存於 Local Storage')
-  router.push('/settings')
+const handleNext = async () => {
+  try {
+    const userStr = localStorage.getItem('user')
+    if (!userStr) {
+      alert('請先登入')
+      router.push('/login')
+      return
+    }
+
+    const currentUser = JSON.parse(userStr)
+    const verificationData = {
+      idNumber: idNumber.value,
+      fullName: fullName.value,
+      frontImage: frontImage.value,
+      backImage: backImage.value,
+      updatedAt: new Date().toISOString()
+    }
+
+    // 呼叫 API 儲存
+    await userService.verifyIdentity(currentUser.id, verificationData)
+
+    // 同步更新本地使用者資訊 (為了即時顯示)
+    currentUser.verificationData = verificationData
+    currentUser.isVerified = true // 假設送出即驗證或進入審核中
+    localStorage.setItem('user', JSON.stringify(currentUser))
+    
+    // 清除舊的髒資料 (Migration purpose)
+    localStorage.removeItem('iv_idNumber')
+    localStorage.removeItem('iv_fullName')
+    localStorage.removeItem('iv_frontImage')
+    localStorage.removeItem('iv_backImage')
+
+    alert('實名認證資料已送出')
+    router.push('/settings')
+  } catch (error) {
+    console.error(error)
+    alert('儲存失敗: ' + error.message)
+  }
 }
 </script>
 
