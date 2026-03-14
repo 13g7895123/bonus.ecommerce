@@ -47,11 +47,30 @@ export class UserService extends BaseService {
         user.verified = true;
         user.verificationData = data;
         
-        await mockDb.update(this.table, userId, { verified: true, verificationData: data });
-        return { message: '身份驗證資料已送出' };
-      });
+  async listUsers() {
+    if (this.useMock) {
+        // mockDb only has generic list
+        return this._get('/', async () => {
+             const items = await mockDb.list(this.table);
+             return items;
+        });
     } else {
-      return this._post(`/${userId}/verify`, data);
+        return this._get('/');
+    }
+  }
+
+  async updateUserBalance(userId, newBalance) {
+    if (this.useMock) {
+        return this._post(`/${userId}/balance`, { balance: newBalance }, async () => {
+             const user = await mockDb.findOne(this.table, u => u.id === userId);
+             if (!user) throw new Error('用戶不存在');
+             if (!user.wallet) user.wallet = {};
+             user.wallet.balance = Number(newBalance);
+             await mockDb.update(this.table, userId, { wallet: user.wallet });
+             return { message: '餘額更新成功', balance: user.wallet.balance };
+        });
+    } else {
+        return this._post(`/${userId}/balance`, { balance: newBalance });
     }
   }
 }

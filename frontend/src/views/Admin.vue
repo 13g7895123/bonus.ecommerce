@@ -18,6 +18,18 @@
     <div class="admin-layout">
       <!-- Sidebar -->
       <div class="admin-sidebar">
+        <div class="sidebar-header">
+            Management
+        </div>
+        <div class="sidebar-list">
+             <div class="sidebar-item" :class="{ active: selectedKey === 'users' }" @click="selectKey({ key: 'users' })">
+                <div class="sidebar-item-content">
+                    <div class="sidebar-item-title">Users List</div>
+                </div>
+             </div>
+             <!-- Original LocalStorage inspector below -->
+        </div>
+
         <div class="sidebar-header">Storage Keys</div>
         <div class="sidebar-list">
           <div 
@@ -49,7 +61,35 @@
 
       <!-- Main Content -->
       <div class="admin-main">
-        <div v-if="!selectedItem" class="empty-selection">
+        <div v-if="selectedKey === 'users'" class="content-panel">
+            <div class="panel-header">
+                <h2>User Management</h2>
+            </div>
+            <div class="panel-body">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Balance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="user in usersList" :key="user.id">
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>${{ user.wallet?.balance?.toLocaleString() || 0 }}</td>
+                            <td>
+                                <button class="action-btn" @click="editBalance(user)">Edit Balance</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div v-else-if="!selectedItem" class="empty-selection">
           <div class="empty-icon">👈</div>
           <p>Please select a key from the sidebar</p>
         </div>

@@ -182,7 +182,7 @@ const fillRandomData = () => {
 
 .forgot-pwd-link {
   margin-top: 0.5rem;
-  text-align: right;
+  text-align: left;
   margin-bottom: 2rem;
 }
 
