@@ -145,6 +145,7 @@ const handleSubmit = async () => {
     height: 40px;
 }
 
+</style>
 
 <style scoped>
 .standalone-login-page {

@@ -15,11 +15,9 @@ if [ ! -f "$ENV_TEMPLATE" ]; then
   exit 1
 fi
 
-# 若 docker/.env 不存在，從對應環境的範本複製
-if [ ! -f "$ENV_FILE" ]; then
-  echo "No .env found in docker/, copying from $ENV_TEMPLATE ..."
-  cp "$ENV_TEMPLATE" "$ENV_FILE"
-fi
+# 每次都從對應環境的範本更新 docker/.env
+echo "Syncing .env from $ENV_TEMPLATE ..."
+cp "$ENV_TEMPLATE" "$ENV_FILE"
 
 echo "Starting [$ENV] environment ..."
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build
