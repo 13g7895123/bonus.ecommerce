@@ -30,33 +30,7 @@
              <!-- Original LocalStorage inspector below -->
         </div>
 
-        <div class="sidebar-header">Storage Keys</div>
-        <div class="sidebar-list">
-          <div 
-            v-for="(item, index) in items" 
-            :key="index" 
-            class="sidebar-item"
-            :class="{ active: selectedKey === item.key }"
-            @click="selectKey(item)"
-          >
-            <div class="sidebar-item-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="icon" stroke="currentColor" stroke-width="2">
-                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                 <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                 <line x1="12" y1="22.08" x2="12" y2="12"></line>
-              </svg>
-            </div>
-            <div class="sidebar-item-content">
-              <div class="sidebar-item-title">{{ getLabel(item.key) }}</div>
-              <div class="sidebar-item-key">{{ item.key }}</div>
-            </div>
-            <button class="delete-icon-btn" @click="(e) => deleteKey(item.key, e)" title="刪除此項目">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-        </div>
+        <!-- Storage Keys section hidden -->
       </div>
 
       <!-- Main Content -->
