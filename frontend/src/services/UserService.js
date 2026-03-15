@@ -88,7 +88,11 @@ export class UserService extends BaseService {
       return this._post(`/${userId}/verify`, data, async () => {
         const user = await mockDb.findOne(this.table, u => u.id === userId);
         if (!user) throw new Error('用戶不存在');
-        await mockDb.update(this.table, userId, { verified: true, verificationData: data });
+        await mockDb.update(this.table, userId, {
+          verified: true,
+          verificationStatus: 'pending',
+          verificationData: data,
+        });
         return { message: '身份驗證資料已送出' };
       });
     }
