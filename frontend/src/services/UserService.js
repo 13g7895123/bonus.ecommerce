@@ -88,10 +88,16 @@ export class UserService extends BaseService {
       return this._post(`/${userId}/verify`, data, async () => {
         const user = await mockDb.findOne(this.table, u => u.id === userId);
         if (!user) throw new Error('用戶不存在');
+        // 只儲存文字欄位與 file ID，不存 base64 圖片（避免 localStorage quota 超限）
         await mockDb.update(this.table, userId, {
           verified: true,
           verificationStatus: 'pending',
-          verificationData: data,
+          verificationData: {
+            idNumber:    data.idNumber    || data.id_number  || '',
+            fullName:    data.fullName    || data.real_name  || '',
+            frontFileId: data.frontFileId || null,
+            backFileId:  data.backFileId  || null,
+          },
         });
         return { message: '身份驗證資料已送出' };
       });

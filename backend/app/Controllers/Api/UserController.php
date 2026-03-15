@@ -28,10 +28,9 @@ class UserController extends BaseApiController
 
     public function verify()
     {
-        $files = $this->request->getFiles();
-        $data  = $this->request->getPost();
-
-        $result = (new UserService())->submitVerification(Auth::id(), $files, $data ?? []);
+        // 前端傳 JSON（file ID 已預先上傳），用 getJson() 讀取
+        $json = $this->getJson(true);  // true = assoc array
+        $result = (new UserService())->submitVerification(Auth::id(), [], $json ?? []);
         return $this->success(null, $result['message']);
     }
 

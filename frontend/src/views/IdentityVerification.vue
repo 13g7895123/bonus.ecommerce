@@ -121,12 +121,12 @@ const rejectionReason    = ref('')
 const isSubmitted = computed(() => verificationStatus.value !== 'none')
 
 const statusText = computed(() => {
-  const map = { pending: '審核中', approved: '已通過', rejected: '已拒絕' }
+  const map = { pending: '審核中', approved: '已通過', verified: '已通過', rejected: '已拒絕' }
   return map[verificationStatus.value] || ''
 })
 
 const statusIcon = computed(() => {
-  const map = { pending: '⏳', approved: '✓', rejected: '✗' }
+  const map = { pending: '⏳', approved: '✓', verified: '✓', rejected: '✗' }
   return map[verificationStatus.value] || ''
 })
 
@@ -138,15 +138,13 @@ onMounted(async () => {
     const { user: userService } = useApi()
     const profile = await userService.getProfile(userId)
 
-    // 判斷驗證狀態（相容真實 API 與 mock 模式）
+    // 判斷驗證狀態（相容真實 API verify_status 欄位 與 mock verificationStatus）
     const status =
-      profile?.verification_status ||       // 真實 API
-      profile?.verificationStatus  ||       // mock 新版
+      profile?.verify_status        ||   // 真實 API DB 欄位名
+      profile?.verification_status  ||   // 備用
+      profile?.verificationStatus   ||   // mock 新版
       (profile?.verificationData ? 'pending' : 'none')  // mock 舊版
     verificationStatus.value = status || 'none'
-
-    // 拒絕原因
-    rejectionReason.value = profile?.verification_rejection_reason || ''
 
     // 從 API 返回的 verification_data 預填表單
     const vd = profile?.verification_data
@@ -155,10 +153,17 @@ onMounted(async () => {
           : profile.verification_data)
       : (profile?.verificationData || null)
 
+    // 拒絕原因：後端存在 verification_data.reject_reason
+    rejectionReason.value =
+      profile?.verification_rejection_reason ||
+      vd?.reject_reason ||
+      ''
+
     if (vd) {
-      idNumber.value    = vd.idNumber    || vd.id_number    || ''
-      fullName.value    = vd.fullName    || vd.full_name    || ''
-      // 載入已送出的圖片預覽
+      idNumber.value = vd.idNumber || vd.id_number || ''
+      // 真實 API 欄位叫 real_name；mock 叫 fullName
+      fullName.value = vd.fullName || vd.real_name || vd.full_name || ''
+      // 圖片 URL（mock 模式不存 base64，只顯示 placeholder）
       frontPreview.value = vd.frontImageUrl || vd.front_image_url || ''
       backPreview.value  = vd.backImageUrl  || vd.back_image_url  || ''
     }

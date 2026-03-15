@@ -59,6 +59,7 @@ class UserService
     public function submitVerification(int $userId, array $files, array $data): array
     {
         $fileIds = [];
+        // 處理實體檔案上傳（multipart）
         foreach ($files as $key => $file) {
             if ($file && $file->isValid() && !$file->hasMoved()) {
                 $result = $this->fileService->upload($userId, $file, 'kyc');
@@ -67,8 +68,15 @@ class UserService
                 }
             }
         }
+        // 處理前端傳入已上傳的 file ID（JSON 模式）
+        if (!empty($data['front_file_id'])) $fileIds['front'] = (int) $data['front_file_id'];
+        if (!empty($data['back_file_id']))  $fileIds['back']  = (int) $data['back_file_id'];
 
-        $verificationData = array_merge($data, ['file_ids' => $fileIds]);
+        $verificationData = [
+            'real_name'  => $data['real_name']  ?? null,
+            'id_number'  => $data['id_number']  ?? null,
+            'file_ids'   => $fileIds,
+        ];
         $this->userRepo->update($userId, [
             'verify_status'     => 'pending',
             'verification_data' => json_encode($verificationData),
