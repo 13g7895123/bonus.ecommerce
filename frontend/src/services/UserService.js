@@ -149,5 +149,13 @@ export class UserService extends BaseService {
     const response = await this.http.post(`/admin/users/${userId}/balance`, { amount, description });
     return response.data;
   }
+
+  /* 發送電子郵件驗證信 — POST /users/me/verify-email */
+  async sendVerificationEmail() {
+    if (this.useMock) {
+      return { message: '驗證信已發送（mock）' }
+    }
+    return this._post('/me/verify-email', {})
+  }
 }
 

@@ -19,27 +19,27 @@
         <h4 class="sub-title">個人資訊</h4>
         <div class="form-group">
           <label>名字</label>
-          <div v-if="!isEditing" class="field-value">{{ user?.firstName || 'Admin' }}</div>
+          <div v-if="!isEditing" class="field-value">{{ user?.firstName }}</div>
           <input v-else v-model="formData.firstName" class="edit-input" />
         </div>
         <div class="form-group">
           <label>姓氏</label>
-          <div v-if="!isEditing" class="field-value">{{ user?.lastName || 'User' }}</div>
+          <div v-if="!isEditing" class="field-value">{{ user?.lastName }}</div>
           <input v-else v-model="formData.lastName" class="edit-input" />
         </div>
         <div class="form-group">
           <label>你的出生日期</label>
-          <div v-if="!isEditing" class="field-value">{{ user?.dob || '1990/01/01' }}</div>
+          <div v-if="!isEditing" class="field-value">{{ user?.dob }}</div>
           <input v-else v-model="formData.dob" type="date" class="edit-input" />
         </div>
         <div class="form-group">
           <label>居住國家/地區</label>
-          <div v-if="!isEditing" class="field-value">{{ user?.country || 'Taiwan' }}</div>
+          <div v-if="!isEditing" class="field-value">{{ user?.country }}</div>
            <input v-else v-model="formData.country" class="edit-input" />
         </div>
         <div class="form-group">
           <label>行動號碼(偏好的聯絡方式)</label>
-          <div v-if="!isEditing" class="field-value">{{ user?.phone || '+886 0912345678' }}</div>
+          <div v-if="!isEditing" class="field-value">{{ user?.phone }}</div>
            <input v-else v-model="formData.phone" class="edit-input" />
         </div>
       </div>
@@ -48,16 +48,20 @@
       <div class="sub-section">
         <h4 class="sub-title">電子郵件</h4>
         <div class="email-group">
-          <div class="email-value">{{ user?.email || 'admin@emirates.com' }}</div>
-          <span class="verified-tag">已驗證</span>
+          <div class="email-value">{{ user?.email }}</div>
+          <span v-if="isEmailVerified" class="verified-tag">已驗證</span>
+          <span v-else class="unverified-tag">未驗證</span>
         </div>
+        <button v-if="!isEmailVerified" class="verify-email-btn" :disabled="sendingVerify" @click="sendVerificationEmail">
+          {{ sendingVerify ? '發送中...' : '驗證電子郵件' }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import { UserService } from '../services/UserService'
@@ -65,7 +69,10 @@ import { UserService } from '../services/UserService'
 const isEditing = ref(false)
 const user = ref({})
 const formData = ref({})
+const sendingVerify = ref(false)
 const toast = useToast()
+
+const isEmailVerified = computed(() => !!(user.value?.is_verified || user.value?.verified))
 
 onMounted(async () => {
   try {
@@ -93,6 +100,19 @@ const toggleEdit = () => {
     }
     formData.value = u
     isEditing.value = true
+  }
+}
+
+const sendVerificationEmail = async () => {
+  sendingVerify.value = true
+  try {
+    const userService = new UserService()
+    await userService.sendVerificationEmail()
+    toast.success('驗證信已發送，請查收電子郵件')
+  } catch (e) {
+    toast.error('發送失敗，請稍後再試')
+  } finally {
+    sendingVerify.value = false
   }
 }
 
@@ -172,6 +192,11 @@ const saveChanges = async () => {
   justify-content: center;
   cursor: pointer;
   padding: 0;
+  outline: none;
+}
+
+.edit-btn:focus-visible {
+  outline: none;
 }
 
 /* Ensure svg within button is black */
@@ -235,5 +260,31 @@ const saveChanges = async () => {
   padding: 2px 8px;
   border-radius: 4px;
   font-weight: 700;
+}
+
+.unverified-tag {
+  background-color: #fff3e0;
+  color: #e65100;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.verify-email-btn {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  background-color: #d71921;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.verify-email-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
