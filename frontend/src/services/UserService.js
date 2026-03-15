@@ -15,14 +15,27 @@ export class UserService extends BaseService {
       return this._get(`/${userId}`, async () => {
         const user = await mockDb.findOne(this.table, u => u.id === userId);
         if (!user) throw new Error('用戶不存在');
+        // 從 full_name 補上 firstName / lastName（新用戶可能只有 full_name）
+        if (!user.firstName && user.full_name) {
+          const parts = user.full_name.trim().split(/\s+/)
+          user.firstName = parts[0] || ''
+          user.lastName  = parts.slice(1).join(' ') || ''
+        }
+        // PHP PDO 可能將 TINYINT 回傳為字串，統一轉成 boolean
+        // mock 用 verified 欄位，確保新用戶預設為 false
+        user.is_verified = !!(user.is_verified || user.verified)
         return user;
       });
     }
     const data = await this._get('/me');
+    // 從 full_name 拆分 firstName / lastName
+    const nameParts = (data.full_name || '').trim().split(/\s+/)
     // 映射欄位以相容舊版 view
     return {
       ...data,
-      name: data.full_name || '',
+      name:      data.full_name || '',
+      firstName: data.firstName || nameParts[0] || '',
+      lastName:  data.lastName  || nameParts.slice(1).join(' ') || '',
       miles: data.wallet?.miles_balance ?? 0,
       // PHP PDO 可能將 TINYINT 回傳為字串 "0"/"1"，統一轉成 boolean
       is_verified: data.is_verified === 1 || data.is_verified === true || data.is_verified === '1',

@@ -52,6 +52,7 @@
                               <th>ID</th>
                               <th>姓名</th>
                               <th>Email</th>
+                              <th>Email 驗證</th>
                               <th>電話</th>
                               <th>國家</th>
                               <th>角色</th>
@@ -67,6 +68,11 @@
                               <td>{{ user.id }}</td>
                               <td>{{ user.full_name || '-' }}</td>
                               <td>{{ user.email }}</td>
+                              <td>
+                                <span :class="['email-verified-badge', (user.is_verified == 1 || user.is_verified === true) ? 'yes' : 'no']">
+                                  {{ (user.is_verified == 1 || user.is_verified === true) ? '已驗證' : '未驗證' }}
+                                </span>
+                              </td>
                               <td>{{ user.phone || '-' }}</td>
                               <td>{{ user.country || '-' }}</td>
                               <td><span :class="['role-badge', user.role]">{{ user.role || 'user' }}</span></td>
@@ -1012,6 +1018,16 @@ tr:hover td {
 
 .bank-badge.yes { background: #d1fae5; color: #065f46; }
 .bank-badge.no  { background: #f3f4f6; color: #6b7280; }
+
+.email-verified-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.email-verified-badge.yes { background: #d1fae5; color: #065f46; }
+.email-verified-badge.no  { background: #fee2e2; color: #991b1b; }
 
 .deposit-btn {
   background: #d71921;
