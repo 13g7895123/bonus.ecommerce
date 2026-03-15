@@ -1,6 +1,9 @@
 <template>
   <PageLayout title="儲值紀錄" back-to="/transactions" theme="white">
-    <ContentList>
+    <div v-if="loading" class="tr-hint">載入中...</div>
+    <div v-else-if="errorMsg" class="tr-hint tr-error">{{ errorMsg }}</div>
+    <EmptyTransactions v-else-if="records.length === 0" />
+    <ContentList v-else>
       <ContentListItem v-for="record in records" :key="record.id" class="record-item">
         <div class="record-left">
           <p class="record-type">儲值</p>
@@ -13,17 +16,45 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import PageLayout from '../components/PageLayout.vue'
 import ContentList from '../components/ContentList.vue'
 import ContentListItem from '../components/ContentListItem.vue'
+import { WalletService } from '../services/WalletService'
+import EmptyTransactions from '../components/EmptyTransactions.vue'
 
-const records = [
-  { id: 1, time: '2026-03-11 14:32:00', amount: '+$7,000' },
-  { id: 2, time: '2026-03-10 09:15:00', amount: '+$3,500' },
-  { id: 3, time: '2026-03-08 18:47:00', amount: '+$10,000' },
-  { id: 4, time: '2026-03-05 11:20:00', amount: '+$5,000' },
-  { id: 5, time: '2026-03-01 16:03:00', amount: '+$2,000' },
-]
+const walletService = new WalletService()
+const records  = ref([])
+const loading  = ref(true)
+const errorMsg = ref('')
+
+const formatAmount = (amount) => {
+  const n = Number(amount)
+  return n >= 0 ? `+$${n.toLocaleString()}` : `-$${Math.abs(n).toLocaleString()}`
+}
+
+const formatTime = (val) => {
+  if (!val) return ''
+  return new Date(val).toLocaleString('zh-TW', { hour12: false }).replace('T', ' ').slice(0, 19)
+}
+
+onMounted(async () => {
+  try {
+    // 撈全部交易，只顯示 deposit / adjustment（管理員儲值）類型
+    const result = await walletService.getTransactions()
+    records.value = (result?.items || [])
+      .filter(t => t.type === 'deposit' || t.type === 'adjustment')
+      .map(t => ({
+        id:     t.id,
+        time:   formatTime(t.created_at || t.createdAt),
+        amount: formatAmount(t.amount),
+      }))
+  } catch (e) {
+    errorMsg.value = '載入失敗，請稍後再試'
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <style scoped>
@@ -54,5 +85,16 @@ const records = [
   font-size: 1rem;
   font-weight: 700;
   color: #000000;
+}
+
+.tr-hint {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.tr-error {
+  color: #e74c3c;
 }
 </style>

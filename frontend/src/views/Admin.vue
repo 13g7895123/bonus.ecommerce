@@ -220,8 +220,10 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useApi } from '../composables/useApi'
 
 const router = useRouter()
+const { user: userService } = useApi()
 const items = ref([])
 const selectedKey = ref(null)
 
@@ -265,24 +267,21 @@ const submitDeposit = async () => {
   }
   depositModal.value.submitting = true
   try {
-    const res = await fetch(`/api/v1/admin-panel/users/${depositModal.value.user.id}/deposit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, description: depositModal.value.description || 'Admin 儲值 (demo)' }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      alert(data.message || '儲值失敗')
-      return
-    }
+    // 使用 service 層，相容 mock 與真實 API，並自動帶入 JWT
+    const data = await userService.updateUserBalance(
+      depositModal.value.user.id,
+      amount,
+      depositModal.value.description || '管理員儲值',
+    )
     // 更新本地列表中的餘額
+    const newBalance = data?.balance ?? data?.data?.balance
     const user = usersList.value.find(u => u.id === depositModal.value.user.id)
-    if (user) user.balance = data.balance
-    depositModal.value.user.balance = data.balance
-    alert(`儲值成功！新餘額：$${data.balance.toLocaleString()}`)
+    if (user && newBalance != null) user.balance = newBalance
+    if (newBalance != null) depositModal.value.user.balance = newBalance
+    alert(`儲值成功！新餘額：$${Number(newBalance ?? 0).toLocaleString()}`)
     depositModal.value.show = false
   } catch (e) {
-    alert('儲值失敗，請稍後再試')
+    alert(e?.response?.data?.message || e?.message || '儲值失敗，請稍後再試')
   } finally {
     depositModal.value.submitting = false
   }

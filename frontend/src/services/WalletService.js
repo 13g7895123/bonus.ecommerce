@@ -61,6 +61,26 @@ export class WalletService extends BaseService {
     return this._post('/password', body);
   }
 
+  /* 取得交易紀錄 — GET /wallet/transactions */
+  async getTransactions(type = null, page = 1, limit = 50) {
+    if (this.useMock) {
+      return this._get('/transactions', async () => {
+        const token = localStorage.getItem('token');
+        const userId = token ? parseInt(token.replace('mock-jwt-token-', '')) : null;
+        const all = (localStorage.getItem('skywards_db_transactions')
+          ? JSON.parse(localStorage.getItem('skywards_db_transactions'))
+          : []).filter(t => String(t.user_id) === String(userId));
+        const filtered = type ? all.filter(t => t.type === type) : all;
+        filtered.sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
+        const start = (page - 1) * limit;
+        return { items: filtered.slice(start, start + limit), total: filtered.length };
+      });
+    }
+    const params = { page, limit };
+    if (type) params.type = type;
+    return this._get('/transactions', params);
+  }
+
   /* 綁定銀行帳戶 — POST /wallet/bank */
   async setupBank(userId, bankData) {
     if (this.useMock) {

@@ -126,12 +126,23 @@ export class UserService extends BaseService {
   /* 調整使用者餘額（管理員）— POST /admin/users/{id}/balance */
   async updateUserBalance(userId, amount, description = '') {
     if (this.useMock) {
-      return this._post(`/${userId}/balance`, { balance: amount }, async () => {
+      return this._post(`/${userId}/balance`, { amount, description }, async () => {
         const user = await mockDb.findOne(this.table, u => u.id === userId);
         if (!user) throw new Error('用戶不存在');
         if (!user.wallet) user.wallet = {};
-        user.wallet.balance = Number(amount);
+        // 加法調整（而非覆寫）
+        user.wallet.balance = (Number(user.wallet.balance) || 0) + Number(amount);
         await mockDb.update(this.table, userId, { wallet: user.wallet });
+        // 同步建立交易紀錄，讓「我的明細表」可查詢
+        await mockDb.insert('transactions', {
+          user_id:      userId,
+          type:         'adjustment',
+          amount:       Number(amount),
+          status:       'completed',
+          description:  description || '管理員儲值',
+          reference_id: 'ADJ_' + Date.now() + '_' + userId,
+          created_at:   new Date().toISOString(),
+        });
         return { message: '餘額更新成功', balance: user.wallet.balance };
       });
     }

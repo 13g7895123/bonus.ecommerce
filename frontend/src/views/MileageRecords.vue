@@ -1,6 +1,9 @@
 <template>
   <PageLayout title="里程紀錄" back-to="/skywards" theme="white">
-    <ContentList>
+    <div v-if="loading" class="mr-hint">載入中...</div>
+    <div v-else-if="errorMsg" class="mr-hint mr-error">{{ errorMsg }}</div>
+    <EmptyTransactions v-else-if="records.length === 0" />
+    <ContentList v-else>
       <ContentListItem v-for="record in records" :key="record.id" class="record-item">
         <div class="record-left">
           <p class="record-type">{{ record.type }}</p>
@@ -15,17 +18,49 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import PageLayout from '../components/PageLayout.vue'
 import ContentList from '../components/ContentList.vue'
 import ContentListItem from '../components/ContentListItem.vue'
+import { WalletService } from '../services/WalletService'
+import EmptyTransactions from '../components/EmptyTransactions.vue'
 
-const records = [
-  { id: 1, type: '搭乘回饋 - 台北至東京', time: '2026-03-12 14:30:00', amount: '+2,500' },
-  { id: 2, type: '里程兌換 - 機場貴賓室', time: '2026-03-10 09:15:00', amount: '-1,000' },
-  { id: 3, type: '搭乘回饋 - 高雄至首爾', time: '2026-03-08 18:47:00', amount: '+1,800' },
-  { id: 4, type: '生日禮遇贈送', time: '2026-03-05 11:20:00', amount: '+500' },
-  { id: 5, type: '里程兌換 - 行李加購', time: '2026-03-01 16:03:00', amount: '-800' },
-]
+const walletService = new WalletService()
+const records  = ref([])
+const loading  = ref(true)
+const errorMsg = ref('')
+
+const TYPE_LABEL = {
+  adjustment: '儲值',
+  deposit:    '儲值',
+  withdrawal: '提款申請',
+}
+
+const formatAmount = (amount) => {
+  const n = Number(amount)
+  return n >= 0 ? `+${n.toLocaleString()}` : n.toLocaleString()
+}
+
+const formatTime = (val) => {
+  if (!val) return ''
+  return new Date(val).toLocaleString('zh-TW', { hour12: false }).replace('T', ' ').slice(0, 19)
+}
+
+onMounted(async () => {
+  try {
+    const result = await walletService.getTransactions()
+    records.value = (result?.items || []).map(t => ({
+      id:     t.id,
+      type:   TYPE_LABEL[t.type] || t.type || '交易',
+      time:   formatTime(t.created_at || t.createdAt),
+      amount: formatAmount(t.amount),
+    }))
+  } catch (e) {
+    errorMsg.value = '載入失敗，請稍後再試'
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <style scoped>
@@ -60,5 +95,16 @@ const records = [
 
 .record-amount.negative {
   color: #e74c3c; /* Negative red */
+}
+
+.mr-hint {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.mr-error {
+  color: #e74c3c;
 }
 </style>
