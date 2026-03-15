@@ -64,4 +64,14 @@ class UserController extends BaseApiController
         }
         return $this->success(['avatar_url' => $result['avatar_url']], 'Avatar updated');
     }
+
+    public function sendVerificationEmail()
+    {
+        // TODO: 串接寄信功能（SMTP / 第三方 mail service）
+        // 目前直接回傳成功，待日後實作以下流程：
+        //   1. 產生 email_verify_token(uuid) 並寫入 users 表
+        //   2. 寄送驗證連結至使用者信箱
+        //   3. 另建 GET /users/me/verify-email?token=xxx 驗證 token 並更新 is_verified=1
+        return $this->success(null, '驗證信已發送，請查收電子郵件');
+    }
 }

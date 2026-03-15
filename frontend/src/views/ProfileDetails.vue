@@ -73,6 +73,8 @@ const sendingVerify = ref(false)
 const toast = useToast()
 
 const isEmailVerified = computed(() => !!(user.value?.is_verified || user.value?.verified))
+// 注意：is_verified 已在 UserService.getProfile 正規化為 boolean，
+// 此處直接用即可
 
 onMounted(async () => {
   try {

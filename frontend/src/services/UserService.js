@@ -24,6 +24,8 @@ export class UserService extends BaseService {
       ...data,
       name: data.full_name || '',
       miles: data.wallet?.miles_balance ?? 0,
+      // PHP PDO 可能將 TINYINT 回傳為字串 "0"/"1"，統一轉成 boolean
+      is_verified: data.is_verified === 1 || data.is_verified === true || data.is_verified === '1',
       wallet: {
         ...data.wallet,
         // view 存取 wallet.bank.account，has_bank_account=true 時給予佔位值
