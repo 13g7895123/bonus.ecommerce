@@ -547,4 +547,36 @@ const scrollToTop = () => {
   margin: 0;
   align-self: flex-start;
 }
+
+/* ================================================
+ * 手機版 Navbar / Bottom Nav（≤ 767px）
+ * ================================================ */
+@media (max-width: 767px) {
+  .navbar {
+    padding: 0.5rem 1rem;
+  }
+
+  .logo-image {
+    height: 40px;
+  }
+
+  .hamburger {
+    width: 36px;
+    height: 36px;
+  }
+
+  .bottom-nav {
+    height: 50px;
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+    margin-bottom: 2px;
+  }
+
+  .nav-label {
+    font-size: 0.65rem;
+  }
+}
 </style>
