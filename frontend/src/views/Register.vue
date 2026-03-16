@@ -300,7 +300,7 @@ const handleRegister = async () => {
 
 @media (max-width: 767px) {
   .login-page {
-    padding: 2rem 1.5rem;
+    padding: 1.5rem 1rem;
   }
 }
 </style>
