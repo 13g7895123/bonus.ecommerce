@@ -266,11 +266,12 @@ const announcements = ref([
 }
 
 /* ================================================
- * 手機版配置（≤ 430px）
+ * 手機版配置（≤ 767px，涵蓋所有手機裝置）
  * ================================================ */
-@media (max-width: 430px) {
+@media (max-width: 767px) {
   .hero-section {
-    height: 40vh;
+    height: auto;
+    min-height: 55vh;
     padding: 3rem 0;
   }
 
@@ -279,11 +280,12 @@ const announcements = ref([
   }
 
   .cta-button {
-    padding: 0.5rem 4rem;
+    padding: 0.5rem 3rem;
   }
 
   .upgrade-section {
-    height: 40vh;
+    height: auto;
+    min-height: 55vh;
     padding: 3rem 0;
   }
 

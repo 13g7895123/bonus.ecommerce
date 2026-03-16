@@ -103,9 +103,10 @@ button:focus-visible {
 }
 
 /* ================================================
- * 手機版字體大小（≤ 430px，例如 iPhone 系列）
+ * 手機版字體大小（≤ 767px，涵蓋所有手機裝置）
+ * 常見手機 CSS 寬度：iPhone SE 375px / iPhone 13 Pro 390px / iPhone 14 Pro Max 430px / Android 360px~412px
  * ================================================ */
-@media (max-width: 430px) {
+@media (max-width: 767px) {
   :root {
     /* Hero 區塊 */
     --fs-hero-subtitle: 1.5rem;
