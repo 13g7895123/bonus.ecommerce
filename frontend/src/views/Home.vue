@@ -97,14 +97,14 @@ const announcements = ref([
 
 .hero-subtitle {
   font-family: 'Playfair Display', serif;
-  font-size: 2.5rem;
+  font-size: var(--fs-hero-subtitle);
   font-weight: 800;
   margin-bottom: 0.75rem;
 }
 
 .hero-description {
   font-family: 'Playfair Display', serif;
-  font-size: 2em;
+  font-size: var(--fs-hero-description);
   font-weight: 700;
   margin-bottom: 2.5rem;
   line-height: 1.3;
@@ -116,7 +116,7 @@ const announcements = ref([
   color: #000000;
   border: none;
   padding: 0.5rem 7rem;
-  font-size: 1.5rem;
+  font-size: var(--fs-hero-button);
   font-weight: 900;
   border-radius: 0;
   cursor: pointer;
@@ -153,7 +153,7 @@ const announcements = ref([
 
 .upgrade-subtitle {
   font-family: 'Playfair Display', serif;
-  font-size: 2rem;
+  font-size: var(--fs-upgrade-label);
   font-weight: 500;
   margin-bottom: 0.75rem;
   text-transform: uppercase;
@@ -162,14 +162,14 @@ const announcements = ref([
 
 .upgrade-title {
   font-family: 'Playfair Display', serif;
-  font-size: 3.5rem;
+  font-size: var(--fs-upgrade-title);
   font-weight: 700;
   margin-bottom: 1.5rem;
   line-height: 1.2;
 }
 
 .upgrade-description {
-  font-size: 2.2rem;
+  font-size: var(--fs-upgrade-body);
   font-weight: 800;
   margin-bottom: 2.5rem;
   line-height: 1.4;
@@ -184,7 +184,7 @@ const announcements = ref([
   background-color: white;
   color: black;
   border: 2px solid white;
-  font-size: 1.5rem;
+  font-size: var(--fs-upgrade-button);
   font-weight: 800;
   border-radius: 0;
   cursor: pointer;
@@ -224,7 +224,7 @@ const announcements = ref([
 }
 
 .about-title {
-  font-size: 2.5rem;
+  font-size: var(--fs-about-title);
   font-weight: 700;
   margin-bottom: 1rem;
   color: #111111;
@@ -238,7 +238,7 @@ const announcements = ref([
 }
 
 .about-subtitle {
-  font-size: 1.5rem;
+  font-size: var(--fs-about-body);
   font-weight: 800;
   color: #555555;
   margin: 0;
@@ -263,5 +263,41 @@ const announcements = ref([
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* ================================================
+ * 手機版配置（≤ 430px）
+ * ================================================ */
+@media (max-width: 430px) {
+  .hero-section {
+    height: 40vh;
+    padding: 3rem 0;
+  }
+
+  .coin-image {
+    width: 45vw;
+  }
+
+  .cta-button {
+    padding: 0.5rem 4rem;
+  }
+
+  .upgrade-section {
+    height: 40vh;
+    padding: 3rem 0;
+  }
+
+  .upgrade-content {
+    padding: 0 1.5rem;
+  }
+
+  .about-section {
+    padding: 3rem 1.5rem 6rem;
+  }
+
+  .about-circles {
+    grid-template-columns: repeat(2, 40%);
+    gap: 2.5rem;
+  }
 }
 </style>
