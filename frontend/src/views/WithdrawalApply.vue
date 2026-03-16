@@ -1,11 +1,11 @@
 <template>
   <div class="wa-page">
-    <PageHeader title="提款申請" back-to="/settings" :bordered="false" />
+    <PageHeader :title="$t('withdrawal.title')" back-to="/settings" :bordered="false" />
 
     <div class="wa-content">
       <!-- 可提款現金 -->
       <div class="info-section">
-        <p class="info-label">可提款現金</p>
+        <p class="info-label">{{ $t('withdrawal.availableCash') }}</p>
         <p class="info-value cash-value">${{ balance.toLocaleString() }}</p>
       </div>
 
@@ -13,29 +13,29 @@
 
       <!-- 銀行存摺 -->
       <div class="info-section">
-        <p class="info-label">銀行帳號</p>
-        <p class="info-value account-value">{{ bankAccount || '尚未綁定' }}</p>
+        <p class="info-label">{{ $t('withdrawal.bankAccount') }}</p>
+        <p class="info-value account-value">{{ bankAccount || $t('withdrawal.notBound') }}</p>
       </div>
 
       <div class="divider"></div>
 
       <!-- 提款現金 -->
       <div class="info-section">
-        <p class="info-label highlight-label">提款現金</p>
-        <p class="info-hint">單次提款金額為1000元，最大可提款100000000元</p>
+        <p class="info-label highlight-label">{{ $t('withdrawal.withdrawCash') }}</p>
+        <p class="info-hint">{{ $t('withdrawal.hint') }}</p>
       </div>
 
       <!-- 輸入框 -->
-      <AppInput v-model="amount" type="number" placeholder="請輸入提款金額" />
-      <AppInput v-model="password" type="password" placeholder="請輸入提款密碼" />
+      <AppInput v-model="amount" type="number" :placeholder="$t('withdrawal.amountPlaceholder')" />
+      <AppInput v-model="password" type="password" :placeholder="$t('withdrawal.passwordPlaceholder')" />
 
       <div class="forgot-pwd-link">
-        <router-link :to="{ path: '/transactions/withdrawal', query: { reset: 'true' }}" class="link-text">忘記提款密碼?</router-link>
+        <router-link :to="{ path: '/transactions/withdrawal', query: { reset: 'true' }}" class="link-text">{{ $t('withdrawal.forgotPwd') }}</router-link>
       </div>
 
       <!-- 提款申請按鈕 -->
       <div class="bottom-button-container">
-          <AppButton block :disabled="loading" @click="handleWithdraw">提款申請</AppButton>
+          <AppButton block :disabled="loading" @click="handleWithdraw">{{ $t('withdrawal.applyBtn') }}</AppButton>
           <DebugFillButton @fill="fillRandomData" />
       </div>
 
@@ -46,6 +46,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useApi } from '../composables/useApi'
 import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
@@ -55,6 +56,7 @@ import DebugFillButton from '../components/DebugFillButton.vue'
 
 const router = useRouter()
 const api = useApi()
+const { t } = useI18n()
 
 const amount = ref('')
 const password = ref('')
@@ -96,7 +98,7 @@ const handleWithdraw = async () => {
         const localUser = JSON.parse(userStr);
         
         await api.wallet.applyWithdrawal(localUser.id, Number(amount.value), password.value);
-        toast.success('提款申請已送出');
+        toast.success(t('withdrawal.successMsg'));
         router.push('/settings');
     } catch(err) {
         toast.error(err.message || '申請失敗');

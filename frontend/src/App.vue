@@ -1,13 +1,22 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import ToastNotification from '@/components/ToastNotification.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { t, locale } = useI18n()
 const isMenuOpen = ref(false)
 const isLoggedIn = ref(false)
 const activeMenu = ref(null)
+
+// 切換語言
+const setLocale = (lang) => {
+  locale.value = lang
+  localStorage.setItem('app_locale', lang)
+  activeMenu.value = null
+}
 
 // 檢查登入狀態
 const checkLoginStatus = () => {
@@ -68,6 +77,16 @@ const goBack = () => {
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+const activeMenuLabel = computed(() => {
+  const map = {
+    member: t('nav.member'),
+    help: t('nav.help'),
+    news: t('nav.news'),
+    lang: t('nav.language'),
+  }
+  return map[activeMenu.value] || ''
+})
 </script>
 
 <template>
@@ -104,7 +123,7 @@ const scrollToTop = () => {
                     </button>
                   </div>
                   <h2 v-if="activeMenu" class="menu-header-title">
-                    {{ activeMenu === 'member' ? '會員' : activeMenu === 'help' ? '協助' : activeMenu === 'news' ? '公告' : '語言' }}
+                    {{ activeMenuLabel }}
                   </h2>
                   <div class="header-right-area">
                     <button class="close-button" @click="toggleMenu">
@@ -114,30 +133,38 @@ const scrollToTop = () => {
                 </div>
 
                 <ul v-if="!activeMenu" class="menu-list">
-                <li><a href="#" @click.prevent="activeMenu = 'member'">會員</a></li>
-                <li><a href="#" @click.prevent="activeMenu = 'help'">協助</a></li>
-                <li><a href="#" @click.prevent="activeMenu = 'news'">公告</a></li>
-                <li><a href="#" @click.prevent="activeMenu = 'lang'">語言</a></li>
-                <li v-if="isLoggedIn"><a href="#" @click.prevent="handleLogout" class="logout-link">登出</a></li>
+                <li><a href="#" @click.prevent="activeMenu = 'member'">{{ $t('nav.member') }}</a></li>
+                <li><a href="#" @click.prevent="activeMenu = 'help'">{{ $t('nav.help') }}</a></li>
+                <li><a href="#" @click.prevent="activeMenu = 'news'">{{ $t('nav.news') }}</a></li>
+                <li><a href="#" @click.prevent="activeMenu = 'lang'">{{ $t('nav.language') }}</a></li>
+                <li v-if="isLoggedIn"><a href="#" @click.prevent="handleLogout" class="logout-link">{{ $t('nav.logout') }}</a></li>
               </ul>
 
               <div v-else class="submenu-content">
                 <ul v-if="activeMenu === 'member'" class="submenu-list">
                   <li v-if="!isLoggedIn">
-                    <router-link to="/register" @click="isMenuOpen = false">註冊/登入 阿聯酋航空 Skywards</router-link>
+                    <router-link to="/register" @click="isMenuOpen = false">{{ $t('nav.register') }} / {{ $t('nav.login') }} 阿聯酋航空 Skywards</router-link>
                   </li>
                   <li v-else>
-                     <router-link to="/skywards" @click="isMenuOpen = false">Skywards 會員資訊</router-link>
+                     <router-link to="/skywards" @click="isMenuOpen = false">Skywards {{ $t('nav.member') }}</router-link>
                   </li>
                 </ul>
                 <ul v-if="activeMenu === 'help'" class="submenu-list">
                   <li>
-                    <router-link to="/customer-service" @click="isMenuOpen = false">在線客服</router-link>
+                    <router-link to="/customer-service" @click="isMenuOpen = false">{{ $t('nav.onlineCS') }}</router-link>
                   </li>
                 </ul>
-                <ul v-if="activeMenu === 'lang'" class="submenu-list">
-                  <li><a href="#">中文</a></li>
-                  <li><a href="#">英文</a></li>
+                <ul v-if="activeMenu === 'lang'" class="submenu-list lang-list">
+                  <li>
+                    <a href="#" :class="{ active: $i18n.locale === 'zh-TW' }" @click.prevent="setLocale('zh-TW')">
+                      {{ $t('lang.zhTW') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" :class="{ active: $i18n.locale === 'en' }" @click.prevent="setLocale('en')">
+                      {{ $t('lang.en') }}
+                    </a>
+                  </li>
                 </ul>
                 <div v-if="activeMenu === 'news'" class="announcements-page">
                   <div v-for="news in announcements" :key="news.id" class="news-card" @click="router.push(`/announcement/${news.id}`)">
@@ -161,19 +188,19 @@ const scrollToTop = () => {
           <path d="M3 9.75L12 3l9 6.75V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.75z"/>
           <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
-        <span class="nav-label">首頁</span>
+        <span class="nav-label">{{ $t('nav.home') }}</span>
       </router-link>
       <router-link to="/skywards" class="nav-item">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 13.5C15.7266 13.5 18.75 10.4766 18.75 6.75C18.75 3.02344 15.7266 0 12 0C8.27344 0 5.25 3.02344 5.25 6.75C5.25 10.4766 8.27344 13.5 12 13.5ZM18 15H15.4172C14.3766 15.4781 13.2188 15.75 12 15.75C10.7812 15.75 9.62813 15.4781 8.58281 15H6C2.68594 15 0 17.6859 0 21V21.75C0 22.9922 1.00781 24 2.25 24H21.75C22.9922 24 24 22.9922 24 21.75V21C24 17.6859 21.3141 15 18 15Z" fill="currentColor"/>
         </svg>
-        <span class="nav-label">Skywards</span>
+        <span class="nav-label">{{ $t('nav.skywards') }}</span>
       </router-link>
       <router-link to="/settings" class="nav-item">
         <svg width="24" height="19" viewBox="0 0 24 19" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0.857143 3.375H23.1429C23.6163 3.375 24 3.03923 24 2.625V0.75C24 0.335766 23.6163 0 23.1429 0H0.857143C0.383732 0 0 0.335766 0 0.75V2.625C0 3.03923 0.383732 3.375 0.857143 3.375ZM0.857143 10.875H23.1429C23.6163 10.875 24 10.5392 24 10.125V8.25C24 7.83577 23.6163 7.5 23.1429 7.5H0.857143C0.383732 7.5 0 7.83577 0 8.25V10.125C0 10.5392 0.383732 10.875 0.857143 10.875ZM0.857143 18.375H23.1429C23.6163 18.375 24 18.0392 24 17.625V15.75C24 15.3358 23.6163 15 23.1429 15H0.857143C0.383732 15 0 15.3358 0 15.75V17.625C0 18.0392 0.383732 18.375 0.857143 18.375Z" fill="currentColor"/>
         </svg>
-        <span class="nav-label">我的</span>
+        <span class="nav-label">{{ $t('nav.settings') }}</span>
       </router-link>
     </footer>
   </div>
@@ -437,6 +464,11 @@ const scrollToTop = () => {
   font-size: 1.25rem;
   font-weight: 500;
   background-color: #ffffff;
+}
+
+.lang-list a.active {
+  color: #d71921;
+  font-weight: 700;
 }
 
 /* Slide Transition */

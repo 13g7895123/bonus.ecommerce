@@ -1,84 +1,369 @@
 <template>
   <div class="cs-page">
-    <PageHeader title="在線客服" back-to="/settings" />
+    <PageHeader :title="$t('cs.title')" back-to="/settings" />
+
+    <!-- 載入狀態 -->
+    <div v-if="initialLoading" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p>載入中...</p>
+    </div>
 
     <!-- 訊息列表 -->
-    <div class="messages-container">
-      <!-- 日期分隔：3月10日 -->
-      <div class="date-divider">
-        <span>2026年3月10日</span>
+    <div ref="messagesContainer" class="messages-container" @scroll="handleScroll">
+      <!-- 頂部拉取更多 -->
+      <div v-if="loadingMore" class="loading-more">載入中...</div>
+
+      <!-- 無訊息提示 -->
+      <div v-if="!initialLoading && groupedMessages.length === 0" class="empty-messages">
+        <p>{{ $t('cs.empty') }}</p>
       </div>
 
-      <!-- 對方訊息 -->
-      <div class="message-row other">
-        <div class="avatar">客服</div>
-        <div class="bubble other-bubble">您好！請問有什麼可以協助您的嗎？</div>
-      </div>
+      <template v-for="group in groupedMessages" :key="group.date">
+        <!-- 日期分隔線 -->
+        <div class="date-divider">
+          <span>{{ group.date }}</span>
+        </div>
 
-      <!-- 使用者訊息 -->
-      <div class="message-row self">
-        <div class="bubble self-bubble">你好，我想詢問儲值相關問題</div>
-      </div>
+        <!-- 訊息氣泡 -->
+        <div
+          v-for="msg in group.messages"
+          :key="msg.id"
+          :class="['message-row', msg.sender_type === 'user' ? 'self' : 'other']"
+        >
+          <div v-if="msg.sender_type !== 'user'" class="avatar">客服</div>
+          <div :class="['bubble', msg.sender_type === 'user' ? 'self-bubble' : 'other-bubble']">
+            <!-- 圖片訊息 -->
+            <img
+              v-if="msg.image_url"
+              :src="msg.image_url"
+              class="message-image"
+              @click="openImage(msg.image_url)"
+            />
+            <!-- 文字訊息 -->
+            <span v-if="msg.content">{{ msg.content }}</span>
+            <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
+          </div>
+        </div>
+      </template>
 
-      <!-- 對方訊息 -->
-      <div class="message-row other">
-        <div class="avatar">客服</div>
-        <div class="bubble other-bubble">好的，請問您需要了解哪方面的詳情呢？</div>
+      <!-- 發送中佔位 -->
+      <div v-if="sending" class="message-row self">
+        <div class="bubble self-bubble sending-bubble">{{ inputText }}<span class="sending-dots">...</span></div>
       </div>
+    </div>
 
-      <!-- 日期分隔：3月11日（今天） -->
-      <div class="date-divider">
-        <span>2026年3月11日</span>
-      </div>
-
-      <!-- 對方訊息 -->
-      <div class="message-row other">
-        <div class="avatar">客服</div>
-        <div class="bubble other-bubble">早安！今天有什麼需要幫助的嗎？</div>
-      </div>
-
-      <!-- 使用者訊息 -->
-      <div class="message-row self">
-        <div class="bubble self-bubble">請問儲值後多久會到帳？</div>
-      </div>
-
-      <!-- 對方訊息 -->
-      <div class="message-row other">
-        <div class="avatar">客服</div>
-        <div class="bubble other-bubble">儲值通常在10至30分鐘內到帳，若超過時間請提供交易截圖給我們確認。</div>
-      </div>
+    <!-- 圖片預覽 -->
+    <div v-if="imagePreview" class="image-preview-bar">
+      <img :src="imagePreview" class="preview-thumb" />
+      <button class="remove-preview" @click="removeImage">✕</button>
     </div>
 
     <!-- 固定輸入列 -->
     <div class="input-bar">
-      <button class="plus-btn">＋</button>
-      <input type="text" class="chat-input" placeholder="輸入訊息..." />
-      <button class="send-btn">發送</button>
+      <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="handleImageSelect" />
+      <button class="plus-btn" @click="fileInput?.click()">＋</button>
+      <input
+        v-model="inputText"
+        type="text"
+        class="chat-input"
+        :placeholder="$t('cs.inputPlaceholder')"
+        @keyup.enter="sendMessage"
+        :disabled="sending"
+      />
+      <button class="send-btn" :disabled="sending || (!inputText.trim() && !selectedImage)" @click="sendMessage">
+        {{ sending ? $t('cs.sending') : $t('cs.send') }}
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/PageHeader.vue'
+import { useApi } from '../composables/useApi'
+
+const { t } = useI18n()
+const api = useApi()
+
+// 狀態
+const messages = ref([])       // 所有訊息
+const inputText = ref('')       // 輸入框
+const sending = ref(false)      // 發送中
+const initialLoading = ref(true) // 首次載入
+const loadingMore = ref(false)   // 載入更多
+const messagesContainer = ref(null)
+const fileInput = ref(null)
+const selectedImage = ref(null)
+const imagePreview = ref(null)
+const page = ref(1)
+const hasMore = ref(true)
+const ticketId = ref(null)
+let pollTimer = null
+
+// 按日期分組訊息
+const groupedMessages = computed(() => {
+  const groups = []
+  let currentDate = ''
+  const sorted = [...messages.value].sort((a, b) =>
+    new Date(a.created_at) - new Date(b.created_at)
+  )
+  for (const msg of sorted) {
+    const d = formatDate(msg.created_at)
+    if (d !== currentDate) {
+      currentDate = d
+      groups.push({ date: d, messages: [] })
+    }
+    groups[groups.length - 1].messages.push(msg)
+  }
+  return groups
+})
+
+// 格式化日期
+const formatDate = (dateStr) => {
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+}
+
+// 格式化時間
+const formatTime = (dateStr) => {
+  const d = new Date(dateStr)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `${hh}:${mm}`
+}
+
+// 滾動至底部
+const scrollToBottom = async (smooth = false) => {
+  await nextTick()
+  const el = messagesContainer.value
+  if (el) {
+    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
+  }
+}
+
+// 載入訊息
+const loadMessages = async (loadPage = 1, append = false) => {
+  try {
+    const result = await api.cs.getMessages({ page: loadPage, limit: 50 })
+    const newMsgs = result?.items || []
+    ticketId.value = result?.ticket_id || null
+    if (append) {
+      // 前置舊訊息
+      messages.value = [...newMsgs, ...messages.value]
+      hasMore.value = newMsgs.length >= 50
+    } else {
+      messages.value = newMsgs
+      hasMore.value = newMsgs.length >= 50
+      await scrollToBottom()
+    }
+  } catch (e) {
+    console.error('載入訊息失敗', e)
+  }
+}
+
+// 初始載入
+const initLoad = async () => {
+  initialLoading.value = true
+  await loadMessages(1, false)
+  initialLoading.value = false
+}
+
+// 輪詢新訊息
+const pollMessages = async () => {
+  try {
+    const result = await api.cs.getMessages({ page: 1, limit: 50 })
+    const newMsgs = result?.items || []
+    if (newMsgs.length !== messages.value.length) {
+      const el = messagesContainer.value
+      const isAtBottom = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 80
+      messages.value = newMsgs
+      if (isAtBottom) await scrollToBottom(true)
+    }
+  } catch (e) {
+    // silent
+  }
+}
+
+// 處理上滑載入更多
+const handleScroll = async () => {
+  const el = messagesContainer.value
+  if (!el || loadingMore.value || !hasMore.value) return
+  if (el.scrollTop < 50) {
+    loadingMore.value = true
+    page.value += 1
+    await loadMessages(page.value, true)
+    loadingMore.value = false
+  }
+}
+
+// 選擇圖片
+const handleImageSelect = (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  selectedImage.value = file
+  const reader = new FileReader()
+  reader.onload = (ev) => { imagePreview.value = ev.target.result }
+  reader.readAsDataURL(file)
+}
+
+const removeImage = () => {
+  selectedImage.value = null
+  imagePreview.value = null
+  if (fileInput.value) fileInput.value.value = ''
+}
+
+// 發送訊息
+const sendMessage = async () => {
+  const text = inputText.value.trim()
+  if (!text && !selectedImage.value) return
+  sending.value = true
+  const tempText = text
+  try {
+    await api.cs.sendMessage(text || null, selectedImage.value || null)
+    inputText.value = ''
+    removeImage()
+    // 重新載入訊息取得最新
+    await loadMessages(1, false)
+  } catch (e) {
+    // 恢復輸入框
+    inputText.value = tempText
+    console.error('發送失敗', e)
+  } finally {
+    sending.value = false
+  }
+}
+
+// 開啟圖片
+const openImage = (url) => {
+  window.open(url, '_blank')
+}
+
+onMounted(async () => {
+  await initLoad()
+  // 每 10 秒輪詢一次新訊息
+  pollTimer = setInterval(pollMessages, 10000)
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
+})
 </script>
 
 <style scoped>
 .cs-page {
   background-color: #f5f5f5;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+/* 載入中遮罩 */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.85);
+  z-index: 50;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #7b2ff7;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-more {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #999;
+  padding: 0.5rem 0;
+}
+
+.empty-messages {
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+  padding: 3rem 0;
 }
 
 /* 訊息區域 */
 .messages-container {
   flex: 1;
-  padding: 1rem 1rem 6rem 1rem;
+  padding: 1rem 1rem 0.5rem 1rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
+
+/* 圖片預覽列 */
+.image-preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+}
+
+.preview-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.remove-preview {
+  background: #e0e0e0;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: #555;
+  line-height: 1;
+}
+
+/* 訊息圖片 */
+.message-image {
+  max-width: 180px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+/* 時間戳 */
+.msg-time {
+  display: block;
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.65);
+  margin-top: 0.25rem;
+  text-align: right;
+}
+.self-bubble .msg-time {
+  color: rgba(0,0,0,0.4);
+}
+
+/* 發送中動畫 */
+.sending-bubble { opacity: 0.6; }
+.sending-dots { animation: blink 1.2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
 /* 日期分隔線 */
 .date-divider {
@@ -148,10 +433,7 @@ import PageHeader from '../components/PageHeader.vue'
 
 /* 固定輸入列 */
 .input-bar {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   width: 100%;
   display: flex;
   align-items: center;
@@ -161,8 +443,7 @@ import PageHeader from '../components/PageHeader.vue'
   border-top: 1px solid #eee;
   z-index: 20;
   box-sizing: border-box;
-  max-width: var(--app-max-width);
-  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .plus-btn {
@@ -209,7 +490,9 @@ import PageHeader from '../components/PageHeader.vue'
   transition: background-color 0.2s;
 }
 
-.send-btn:hover {
-  background-color: #6620d4;
+.send-btn:active,
+.send-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 </style>

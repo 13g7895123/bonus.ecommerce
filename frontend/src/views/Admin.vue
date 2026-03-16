@@ -231,7 +231,7 @@ import { useApi } from '../composables/useApi'
 const router = useRouter()
 const { user: userService } = useApi()
 const items = ref([])
-const selectedKey = ref(null)
+const selectedKey = ref('users')
 
 const selectedItem = computed(() => items.value.find(i => i.key === selectedKey.value))
 
@@ -499,11 +499,6 @@ onMounted(() => {
 
   updateView()
   loadUsers()
-
-  // Select first item by default if available
-  if (items.value.length > 0) {
-    selectedKey.value = items.value[0].key
-  }
 })
 
 onUnmounted(() => {

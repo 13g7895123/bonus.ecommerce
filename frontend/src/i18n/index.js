@@ -1,0 +1,290 @@
+import { createI18n } from 'vue-i18n'
+
+const messages = {
+  'zh-TW': {
+    // 導覽
+    nav: {
+      home: '首頁',
+      skywards: 'Skywards',
+      settings: '我的',
+      member: '會員',
+      help: '協助',
+      news: '公告',
+      language: '語言',
+      logout: '登出',
+      login: '登入',
+      register: '註冊',
+      onlineCS: '在線客服',
+    },
+    // 語言選項
+    lang: {
+      zhTW: '繁體中文',
+      en: 'English',
+    },
+    // 通用
+    common: {
+      confirm: '確認',
+      cancel: '取消',
+      submit: '送出',
+      back: '返回',
+      loading: '載入中...',
+      save: '儲存',
+      edit: '編輯',
+      delete: '刪除',
+      refresh: '重新整理',
+      close: '關閉',
+      success: '成功',
+      error: '錯誤',
+      required: '必填',
+      optional: '選填',
+      amount: '金額',
+      status: '狀態',
+    },
+    // 首頁
+    home: {
+      joinTitle: '加入阿聯酋航空 Skywards',
+      joinDesc: '成為阿聯酋航空 Skywards 會員，即可享有航班獎勵、升等及其他福利',
+      joinBtn: '立即加入',
+      skywardsPlus: 'SKYWARDS+',
+      upgradeTitle: '利用 Skywards+ 升級您的權益',
+      upgradeDesc: '隨心所好，從您最喜愛的三款套裝行程中選擇，從機場貴賓休息室使用權限和額外行李限額，到專屬「現金+哩程數」票價與折扣，為您提供精彩可期的服務內容。',
+      moreInfo: '更多資訊',
+      aboutUs: '關於我們',
+      aboutSubtitle: '瞭解更多關於我們的歷史沿革、企業和永續發展倡議的資訊',
+    },
+    // 設定頁
+    settings: {
+      title: '我的設定',
+      essentials: '旅行必需品',
+      settingsSection: '設定',
+      idVerification: '實名認證',
+      myMail: '我的信件',
+      transactions: '交易紀錄',
+      withdrawal: '提款申請',
+      mileageRewards: '里程回饋',
+      customerService: '在線客服',
+      countryLanguage: '國家/地區和語言',
+      logout: '登出',
+    },
+    // 登入
+    auth: {
+      loginTitle: '登入',
+      registerTitle: '註冊',
+      forgotPassword: '忘記密碼',
+      email: '電子郵件',
+      password: '密碼',
+      confirmPassword: '確認密碼',
+      fullName: '姓名',
+      phone: '電話',
+      country: '國家',
+      loginBtn: '登入',
+      registerBtn: '註冊',
+      noAccount: '還沒有帳號？',
+      hasAccount: '已有帳號？',
+      toRegister: '立即註冊',
+      toLogin: '登入',
+      resetPassword: '重設密碼',
+      sendResetEmail: '發送重設郵件',
+    },
+    // 客服
+    cs: {
+      title: '在線客服',
+      inputPlaceholder: '輸入訊息...',
+      send: '發送',
+      sending: '傳送中',
+      loading: '載入中...',
+      empty: '開始與客服聯絡吧！',
+    },
+    // 提款
+    withdrawal: {
+      title: '提款申請',
+      availableCash: '可提款現金',
+      bankAccount: '銀行帳號',
+      notBound: '尚未綁定',
+      withdrawCash: '提款現金',
+      hint: '單次提款金額為1000元，最大可提款100000000元',
+      amountPlaceholder: '請輸入提款金額',
+      passwordPlaceholder: '請輸入提款密碼',
+      forgotPwd: '忘記提款密碼?',
+      applyBtn: '確認提款',
+      successMsg: '提款成功，餘額已更新',
+    },
+    // Skywards
+    skywards: {
+      title: 'Skywards 會員',
+      memberNumber: '會員號碼',
+      tier: '會員等級',
+      balance: '帳戶餘額',
+      miles: '里程數',
+      recentTransactions: '最近交易',
+      viewAll: '查看全部',
+    },
+    // Admin
+    admin: {
+      title: 'Admin Dashboard',
+      management: 'Management',
+      usersList: 'Users List',
+      userManagement: '使用者管理',
+      refresh: '重新整理',
+      loading: '載入中...',
+      noData: '尚無使用者資料',
+      clearStorage: 'Clear Storage',
+    },
+    // 交易類型
+    transactionType: {
+      deposit: '儲值',
+      withdrawal: '提款',
+      mileage: '里程',
+      transfer: '轉帳',
+    },
+  },
+  'en': {
+    // Navigation
+    nav: {
+      home: 'Home',
+      skywards: 'Skywards',
+      settings: 'My Account',
+      member: 'Member',
+      help: 'Help',
+      news: 'News',
+      language: 'Language',
+      logout: 'Logout',
+      login: 'Login',
+      register: 'Register',
+      onlineCS: 'Customer Service',
+    },
+    // Language options
+    lang: {
+      zhTW: '繁體中文',
+      en: 'English',
+    },
+    // Common
+    common: {
+      confirm: 'Confirm',
+      cancel: 'Cancel',
+      submit: 'Submit',
+      back: 'Back',
+      loading: 'Loading...',
+      save: 'Save',
+      edit: 'Edit',
+      delete: 'Delete',
+      refresh: 'Refresh',
+      close: 'Close',
+      success: 'Success',
+      error: 'Error',
+      required: 'Required',
+      optional: 'Optional',
+      amount: 'Amount',
+      status: 'Status',
+    },
+    // Home
+    home: {
+      joinTitle: 'Join Emirates Skywards',
+      joinDesc: 'Become an Emirates Skywards member and enjoy flight rewards, upgrades and more',
+      joinBtn: 'Join Now',
+      skywardsPlus: 'SKYWARDS+',
+      upgradeTitle: 'Upgrade Your Benefits with Skywards+',
+      upgradeDesc: 'Choose from your favourite three travel packages, from airport lounge access and extra baggage allowance to exclusive Cash+Miles fares and discounts.',
+      moreInfo: 'More Info',
+      aboutUs: 'About Us',
+      aboutSubtitle: 'Learn more about our history, corporate culture and sustainability initiatives',
+    },
+    // Settings
+    settings: {
+      title: 'Settings',
+      essentials: 'Travel Essentials',
+      settingsSection: 'Settings',
+      idVerification: 'ID Verification',
+      myMail: 'My Mail',
+      transactions: 'Transactions',
+      withdrawal: 'Withdrawal',
+      mileageRewards: 'Mileage Rewards',
+      customerService: 'Customer Service',
+      countryLanguage: 'Country/Region & Language',
+      logout: 'Logout',
+    },
+    // Auth
+    auth: {
+      loginTitle: 'Login',
+      registerTitle: 'Register',
+      forgotPassword: 'Forgot Password',
+      email: 'Email',
+      password: 'Password',
+      confirmPassword: 'Confirm Password',
+      fullName: 'Full Name',
+      phone: 'Phone',
+      country: 'Country',
+      loginBtn: 'Login',
+      registerBtn: 'Register',
+      noAccount: "Don't have an account?",
+      hasAccount: 'Already have an account?',
+      toRegister: 'Register Now',
+      toLogin: 'Login',
+      resetPassword: 'Reset Password',
+      sendResetEmail: 'Send Reset Email',
+    },
+    // Customer Service
+    cs: {
+      title: 'Customer Service',
+      inputPlaceholder: 'Type a message...',
+      send: 'Send',
+      sending: 'Sending',
+      loading: 'Loading...',
+      empty: 'Start a conversation with our support team!',
+    },
+    // Withdrawal
+    withdrawal: {
+      title: 'Withdrawal',
+      availableCash: 'Available Cash',
+      bankAccount: 'Bank Account',
+      notBound: 'Not bound',
+      withdrawCash: 'Withdraw Cash',
+      hint: 'Minimum withdrawal: $1,000. Maximum: $100,000,000',
+      amountPlaceholder: 'Enter withdrawal amount',
+      passwordPlaceholder: 'Enter withdrawal password',
+      forgotPwd: 'Forgot withdrawal password?',
+      applyBtn: 'Withdraw Now',
+      successMsg: 'Withdrawal completed, balance updated',
+    },
+    // Skywards
+    skywards: {
+      title: 'Skywards Membership',
+      memberNumber: 'Member Number',
+      tier: 'Tier',
+      balance: 'Account Balance',
+      miles: 'Miles',
+      recentTransactions: 'Recent Transactions',
+      viewAll: 'View All',
+    },
+    // Admin
+    admin: {
+      title: 'Admin Dashboard',
+      management: 'Management',
+      usersList: 'Users List',
+      userManagement: 'User Management',
+      refresh: 'Refresh',
+      loading: 'Loading...',
+      noData: 'No users found',
+      clearStorage: 'Clear Storage',
+    },
+    // Transaction types
+    transactionType: {
+      deposit: 'Deposit',
+      withdrawal: 'Withdrawal',
+      mileage: 'Mileage',
+      transfer: 'Transfer',
+    },
+  },
+}
+
+// 讀取儲存的語系，預設繁體中文
+const savedLocale = localStorage.getItem('app_locale') || 'zh-TW'
+
+const i18n = createI18n({
+  legacy: false,
+  locale: savedLocale,
+  fallbackLocale: 'zh-TW',
+  messages,
+})
+
+export default i18n

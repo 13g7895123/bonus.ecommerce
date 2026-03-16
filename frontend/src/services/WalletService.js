@@ -34,7 +34,17 @@ export class WalletService extends BaseService {
         if (user.wallet.balance < amount) throw new Error('餘額不足');
         user.wallet.balance -= amount;
         await mockDb.update(this.table, userId, { wallet: user.wallet });
-        return { message: '提款申請成功', balance: user.wallet.balance };
+        // 建立交易紀錄
+        await mockDb.insert('transactions', {
+          user_id:      userId,
+          type:         'withdrawal',
+          amount:       amount,
+          status:       'completed',
+          description:  '提款至銀行帳戶',
+          reference_id: 'WD_' + Date.now() + '_' + userId,
+          created_at:   new Date().toISOString(),
+        });
+        return { message: '提款成功', balance: user.wallet.balance };
       });
     }
     // Real API: userId 由 JWT 決定，body 使用 snake_case
