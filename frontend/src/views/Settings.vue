@@ -21,7 +21,7 @@ z
     </div>
 
     <!-- 旅行必需品區塊 -->
-    <div class="section" style="background-color: transparent; padding: 0 4rem;">
+    <div class="section section-wide" style="background-color: transparent;">
       <h3 class="section-title">旅行必需品</h3>
       <div class="essentials-grid">
         <router-link to="/identity-verification" class="essential-card">
@@ -77,7 +77,7 @@ z
     </div>
 
     <!-- 設定區塊 (標題再次顯示) -->
-    <div class="section" style="background-color: transparent; padding: 0 4rem;">
+    <div class="section section-wide" style="background-color: transparent;">
       <h3 class="section-title">設定</h3>
       <div>
         <button class="settings-rounded-btn">
@@ -87,12 +87,12 @@ z
     </div>
 
     <!-- 通告卡片區塊 -->
-    <div class="section" style="background-color: transparent; padding: 0 4rem; margin-bottom: 20px;">
+    <div class="section section-wide" style="background-color: transparent; margin-bottom: 20px;">
       <img src="/settings/enjoy.png" alt="Enjoy" style="width: 100%; border-radius: 12px; display: block;" />
     </div>
 
     <!-- 登出按鈕 -->
-    <div class="logout-container" style="padding: 0 4rem;">
+    <div class="logout-container">
       <button class="logout-btn" @click="handleLogout">登出</button>
     </div>
   </div>
@@ -270,7 +270,26 @@ z
 }
 
 .logout-container {
-  padding: 2rem 1.5rem;
+  padding: 2rem 4rem;
+}
+
+.section-wide {
+  padding-left: 4rem;
+  padding-right: 4rem;
+}
+
+/* ================================================
+ * 手機版配置（≤ 767px）
+ * ================================================ */
+@media (max-width: 767px) {
+  .section-wide {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .logout-container {
+    padding: 2rem 1.5rem;
+  }
 }
 
 .logout-btn {

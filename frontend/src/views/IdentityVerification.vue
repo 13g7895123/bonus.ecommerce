@@ -377,4 +377,10 @@ const handleNext = async () => {
   color: #2e7d32;
   font-weight: 600;
 }
+
+@media (max-width: 767px) {
+  .iv-content {
+    padding: 0 1.5rem 2rem 1.5rem;
+  }
+}
 </style>

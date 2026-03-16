@@ -235,4 +235,10 @@ const handleLogin = async () => {
   text-decoration: none;
   box-sizing: border-box;
 }
+
+@media (max-width: 767px) {
+  .login-page {
+    padding: 2rem 1.5rem;
+  }
+}
 </style>

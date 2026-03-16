@@ -257,4 +257,10 @@ const handleSubmit = async () => {
   border-radius: 4px;
   cursor: pointer;
 }
+
+@media (max-width: 767px) {
+  .login-page {
+    padding: 2rem 1.5rem;
+  }
+}
 </style>

@@ -84,4 +84,10 @@ const handleSubmit = async () => {
 :deep(.app-input-label) {
   text-align: left;
 }
+
+@media (max-width: 767px) {
+  .cp-content {
+    padding: 2rem 1.5rem;
+  }
+}
 </style>

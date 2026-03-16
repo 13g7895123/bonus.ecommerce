@@ -383,4 +383,15 @@ const fillRandomData = () => {
 .submit-btn:hover {
   background-color: #b8151b;
 }
+
+@media (max-width: 767px) {
+  .ws-content {
+    padding: 0 1.5rem 2rem 1.5rem;
+  }
+}
+@media (max-width: 767px) {
+  .ws-content {
+    padding: 0 1.5rem 2rem 1.5rem;
+  }
+}
 </style>

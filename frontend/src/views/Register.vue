@@ -297,4 +297,10 @@ const handleRegister = async () => {
   font-weight: 700;
   margin-left: 0.5rem;
 }
+
+@media (max-width: 767px) {
+  .login-page {
+    padding: 2rem 1.5rem;
+  }
+}
 </style>
