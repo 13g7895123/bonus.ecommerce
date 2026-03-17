@@ -21,6 +21,16 @@ $routes->group('api/v1', static function ($routes) {
         $routes->get('users/(:num)',          'AdminPanelController::userDetail/$1');
         $routes->get('users/(:num)/logs',     'AdminPanelController::userLogs/$1');
         $routes->post('users/(:num)/deposit', 'AdminPanelController::deposit/$1');
+        // Mileage Redemption Items
+        $routes->get('mileage-items',           'AdminPanelController::mileageItems');
+        $routes->post('mileage-items',          'AdminPanelController::createMileageItem');
+        $routes->put('mileage-items/(:num)',    'AdminPanelController::updateMileageItem/$1');
+        $routes->delete('mileage-items/(:num)', 'AdminPanelController::deleteMileageItem/$1');
+        // Skywards Benefits
+        $routes->get('skywards-benefits',           'AdminPanelController::skywardsBenefits');
+        $routes->post('skywards-benefits',          'AdminPanelController::createSkywardsBenefit');
+        $routes->put('skywards-benefits/(:num)',    'AdminPanelController::updateSkywardsBenefit/$1');
+        $routes->delete('skywards-benefits/(:num)', 'AdminPanelController::deleteSkywardsBenefit/$1');
     });
 
     // ── Auth (Public) ──
@@ -65,14 +75,20 @@ $routes->group('api/v1', static function ($routes) {
 
     // ── Mileage (JWT required) ──
     $routes->group('mileage', ['filter' => 'jwt'], static function ($routes) {
-        $routes->get('history',  'Api\MileageController::history');
-        $routes->post('redeem',  'Api\MileageController::redeem');
+        $routes->get('history',           'Api\MileageController::history');
+        $routes->post('redeem',           'Api\MileageController::redeem');
+        $routes->get('redemption-items',  'Api\MileageController::redemptionItems');
     });
 
     // ── Announcements (JWT required) ──
     $routes->group('announcements', ['filter' => 'jwt'], static function ($routes) {
         $routes->get('/',          'Api\AnnouncementController::index');
         $routes->get('(:num)',     'Api\AnnouncementController::show/$1');
+    });
+
+    // ── Skywards (JWT required) ──
+    $routes->group('skywards', ['filter' => 'jwt'], static function ($routes) {
+        $routes->get('benefits', 'Api\SkywardsBenefitController::index');
     });
 
     // ── Customer Service (JWT required) ──

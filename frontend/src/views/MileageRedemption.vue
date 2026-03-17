@@ -27,33 +27,25 @@
       </div>
       
       <div class="items-list">
-        <!-- Skywards Miles Mall -->
-        <div class="list-item">
+        <div v-if="loadingItems" class="loading-state">載入中...</div>
+        <div v-else-if="redemptionItems.length === 0" class="empty-state">目前尚無項目</div>
+        <div
+          v-else
+          v-for="item in redemptionItems"
+          :key="item.id"
+          class="list-item"
+          @click="openItemModal(item)"
+        >
           <div class="item-left">
-            <div class="logo-box">
-              <span class="logo-text">S</span>
+            <div class="logo-box" :style="item.logo_color ? { backgroundColor: item.logo_color } : {}">
+              <span class="logo-text">{{ item.logo_letter || 'S' }}</span>
             </div>
             <div class="item-info">
-              <h4 class="item-name">Skywards Miles Mall</h4>
-            </div>
-          </div>
-          <div class="item-right">
-            <span class="arrow-icon">›</span>
-          </div>
-        </div>
-
-        <!-- Emirates Official Store -->
-        <div class="list-item">
-          <div class="item-left">
-            <div class="logo-box">
-              <span class="logo-text">E</span>
-            </div>
-            <div class="item-info">
-              <div class="featured-tag">
-                <span class="star">★</span> 精選
+              <div v-if="item.is_featured == 1" class="featured-tag">
+                <span class="star">★</span> {{ item.featured_label || '精選' }}
               </div>
-              <h4 class="item-name">阿聯酋航空官方商店</h4>
-              <p class="item-desc">累積至2,000點哩程數即可開始兌換獎勵</p>
+              <h4 class="item-name">{{ item.name }}</h4>
+              <p v-if="item.short_desc" class="item-desc">{{ item.short_desc }}</p>
             </div>
           </div>
           <div class="item-right">
@@ -82,11 +74,37 @@
         </AppButton>
       </div>
     </div>
+
+    <!-- Item Detail Modal -->
+    <div v-if="selectedItem" class="modal-overlay" @click.self="selectedItem = null">
+      <transition name="slide-up">
+        <div class="item-modal">
+          <div class="item-modal-header">
+            <div class="item-modal-logo" :style="selectedItem.logo_color ? { backgroundColor: selectedItem.logo_color } : {}">
+              <span class="item-modal-letter">{{ selectedItem.logo_letter || 'S' }}</span>
+            </div>
+            <div class="item-modal-title-wrap">
+              <div v-if="selectedItem.is_featured == 1" class="featured-tag">
+                <span class="star">★</span> {{ selectedItem.featured_label || '精選' }}
+              </div>
+              <h3 class="item-modal-title">{{ selectedItem.name }}</h3>
+            </div>
+            <button class="item-modal-close" @click="selectedItem = null">✕</button>
+          </div>
+          <div class="item-modal-body">
+            <p v-if="selectedItem.short_desc" class="item-modal-short">{{ selectedItem.short_desc }}</p>
+            <div v-if="selectedItem.details" class="item-modal-details" v-html="selectedItem.details"></div>
+            <div v-else class="item-modal-empty">暫無詳細說明</div>
+          </div>
+          <button class="item-modal-confirm" @click="selectedItem = null">關閉</button>
+        </div>
+      </transition>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
@@ -98,6 +116,25 @@ const mileageService = new MileageService()
 const activeTab = ref('spending')
 const mileageCode = ref('')
 const loading = ref(false)
+const loadingItems = ref(false)
+const redemptionItems = ref([])
+const selectedItem = ref(null)
+
+const openItemModal = (item) => {
+  selectedItem.value = item
+}
+
+const loadRedemptionItems = async () => {
+  loadingItems.value = true
+  try {
+    const result = await mileageService.getRedemptionItems()
+    redemptionItems.value = result.items || []
+  } catch (e) {
+    toast.error('無法載入項目')
+  } finally {
+    loadingItems.value = false
+  }
+}
 
 const submitCode = async () => {
   if (!mileageCode.value) {
@@ -116,7 +153,307 @@ const submitCode = async () => {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  loadRedemptionItems()
+})
 </script>
+
+<style scoped>
+.mileage-redemption-page {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  color: #333;
+}
+
+/* Tab Navigation */
+.tabs-header {
+  display: flex;
+  background-color: #ffffff;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.tab-item {
+  padding: 1rem 0;
+  margin-right: 2rem;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+}
+
+.tab-item.active {
+  color: #d71921;
+  border-bottom-color: #d71921;
+  font-weight: 700;
+}
+
+/* Spending Content */
+.spending-content {}
+
+.opportunity-header {
+  background-color: #eaeaea;
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  color: #333;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.items-list {
+  background-color: #ffffff;
+}
+
+.loading-state,
+.empty-state {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.item-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-box {
+  width: 50px;
+  height: 50px;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-weight: 700;
+  color: #999;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  align-items: flex-start;
+}
+
+.featured-tag {
+  color: #E65100;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.star {
+  margin-right: 4px;
+  font-size: 0.9rem;
+}
+
+.item-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.item-desc {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.arrow-icon {
+  font-size: 1.5rem;
+  color: #999;
+  font-weight: 300;
+}
+
+/* Redemption Content */
+.redemption-content {
+  background-color: #f5f5f5;
+  padding: 1.5rem;
+  min-height: calc(100vh - 120px);
+}
+
+.redemption-box {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.input-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: -0.5rem;
+}
+
+.code-input {
+  width: 100%;
+}
+
+.submit-btn {
+  background-color: #d71921;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.submit-btn:disabled {
+  background-color: #e57373;
+  cursor: not-allowed;
+}
+
+/* Item Detail Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.item-modal {
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.item-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  position: relative;
+}
+
+.item-modal-logo {
+  width: 48px;
+  height: 48px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.item-modal-letter {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #555;
+}
+
+.item-modal-title-wrap {
+  flex: 1;
+}
+
+.item-modal-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+}
+
+.item-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.item-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+}
+
+.item-modal-short {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.item-modal-details {
+  font-size: 0.88rem;
+  color: #444;
+  line-height: 1.7;
+}
+
+.item-modal-empty {
+  color: #aaa;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.item-modal-confirm {
+  margin: 0 1.5rem 1.5rem;
+  background-color: #d71921;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.875rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: calc(100% - 3rem);
+}
+
+/* Transition */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform 0.3s ease;
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(100%);
+}
+</style>
+
 
 <style scoped>
 .mileage-redemption-page {

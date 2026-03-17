@@ -14,6 +14,14 @@ export class MileageService extends BaseService {
     return this._get('/history', { page, limit });
   }
 
+  /* 消費及生活兌換項目 — GET /mileage/redemption-items */
+  async getRedemptionItems() {
+    if (this.useMock) {
+      return { items: [] };
+    }
+    return this._get('/redemption-items');
+  }
+
   /* 兌換里程代碼 — POST /mileage/redeem */
   async redeem(code) {
     if (this.useMock) {

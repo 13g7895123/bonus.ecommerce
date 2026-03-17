@@ -8,13 +8,34 @@ const toast = useToast()
 const user = ref(null)
 const activeTab = ref('miles') // 'miles' or 'tier'
 const showModal = ref(false)
+const benefits = ref([])
+const loadingBenefits = ref(false)
 
-const openModal = () => {
+const openModal = async () => {
   showModal.value = true
+  if (benefits.value.length === 0) {
+    await loadBenefits()
+  }
 }
 
 const closeModal = () => {
   showModal.value = false
+}
+
+const loadBenefits = async () => {
+  loadingBenefits.value = true
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch('/api/v1/skywards/benefits', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    const json = await res.json()
+    benefits.value = json?.data?.items || []
+  } catch (e) {
+    toast.error('無法載入權益資料')
+  } finally {
+    loadingBenefits.value = false
+  }
 }
 
 const getTierName = (tier) => {
@@ -166,17 +187,21 @@ onMounted(async () => {
       <transition name="pop">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title">升級規則</h3>
+            <h3 class="modal-title">檢視您的權益</h3>
             <button class="modal-close" @click="closeModal">✕</button>
           </div>
           <div class="modal-body">
-            <p class="rule-hint">掌握 Skywards 等級晉升祕訣：</p>
-            <ul class="rule-list">
-              <li><strong>銀卡：</strong>累積 25,000 級哩程或搭乘 25 次合格航班。</li>
-              <li><strong>金卡：</strong>累積 50,000 級哩程或搭乘 50 次合格航班。</li>
-              <li><strong>白金卡：</strong>累積 150,000 級哩程。</li>
-            </ul>
-            <p class="rule-note">※ 合格航班指由阿聯酋航空或杜拜航空營運且符合積分資格之航班。</p>
+            <div v-if="loadingBenefits" class="modal-loading">載入中...</div>
+            <div v-else-if="benefits.length === 0" class="modal-empty">目前尚無權益資料</div>
+            <template v-else>
+              <template v-for="item in benefits" :key="item.id">
+                <p v-if="item.type === 'hint'" class="rule-hint">{{ item.content }}</p>
+                <ul v-else-if="item.type === 'rule'" class="rule-list">
+                  <li><strong v-if="item.label">{{ item.label }}：</strong>{{ item.content }}</li>
+                </ul>
+                <p v-else-if="item.type === 'note'" class="rule-note">{{ item.content }}</p>
+              </template>
+            </template>
           </div>
           <button class="modal-confirm-btn" @click="closeModal">我知道了</button>
         </div>
@@ -354,6 +379,8 @@ onMounted(async () => {
 .rule-list { padding-left: 1.25rem; margin-bottom: 1.5rem; }
 .rule-list li { margin-bottom: 0.75rem; font-size: 0.95rem; line-height: 1.4; }
 .rule-note { font-size: 0.8rem; color: #888; border-top: 1px solid #eee; padding-top: 1rem; }
+.modal-loading { text-align: center; color: #999; padding: 1.5rem 0; font-size: 0.9rem; }
+.modal-empty { text-align: center; color: #bbb; padding: 1.5rem 0; font-size: 0.9rem; }
 .modal-confirm-btn {
   width: 100%; background-color: #d71921; color: white; border: none;
   padding: 1rem; border-radius: 4px; font-weight: 700; margin-top: 1.5rem; cursor: pointer;

@@ -4,9 +4,13 @@ namespace App\Controllers;
 
 use App\Models\UserModel;
 use App\Repositories\ApiLogRepository;
+use App\Repositories\MileageRedemptionItemRepository;
+use App\Repositories\SkywardsBenefitRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\UserWalletRepository;
 use App\Services\AdminService;
+use App\Services\MileageRedemptionItemService;
+use App\Services\SkywardsBenefitService;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -153,6 +157,62 @@ class AdminPanelController extends Controller
         $limit  = min((int) ($this->request->getGet('limit') ?? 20), 100);
         $result = (new ApiLogRepository())->paginate($page, $limit, ['user_id' => $userId]);
         return $this->json(['page' => $page, 'limit' => $limit, ...$result]);
+    }
+
+    // ── Mileage Redemption Items ──────────────────────────────────────────────
+
+    public function mileageItems(): ResponseInterface
+    {
+        $items = (new MileageRedemptionItemService())->getAllItems();
+        return $this->json(['items' => $items]);
+    }
+
+    public function createMileageItem(): ResponseInterface
+    {
+        $data   = $this->request->getJSON(true) ?? [];
+        $result = (new MileageRedemptionItemService())->create($data);
+        return $this->json($result, $result['success'] ? 201 : 400);
+    }
+
+    public function updateMileageItem(int $id): ResponseInterface
+    {
+        $data   = $this->request->getJSON(true) ?? [];
+        $result = (new MileageRedemptionItemService())->update($id, $data);
+        return $this->json($result, $result['success'] ? 200 : 404);
+    }
+
+    public function deleteMileageItem(int $id): ResponseInterface
+    {
+        $result = (new MileageRedemptionItemService())->delete($id);
+        return $this->json($result, $result['success'] ? 200 : 404);
+    }
+
+    // ── Skywards Benefits ─────────────────────────────────────────────────────
+
+    public function skywardsBenefits(): ResponseInterface
+    {
+        $items = (new SkywardsBenefitService())->getAllItems();
+        return $this->json(['items' => $items]);
+    }
+
+    public function createSkywardsBenefit(): ResponseInterface
+    {
+        $data   = $this->request->getJSON(true) ?? [];
+        $result = (new SkywardsBenefitService())->create($data);
+        return $this->json($result, $result['success'] ? 201 : 400);
+    }
+
+    public function updateSkywardsBenefit(int $id): ResponseInterface
+    {
+        $data   = $this->request->getJSON(true) ?? [];
+        $result = (new SkywardsBenefitService())->update($id, $data);
+        return $this->json($result, $result['success'] ? 200 : 404);
+    }
+
+    public function deleteSkywardsBenefit(int $id): ResponseInterface
+    {
+        $result = (new SkywardsBenefitService())->delete($id);
+        return $this->json($result, $result['success'] ? 200 : 404);
     }
 
     // ── HTML Panel ────────────────────────────────────────────────────────────

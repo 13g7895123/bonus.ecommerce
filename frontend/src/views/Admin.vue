@@ -27,6 +27,16 @@
                     <div class="sidebar-item-title">Users List</div>
                 </div>
              </div>
+             <div class="sidebar-item" :class="{ active: selectedKey === 'mileage-items' }" @click="selectKey({ key: 'mileage-items' })">
+                <div class="sidebar-item-content">
+                    <div class="sidebar-item-title">里程兌換項目管理</div>
+                </div>
+             </div>
+             <div class="sidebar-item" :class="{ active: selectedKey === 'skywards-benefits' }" @click="selectKey({ key: 'skywards-benefits' })">
+                <div class="sidebar-item-content">
+                    <div class="sidebar-item-title">Skywards 權益管理</div>
+                </div>
+             </div>
              <!-- Original LocalStorage inspector below -->
         </div>
 
@@ -85,6 +95,103 @@
                               </td>
                           </tr>
                       </tbody>
+                  </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 里程兌換項目管理 -->
+        <div v-else-if="selectedKey === 'mileage-items'" class="content-panel">
+            <div class="panel-header">
+                <h2>里程兌換項目管理</h2>
+                <div style="display:flex;gap:0.5rem;">
+                  <button class="refresh-btn" :disabled="loadingMileageItems" @click="loadMileageItems">{{ loadingMileageItems ? '載入中...' : '重新整理' }}</button>
+                  <button class="add-btn" @click="openMileageItemForm()">＋ 新增項目</button>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div v-if="loadingMileageItems" class="loading-state">載入中...</div>
+                <div v-else-if="mileageItemsList.length === 0" class="empty-state">尚無項目，請點擊「新增項目」</div>
+                <div v-else class="table-container">
+                  <table class="user-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>名稱</th>
+                        <th>簡短說明</th>
+                        <th>Logo字母</th>
+                        <th>Logo顏色</th>
+                        <th>精選</th>
+                        <th>精選標籤</th>
+                        <th>狀態</th>
+                        <th>排序</th>
+                        <th>操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="item in mileageItemsList" :key="item.id">
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.name }}</td>
+                        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ item.short_desc || '-' }}</td>
+                        <td>{{ item.logo_letter }}</td>
+                        <td>
+                          <span class="color-swatch" :style="{ backgroundColor: item.logo_color }"></span>
+                          {{ item.logo_color }}
+                        </td>
+                        <td><span :class="['status-badge', item.is_featured == 1 ? 'active' : 'inactive']">{{ item.is_featured == 1 ? '是' : '否' }}</span></td>
+                        <td>{{ item.featured_label || '-' }}</td>
+                        <td><span :class="['status-badge', item.is_active == 1 ? 'active' : 'inactive']">{{ item.is_active == 1 ? '啟用' : '停用' }}</span></td>
+                        <td>{{ item.sort_order }}</td>
+                        <td>
+                          <button class="edit-btn" @click="openMileageItemForm(item)">編輯</button>
+                          <button class="delete-item-btn" @click="deleteMileageItem(item.id)">刪除</button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skywards 權益管理 -->
+        <div v-else-if="selectedKey === 'skywards-benefits'" class="content-panel">
+            <div class="panel-header">
+                <h2>Skywards 權益管理</h2>
+                <div style="display:flex;gap:0.5rem;">
+                  <button class="refresh-btn" :disabled="loadingBenefits" @click="loadSkywardsBenefits">{{ loadingBenefits ? '載入中...' : '重新整理' }}</button>
+                  <button class="add-btn" @click="openBenefitForm()">＋ 新增權益</button>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div v-if="loadingBenefits" class="loading-state">載入中...</div>
+                <div v-else-if="benefitsList.length === 0" class="empty-state">尚無資料，請點擊「新增權益」</div>
+                <div v-else class="table-container">
+                  <table class="user-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>類型</th>
+                        <th>標籤</th>
+                        <th>內容</th>
+                        <th>狀態</th>
+                        <th>排序</th>
+                        <th>操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="item in benefitsList" :key="item.id">
+                        <td>{{ item.id }}</td>
+                        <td><span :class="['type-badge', item.type]">{{ { hint: '提示文字', rule: '規則條文', note: '備註' }[item.type] || item.type }}</span></td>
+                        <td>{{ item.label || '-' }}</td>
+                        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ item.content }}</td>
+                        <td><span :class="['status-badge', item.is_active == 1 ? 'active' : 'inactive']">{{ item.is_active == 1 ? '啟用' : '停用' }}</span></td>
+                        <td>{{ item.sort_order }}</td>
+                        <td>
+                          <button class="edit-btn" @click="openBenefitForm(item)">編輯</button>
+                          <button class="delete-item-btn" @click="deleteBenefit(item.id)">刪除</button>
+                        </td>
+                      </tr>
+                    </tbody>
                   </table>
                 </div>
             </div>
@@ -221,10 +328,101 @@
       </div>
     </div>
   </div>
+
+  <!-- 里程兌換項目 Modal -->
+  <div v-if="mileageItemForm.show" class="modal-overlay" @click.self="mileageItemForm.show = false">
+    <div class="modal-box" style="width:520px;max-height:90vh;overflow-y:auto;">
+      <div class="modal-header">
+        <h3>{{ mileageItemForm.id ? '編輯項目' : '新增項目' }}</h3>
+        <button class="modal-close" @click="mileageItemForm.show = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label">名稱 *</label>
+        <input v-model="mileageItemForm.name" class="modal-input" placeholder="例：Skywards Miles Mall" />
+        <label class="modal-label" style="margin-top:0.75rem;">簡短說明</label>
+        <input v-model="mileageItemForm.short_desc" class="modal-input" placeholder="顯示在列表的副標題" />
+        <label class="modal-label" style="margin-top:0.75rem;">詳細內容（支援 HTML）</label>
+        <textarea v-model="mileageItemForm.details" class="modal-input" rows="4" placeholder="點開 modal 後顯示的完整說明，支援 HTML 標籤" style="resize:vertical;"></textarea>
+        <div style="display:flex;gap:1rem;margin-top:0.75rem;">
+          <div style="flex:1;">
+            <label class="modal-label">Logo 字母</label>
+            <input v-model="mileageItemForm.logo_letter" class="modal-input" placeholder="S" maxlength="5" />
+          </div>
+          <div style="flex:1;">
+            <label class="modal-label">Logo 背景色</label>
+            <input v-model="mileageItemForm.logo_color" class="modal-input" placeholder="#ffffff" />
+          </div>
+        </div>
+        <div style="display:flex;gap:1rem;margin-top:0.75rem;align-items:center;">
+          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+            <input type="checkbox" v-model="mileageItemForm.is_featured" :true-value="1" :false-value="0" />
+            <span class="modal-label" style="margin:0;">精選項目</span>
+          </label>
+          <div style="flex:1;">
+            <input v-model="mileageItemForm.featured_label" class="modal-input" placeholder="精選標籤文字（預設：精選）" :disabled="!mileageItemForm.is_featured" />
+          </div>
+        </div>
+        <div style="display:flex;gap:1rem;margin-top:0.75rem;align-items:center;">
+          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+            <input type="checkbox" v-model="mileageItemForm.is_active" :true-value="1" :false-value="0" />
+            <span class="modal-label" style="margin:0;">啟用</span>
+          </label>
+          <div style="flex:1;">
+            <label class="modal-label">排序（數字越小越前）</label>
+            <input v-model.number="mileageItemForm.sort_order" class="modal-input" type="number" min="0" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-cancel-btn" @click="mileageItemForm.show = false">取消</button>
+        <button class="modal-submit-btn" :disabled="mileageItemForm.submitting" @click="submitMileageItem">
+          {{ mileageItemForm.submitting ? '處理中...' : (mileageItemForm.id ? '儲存變更' : '新增') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skywards 權益 Modal -->
+  <div v-if="benefitForm.show" class="modal-overlay" @click.self="benefitForm.show = false">
+    <div class="modal-box" style="width:480px;max-height:90vh;overflow-y:auto;">
+      <div class="modal-header">
+        <h3>{{ benefitForm.id ? '編輯權益' : '新增權益' }}</h3>
+        <button class="modal-close" @click="benefitForm.show = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label">類型 *</label>
+        <select v-model="benefitForm.type" class="modal-input">
+          <option value="hint">提示文字（hint）</option>
+          <option value="rule">規則條文（rule）</option>
+          <option value="note">備註（note）</option>
+        </select>
+        <label class="modal-label" style="margin-top:0.75rem;">標籤（rule 類型顯示為粗體前置文字）</label>
+        <input v-model="benefitForm.label" class="modal-input" placeholder="例：銀卡" />
+        <label class="modal-label" style="margin-top:0.75rem;">內容 *</label>
+        <textarea v-model="benefitForm.content" class="modal-input" rows="3" placeholder="輸入說明文字" style="resize:vertical;"></textarea>
+        <div style="display:flex;gap:1rem;margin-top:0.75rem;align-items:center;">
+          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+            <input type="checkbox" v-model="benefitForm.is_active" :true-value="1" :false-value="0" />
+            <span class="modal-label" style="margin:0;">啟用</span>
+          </label>
+          <div style="flex:1;">
+            <label class="modal-label">排序（數字越小越前）</label>
+            <input v-model.number="benefitForm.sort_order" class="modal-input" type="number" min="0" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-cancel-btn" @click="benefitForm.show = false">取消</button>
+        <button class="modal-submit-btn" :disabled="benefitForm.submitting" @click="submitBenefit">
+          {{ benefitForm.submitting ? '處理中...' : (benefitForm.id ? '儲存變更' : '新增') }}
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
 
@@ -416,6 +614,8 @@ const clearStorage = () => {
 
 const selectKey = (item) => {
   selectedKey.value = item.key
+  if (item.key === 'mileage-items' && mileageItemsList.value.length === 0) loadMileageItems()
+  if (item.key === 'skywards-benefits' && benefitsList.value.length === 0) loadSkywardsBenefits()
 }
 
 const openImage = (src) => {
@@ -486,6 +686,116 @@ const updateView = () => {
         parsedValue: parsedVal
         }
     })
+}
+
+// ── 里程兌換項目 ────────────────────────────────────────────────────────────
+const mileageItemsList    = ref([])
+const loadingMileageItems = ref(false)
+const mileageItemForm = ref({ show: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0, submitting: false })
+
+const loadMileageItems = async () => {
+  loadingMileageItems.value = true
+  try {
+    const res  = await fetch('/api/v1/admin-panel/mileage-items')
+    const data = await res.json()
+    mileageItemsList.value = data.items || []
+  } catch (e) {
+    console.error('載入里程兌換項目失敗', e)
+  } finally {
+    loadingMileageItems.value = false
+  }
+}
+
+const openMileageItemForm = (item = null) => {
+  if (item) {
+    mileageItemForm.value = { show: true, submitting: false, id: item.id, name: item.name, short_desc: item.short_desc || '', details: item.details || '', logo_letter: item.logo_letter || 'S', logo_color: item.logo_color || '#ffffff', is_featured: Number(item.is_featured), featured_label: item.featured_label || '精選', is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
+  } else {
+    mileageItemForm.value = { show: true, submitting: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0 }
+  }
+}
+
+const submitMileageItem = async () => {
+  const f = mileageItemForm.value
+  if (!f.name.trim()) { alert('請填寫名稱'); return }
+  f.submitting = true
+  try {
+    const url    = f.id ? `/api/v1/admin-panel/mileage-items/${f.id}` : '/api/v1/admin-panel/mileage-items'
+    const method = f.id ? 'PUT' : 'POST'
+    const body   = JSON.stringify({ name: f.name, short_desc: f.short_desc, details: f.details, logo_letter: f.logo_letter, logo_color: f.logo_color, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order })
+    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body })
+    if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
+    f.show = false
+    await loadMileageItems()
+  } catch (e) {
+    alert('操作失敗，請稍後再試')
+  } finally {
+    f.submitting = false
+  }
+}
+
+const deleteMileageItem = async (id) => {
+  if (!confirm('確定要刪除此項目嗎？')) return
+  try {
+    await fetch(`/api/v1/admin-panel/mileage-items/${id}`, { method: 'DELETE' })
+    await loadMileageItems()
+  } catch (e) {
+    alert('刪除失敗')
+  }
+}
+
+// ── Skywards 權益 ────────────────────────────────────────────────────────────
+const benefitsList    = ref([])
+const loadingBenefits = ref(false)
+const benefitForm = ref({ show: false, id: null, type: 'rule', label: '', content: '', is_active: 1, sort_order: 0, submitting: false })
+
+const loadSkywardsBenefits = async () => {
+  loadingBenefits.value = true
+  try {
+    const res  = await fetch('/api/v1/admin-panel/skywards-benefits')
+    const data = await res.json()
+    benefitsList.value = data.items || []
+  } catch (e) {
+    console.error('載入Skywards權益失敗', e)
+  } finally {
+    loadingBenefits.value = false
+  }
+}
+
+const openBenefitForm = (item = null) => {
+  if (item) {
+    benefitForm.value = { show: true, submitting: false, id: item.id, type: item.type, label: item.label || '', content: item.content, is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
+  } else {
+    benefitForm.value = { show: true, submitting: false, id: null, type: 'rule', label: '', content: '', is_active: 1, sort_order: 0 }
+  }
+}
+
+const submitBenefit = async () => {
+  const f = benefitForm.value
+  if (!f.content.trim()) { alert('請填寫內容'); return }
+  f.submitting = true
+  try {
+    const url    = f.id ? `/api/v1/admin-panel/skywards-benefits/${f.id}` : '/api/v1/admin-panel/skywards-benefits'
+    const method = f.id ? 'PUT' : 'POST'
+    const body   = JSON.stringify({ type: f.type, label: f.label, content: f.content, is_active: f.is_active, sort_order: f.sort_order })
+    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body })
+    if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
+    f.show = false
+    await loadSkywardsBenefits()
+  } catch (e) {
+    alert('操作失敗，請稍後再試')
+  } finally {
+    f.submitting = false
+  }
+}
+
+const deleteBenefit = async (id) => {
+  if (!confirm('確定要刪除此權益項目嗎？')) return
+  try {
+    await fetch(`/api/v1/admin-panel/skywards-benefits/${id}`, { method: 'DELETE' })
+    await loadSkywardsBenefits()
+  } catch (e) {
+    alert('刪除失敗')
+  }
 }
 
 onMounted(() => {
@@ -1168,4 +1478,76 @@ tr:hover td {
 }
 .modal-submit-btn:hover:not(:disabled) { background: #b71418; }
 .modal-submit-btn:disabled { opacity: 0.6; cursor: default; }
+
+.add-btn {
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.add-btn:hover { background: #15803d; }
+
+.edit-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 0.3rem 0.7rem;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 0.4rem;
+  transition: background 0.2s;
+}
+.edit-btn:hover { background: #1d4ed8; }
+
+.delete-item-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 0.3rem 0.7rem;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.delete-item-btn:hover { background: #dc2626; }
+
+.status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.status-badge.active   { background: #d1fae5; color: #065f46; }
+.status-badge.inactive { background: #f3f4f6; color: #6b7280; }
+
+.type-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.type-badge.note { background: #fef9c3; color: #854d0e; }
+.type-badge.hint { background: #f3f4f6; color: #374151; }
+
+.color-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid #d1d5db;
+  vertical-align: middle;
+  margin-right: 4px;
+}
 </style>
