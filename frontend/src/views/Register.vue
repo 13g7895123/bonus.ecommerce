@@ -25,7 +25,6 @@ const form = reactive({
   password: '',
   dob: '',
   country: '',
-  countryCode: '',
   phone: '',
   inviteCode: '',
   terms: false
@@ -38,7 +37,6 @@ const fillRandomData = () => {
   form.password = 'password'
   form.dob = getRandomDate()
   form.country = 'Taiwan'
-  form.countryCode = '+886'
   form.phone = getRandomPhone()
   form.terms = true
 }
@@ -110,13 +108,8 @@ const handleRegister = async () => {
         <div class="form-field">
           <AppInput v-model="form.country" type="text" placeholder="居住國家/地區" />
         </div>
-        <div class="form-row">
-          <div class="half-input-container">
-            <AppInput v-model="form.countryCode" type="text" placeholder="國家/地區代碼" />
-          </div>
-          <div class="half-input-container">
-            <AppInput v-model="form.phone" type="tel" placeholder="手機號碼" />
-          </div>
+        <div class="form-field">
+          <AppInput v-model="form.phone" type="tel" placeholder="手機號碼" />
         </div>
         <div class="form-field">
           <AppInput v-model="form.inviteCode" type="text" placeholder="輸入邀請碼(選填)" />

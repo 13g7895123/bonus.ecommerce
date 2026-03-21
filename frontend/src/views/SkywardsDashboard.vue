@@ -8,34 +8,23 @@ const toast = useToast()
 const user = ref(null)
 const activeTab = ref('miles') // 'miles' or 'tier'
 const showModal = ref(false)
-const benefits = ref([])
-const loadingBenefits = ref(false)
+const silverCardDesc = ref('')
+const benefitsHtml = ref('')
 
-const openModal = async () => {
-  showModal.value = true
-  if (benefits.value.length === 0) {
-    await loadBenefits()
-  }
-}
+const openModal = () => { showModal.value = true }
+const closeModal = () => { showModal.value = false }
 
-const closeModal = () => {
-  showModal.value = false
-}
-
-const loadBenefits = async () => {
-  loadingBenefits.value = true
+const loadConfigs = async () => {
   try {
-    const token = localStorage.getItem('token')
-    const res = await fetch('/api/v1/skywards/benefits', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    const json = await res.json()
-    benefits.value = json?.data?.items || []
-  } catch (e) {
-    toast.error('無法載入權益資料')
-  } finally {
-    loadingBenefits.value = false
-  }
+    const [r1, r2] = await Promise.all([
+      fetch('/api/v1/config/skywards_silver_card_desc'),
+      fetch('/api/v1/config/skywards_benefits_html'),
+    ])
+    const d1 = await r1.json()
+    const d2 = await r2.json()
+    silverCardDesc.value = d1.value || ''
+    benefitsHtml.value   = d2.value || ''
+  } catch {}
 }
 
 const getTierName = (tier) => {
@@ -51,12 +40,11 @@ const getTierName = (tier) => {
 onMounted(async () => {
   try {
     const data = await api.user.getProfile()
-    if (data) {
-      user.value = data
-    }
+    if (data) user.value = data
   } catch (e) {
     toast.error('無法載入使用者資訊')
   }
+  await loadConfigs()
 })
 </script>
 
@@ -176,7 +164,7 @@ onMounted(async () => {
           <img src="/go-silver.png" alt="Silver Tier" class="benefit-img" />
           <div class="benefit-content">
             <h4 class="benefit-title">達到 <span class="silver-text">銀卡</span></h4>
-            <p class="benefit-desc">在2027年2月28日之前賺取25,000級哩程數,或再搭乘 25 次合格航班</p>
+            <p class="benefit-desc">{{ silverCardDesc || '在2027年2月28日之前賺取25,000級哩程數,或再搭乘 25 次合格航班' }}</p>
           </div>
         </div>
       </div>
@@ -187,21 +175,12 @@ onMounted(async () => {
       <transition name="pop">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title">檢視您的權益</h3>
+            <h3 class="modal-title" style="text-align:center">升級規則</h3>
             <button class="modal-close" @click="closeModal">✕</button>
           </div>
           <div class="modal-body">
-            <div v-if="loadingBenefits" class="modal-loading">載入中...</div>
-            <div v-else-if="benefits.length === 0" class="modal-empty">目前尚無權益資料</div>
-            <template v-else>
-              <template v-for="item in benefits" :key="item.id">
-                <p v-if="item.type === 'hint'" class="rule-hint">{{ item.content }}</p>
-                <ul v-else-if="item.type === 'rule'" class="rule-list">
-                  <li><strong v-if="item.label">{{ item.label }}：</strong>{{ item.content }}</li>
-                </ul>
-                <p v-else-if="item.type === 'note'" class="rule-note">{{ item.content }}</p>
-              </template>
-            </template>
+            <div v-if="benefitsHtml" v-html="benefitsHtml" class="benefits-rich-content"></div>
+            <div v-else class="modal-empty">目前尚無升級規則說明</div>
           </div>
           <button class="modal-confirm-btn" @click="closeModal">我知道了</button>
         </div>
@@ -326,7 +305,7 @@ onMounted(async () => {
 .tier-points { display: flex; justify-content: space-between; position: relative; z-index: 2; }
 .tier-point { display: flex; flex-direction: column; align-items: center; width: 60px; }
 .point-dot { width: 20px; height: 20px; background-color: white; border: 2px solid #ddd; border-radius: 50%; margin-bottom: 15px; }
-.tier-point.active .point-dot { background-color: #d71921; border-color: #d71921; shadow: 0 0 5px rgba(215, 25, 33, 0.5); }
+.tier-point.active .point-dot { background-color: #d71921; border-color: #d71921; box-shadow: 0 0 5px rgba(215, 25, 33, 0.5); }
 .tier-point.active .point-label { color: #333; font-weight: 700; }
 .point-label { font-size: 0.85rem; color: #999; white-space: nowrap; }
 .tier-update-hint { font-size: 0.95rem; color: #333; margin-bottom: 2rem; opacity: 0.9; }
@@ -352,7 +331,7 @@ onMounted(async () => {
 .benefit-desc { font-size: 0.95rem; color: #666; line-height: 1.4; margin-bottom: 1rem; }
 .benefit-link { display: block; font-weight: 700; color: #000; text-decoration: none; font-size: 1rem; text-transform: uppercase; }
 .section-hint { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; color: #000; }
-.silver-text { margin-left: 0.5rem; color: #000; }
+.silver-text { margin-left: 0rem; color: #000; }
 
 /* 彈窗樣式 */
 .modal-overlay {
@@ -373,7 +352,16 @@ onMounted(async () => {
 }
 
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.modal-title { font-size: 1.25rem; font-weight: 800; margin: 0; }
+.benefits-rich-content :deep(ul) { padding-left: 1.5em; list-style: disc; margin: 0.5rem 0; }
+.benefits-rich-content :deep(ol) { padding-left: 1.5em; list-style: decimal; margin: 0.5rem 0; }
+.benefits-rich-content :deep(p) { margin: 0 0 0.5rem 0; }
+.benefits-rich-content :deep(strong) { font-weight: 700; }
+
+.modal-title { font-size: 1.25rem; font-weight: 800; margin: 0; flex: 1; }
+.benefits-rich-content :deep(ul) { padding-left: 1.5em; list-style: disc; margin: 0.5rem 0; }
+.benefits-rich-content :deep(ol) { padding-left: 1.5em; list-style: decimal; margin: 0.5rem 0; }
+.benefits-rich-content :deep(p) { margin: 0 0 0.5rem 0; }
+.benefits-rich-content :deep(strong) { font-weight: 700; }
 .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
 .rule-hint { font-weight: 700; margin-bottom: 1rem; }
 .rule-list { padding-left: 1.25rem; margin-bottom: 1.5rem; }

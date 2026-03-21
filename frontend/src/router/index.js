@@ -21,6 +21,7 @@ import MileageRecords from '../views/MileageRecords.vue'
 import MileageRedemption from '../views/MileageRedemption.vue'
 import AnnouncementDetail from '../views/AnnouncementDetail.vue'
 import Admin from '../views/Admin.vue'
+import CountryLanguageSettings from '../views/CountryLanguageSettings.vue'
 
 const routes = [
   {
@@ -37,6 +38,11 @@ const routes = [
     path: '/admin',
     name: 'Admin',
     component: Admin
+  },
+  {
+    path: '/settings/language',
+    name: 'CountryLanguageSettings',
+    component: CountryLanguageSettings
   },
   {
     path: '/announcement/:id',

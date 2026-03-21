@@ -1,18 +1,10 @@
 <script setup>
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 const { t, locale } = useI18n()
 
-const showLangModal = ref(false)
-
-const setLocale = (lang) => {
-  locale.value = lang
-  localStorage.setItem('app_locale', lang)
-  showLangModal.value = false
-}
 
 const handleLogout = () => {
     localStorage.removeItem('token')
@@ -90,29 +82,9 @@ const handleLogout = () => {
     <div class="section section-wide" style="background-color: transparent; padding: 0 4rem;">
       <h3 class="section-title">{{ $t('settings.settingsSection') }}</h3>
       <div>
-        <button class="settings-rounded-btn" @click="showLangModal = true">
+        <router-link to="/settings/language" class="settings-rounded-btn">
           <span class="btn-label">{{ $t('settings.countryLanguage') }}</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- 語言選擇 Modal -->
-    <div v-if="showLangModal" class="lang-modal-overlay" @click.self="showLangModal = false">
-      <div class="lang-modal">
-        <div class="lang-modal-header">
-          <h3>{{ $t('settings.countryLanguage') }}</h3>
-          <button class="lang-modal-close" @click="showLangModal = false">✕</button>
-        </div>
-        <ul class="lang-options">
-          <li @click="setLocale('zh-TW')" :class="{ selected: $i18n.locale === 'zh-TW' }">
-            <span>{{ $t('lang.zhTW') }}</span>
-            <span v-if="$i18n.locale === 'zh-TW'" class="check-icon">✓</span>
-          </li>
-          <li @click="setLocale('en')" :class="{ selected: $i18n.locale === 'en' }">
-            <span>{{ $t('lang.en') }}</span>
-            <span v-if="$i18n.locale === 'en'" class="check-icon">✓</span>
-          </li>
-        </ul>
+        </router-link>
       </div>
     </div>
 
@@ -339,77 +311,10 @@ const handleLogout = () => {
   background-color: #f0f0f0;
 }
 
-/* 語言選擇 Modal */
-.lang-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 100;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.lang-modal {
-  background: #fff;
-  width: 100%;
-  max-width: var(--app-max-width, 480px);
-  border-radius: 16px 16px 0 0;
-  padding-bottom: 2rem;
-}
-
-.lang-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.lang-modal-header h3 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.lang-modal-close {
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  cursor: pointer;
-  color: #666;
-  padding: 0.25rem;
-}
-
-.lang-options {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.lang-options li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-  border-bottom: 1px solid #f8f8f8;
-  transition: background 0.15s;
-}
-
-.lang-options li:hover {
-  background: #f8f8f8;
-}
-
-.lang-options li.selected {
-  color: #d71921;
-  font-weight: 600;
-}
-
-.check-icon {
-  color: #d71921;
-  font-weight: 700;
-  font-size: 1.1rem;
+/* 語言選擇按鈕樣式 */
+.settings-rounded-btn {
+  text-decoration: none;
+  color: inherit;
+  outline: none;
 }
 </style>

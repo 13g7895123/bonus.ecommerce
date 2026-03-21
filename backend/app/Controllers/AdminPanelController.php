@@ -215,6 +215,80 @@ class AdminPanelController extends Controller
         return $this->json($result, $result['success'] ? 200 : 404);
     }
 
+    // ── App Config (key-value settings) ──────────────────────────────────────
+
+    public function getConfig(string $key): ResponseInterface
+    {
+        $row = model(\App\Models\AppConfigModel::class)->getByKey($key);
+        return $this->json(['key' => $key, 'value' => $row['value'] ?? null]);
+    }
+
+    public function setConfig(string $key): ResponseInterface
+    {
+        $data  = $this->request->getJSON(true) ?? [];
+        $value = $data['value'] ?? '';
+        $ok    = model(\App\Models\AppConfigModel::class)->setByKey($key, (string) $value);
+        return $this->json(['success' => $ok, 'key' => $key, 'value' => $value], $ok ? 200 : 500);
+    }
+
+    // ── KYC / Identity Verification ───────────────────────────────────────────
+
+    public function kycList(): ResponseInterface
+    {
+        $status = $this->request->getGet('status') ?? 'pending';
+        $repo   = new UserRepository();
+
+        $users = model(\App\Models\UserModel::class)
+            ->where('verify_status', $status)
+            ->orderBy('created_at', 'DESC')
+            ->findAll();
+
+        // Strip passwords, decode verification_data
+        $users = array_map(static function (array $u): array {
+            unset($u['password_hash']);
+            if (isset($u['verification_data']) && is_string($u['verification_data'])) {
+                $u['verification_data'] = json_decode($u['verification_data'], true);
+            }
+            return $u;
+        }, $users);
+
+        return $this->json(['items' => $users, 'total' => count($users)]);
+    }
+
+    public function kycReview(int $userId): ResponseInterface
+    {
+        $data   = $this->request->getJSON(true) ?? [];
+        $action = $data['action'] ?? '';
+        $reason = $data['reason'] ?? null;
+
+        if (!in_array($action, ['approve', 'reject'], true)) {
+            return $this->json(['message' => 'action 必須為 approve 或 reject'], 400);
+        }
+
+        $repo   = new UserRepository();
+        $user   = $repo->find($userId);
+        if (!$user) {
+            return $this->json(['message' => 'User not found'], 404);
+        }
+
+        $updateData = [];
+        if ($action === 'approve') {
+            $updateData['verify_status'] = 'approved';
+        } else {
+            $updateData['verify_status'] = 'rejected';
+            if ($reason) {
+                $vd = isset($user['verification_data'])
+                    ? (is_string($user['verification_data']) ? json_decode($user['verification_data'], true) : $user['verification_data'])
+                    : [];
+                $vd['reject_reason'] = $reason;
+                $updateData['verification_data'] = json_encode($vd, JSON_UNESCAPED_UNICODE);
+            }
+        }
+
+        $repo->update($userId, $updateData);
+        return $this->json(['success' => true, 'message' => $action === 'approve' ? '已審核通過' : '已拒絕']);
+    }
+
     // ── HTML Panel ────────────────────────────────────────────────────────────
 
     public function index(): ResponseInterface

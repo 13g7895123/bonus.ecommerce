@@ -6,17 +6,31 @@
       <!-- 說明文字 -->
       <p class="iv-desc">為了保障帳戶安全體驗 請您綁定個人身份資訊</p>
 
-      <!-- 已送出：狀態橫幅 -->
-      <div v-if="isSubmitted" class="iv-status-banner" :class="`iv-status--${verificationStatus}`">
-        <span class="iv-status-icon">{{ statusIcon }}</span>
+      <!-- 已通過：綠色成功提示 -->
+      <div v-if="verificationStatus === 'approved' || verificationStatus === 'verified'" class="iv-approved-msg">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>身分已審核通過</span>
+      </div>
+
+      <!-- 審核中：狀態橫幅 -->
+      <div v-else-if="verificationStatus === 'pending'" class="iv-status-banner iv-status--pending">
+        <span class="iv-status-icon">⏳</span>
         <div class="iv-status-body">
-          <p class="iv-status-text">{{ statusText }}</p>
+          <p class="iv-status-text">審核中</p>
+        </div>
+      </div>
+
+      <!-- 已拒絕：顯示原因橫幅 (表單仍顯示，讓用戶重新提交) -->
+      <div v-else-if="verificationStatus === 'rejected'" class="iv-status-banner iv-status--rejected">
+        <span class="iv-status-icon">✗</span>
+        <div class="iv-status-body">
+          <p class="iv-status-text">申請未通過，請重新提交</p>
           <p v-if="rejectionReason" class="iv-status-reason">拒絕原因：{{ rejectionReason }}</p>
         </div>
       </div>
 
-      <!-- 正面身分證：已送出顯示預覽或已上傳標記，否則顯示上傳框 -->
-      <template v-if="isSubmitted">
+      <!-- 正面身分證（已通過或審核中顯示上傳圖，其餘可上傳） -->
+      <template v-if="verificationStatus === 'approved' || verificationStatus === 'verified' || verificationStatus === 'pending'">
         <div v-if="frontPreview" class="iv-img-block">
           <p class="iv-img-label">身分證正面</p>
           <img :src="frontPreview" class="iv-id-img" alt="身分證正面" />
@@ -33,7 +47,7 @@
       />
 
       <!-- 背面身分證 -->
-      <template v-if="isSubmitted">
+      <template v-if="verificationStatus === 'approved' || verificationStatus === 'verified' || verificationStatus === 'pending'">
         <div v-if="backPreview" class="iv-img-block">
           <p class="iv-img-label">身分證背面</p>
           <img :src="backPreview" class="iv-id-img" alt="身分證背面" />
@@ -49,11 +63,11 @@
         @file-selected="handleBackSelected"
       />
 
-      <AppInput v-model="idNumber" label="身份證字號" placeholder="請輸入身份證號" :readonly="isSubmitted" />
-      <AppInput v-model="fullName" label="代表人姓名" placeholder="請輸入代表人姓名" :readonly="isSubmitted" />
+      <AppInput v-model="idNumber" label="身份證字號" placeholder="請輸入身份證號" :readonly="verificationStatus === 'approved' || verificationStatus === 'verified' || verificationStatus === 'pending'" />
+      <AppInput v-model="fullName" label="代表人姓名" placeholder="請輸入代表人姓名" :readonly="verificationStatus === 'approved' || verificationStatus === 'verified' || verificationStatus === 'pending'" />
 
-      <!-- 提示框與操作按鈕：僅未送出時顯示 -->
-      <template v-if="!isSubmitted">
+      <!-- 提示框與操作按鈕：未通過或未提交時顯示，讓用戶重新提交 -->
+      <template v-if="verificationStatus === 'none' || verificationStatus === 'rejected'">
         <NoticeBox>
           <div class="notice-section">
             <p class="notice-title">上傳身份證正反面：</p>
@@ -290,6 +304,20 @@ const handleNext = async () => {
 
 .iv-next-btn {
   margin-top: 0.5rem;
+}
+
+.iv-approved-msg {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #e8f5e9;
+  border: 1px solid #2e7d32;
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.25rem;
+  color: #1b5e20;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 /* ── 已送出後的狀態樣式 ── */

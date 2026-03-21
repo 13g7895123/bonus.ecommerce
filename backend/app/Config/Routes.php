@@ -31,6 +31,12 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('skywards-benefits',          'AdminPanelController::createSkywardsBenefit');
         $routes->put('skywards-benefits/(:num)',    'AdminPanelController::updateSkywardsBenefit/$1');
         $routes->delete('skywards-benefits/(:num)', 'AdminPanelController::deleteSkywardsBenefit/$1');
+        // App Config
+        $routes->get('config/(:segment)',   'AdminPanelController::getConfig/$1');
+        $routes->post('config/(:segment)',  'AdminPanelController::setConfig/$1');
+        // KYC Management
+        $routes->get('kyc',                 'AdminPanelController::kycList');
+        $routes->post('kyc/(:num)/review',  'AdminPanelController::kycReview/$1');
     });
 
     // ── Auth (Public) ──
@@ -90,6 +96,9 @@ $routes->group('api/v1', static function ($routes) {
     $routes->group('skywards', ['filter' => 'jwt'], static function ($routes) {
         $routes->get('benefits', 'Api\SkywardsBenefitController::index');
     });
+
+    // ── App Config (Public) ──
+    $routes->get('config/(:segment)', 'AdminPanelController::getConfig/$1');
 
     // ── Customer Service (JWT required) ──
     $routes->group('cs', ['filter' => 'jwt'], static function ($routes) {

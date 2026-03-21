@@ -1,697 +1,444 @@
 <template>
-  <div class="admin-page">
-    <!-- Header -->
-    <div class="admin-header-bar">
-      <div class="header-left">
-        <button class="back-btn" @click="handleBack">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+  <div class="admin-shell">
+    <!-- ── 側欄 ── -->
+    <aside class="sidebar" :class="{ collapsed: sidebarCollapsed }">
+      <div class="sidebar-logo">
+        <img src="/logo.png" alt="Logo" class="logo-img" />
+        <span v-if="!sidebarCollapsed" class="logo-text">Admin Panel</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div
+          v-for="item in navItems"
+          :key="item.key"
+          class="nav-item"
+          :class="{ active: currentSection === item.key }"
+          @click="navigate(item.key)"
+        >
+          <component :is="item.icon" :size="18" />
+          <span v-if="!sidebarCollapsed" class="nav-label">{{ item.label }}</span>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed">
+          <ChevronLeft v-if="!sidebarCollapsed" :size="16" />
+          <ChevronRight v-else :size="16" />
         </button>
-        <h1>Admin Dashboard</h1>
       </div>
-      <div class="header-right">
-        <button class="bg-red-btn" @click="clearStorage">Clear Storage</button>
-      </div>
-    </div>
-    
-    <div class="admin-layout">
-      <!-- Sidebar -->
-      <div class="admin-sidebar">
-        <div class="sidebar-header">
-            Management
-        </div>
-        <div class="sidebar-list">
-             <div class="sidebar-item" :class="{ active: selectedKey === 'users' }" @click="selectKey({ key: 'users' })">
-                <div class="sidebar-item-content">
-                    <div class="sidebar-item-title">Users List</div>
-                </div>
-             </div>
-             <div class="sidebar-item" :class="{ active: selectedKey === 'mileage-items' }" @click="selectKey({ key: 'mileage-items' })">
-                <div class="sidebar-item-content">
-                    <div class="sidebar-item-title">里程兌換項目管理</div>
-                </div>
-             </div>
-             <div class="sidebar-item" :class="{ active: selectedKey === 'skywards-benefits' }" @click="selectKey({ key: 'skywards-benefits' })">
-                <div class="sidebar-item-content">
-                    <div class="sidebar-item-title">Skywards 權益管理</div>
-                </div>
-             </div>
-             <!-- Original LocalStorage inspector below -->
-        </div>
+    </aside>
 
-        <!-- Storage Keys section hidden -->
+    <!-- ── 主區域 ── -->
+    <main class="main-area">
+      <!-- Header -->
+      <div class="top-bar">
+        <h1 class="section-heading">{{ currentNavItem?.label }}</h1>
+        <button class="icon-btn" @click="$router.push('/')">
+          <Home :size="16" /><span>返回前台</span>
+        </button>
       </div>
 
-      <!-- Main Content -->
-      <div class="admin-main">
-        <div v-if="selectedKey === 'users'" class="content-panel">
-            <div class="panel-header">
-                <h2>使用者管理</h2>
-                <button class="refresh-btn" :disabled="loadingUsers" @click="loadUsers">
-                  {{ loadingUsers ? '載入中...' : '重新整理' }}
-                </button>
-            </div>
-            <div class="panel-body">
-                <div v-if="loadingUsers" class="loading-state">載入中...</div>
-                <div v-else-if="usersList.length === 0" class="empty-state">尚無使用者資料</div>
-                <div v-else class="table-container">
-                  <table class="user-table">
-                      <thead>
-                          <tr>
-                              <th>ID</th>
-                              <th>姓名</th>
-                              <th>Email</th>
-                              <th>Email 驗證</th>
-                              <th>電話</th>
-                              <th>國家</th>
-                              <th>角色</th>
-                              <th>驗證狀態</th>
-                              <th>餘額</th>
-                              <th>里程數</th>
-                              <th>銀行綁定</th>
-                              <th>操作</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <tr v-for="user in usersList" :key="user.id">
-                              <td>{{ user.id }}</td>
-                              <td>{{ user.full_name || '-' }}</td>
-                              <td>{{ user.email }}</td>
-                              <td>
-                                <span :class="['email-verified-badge', (user.is_verified == 1 || user.is_verified === true) ? 'yes' : 'no']">
-                                  {{ (user.is_verified == 1 || user.is_verified === true) ? '已驗證' : '未驗證' }}
-                                </span>
-                              </td>
-                              <td>{{ user.phone || '-' }}</td>
-                              <td>{{ user.country || '-' }}</td>
-                              <td><span :class="['role-badge', user.role]">{{ user.role || 'user' }}</span></td>
-                              <td><span :class="['verify-badge', user.verify_status || 'none']">{{ verifyLabel(user.verify_status) }}</span></td>
-                              <td class="amount-cell">${{ user.balance?.toLocaleString() || '0' }}</td>
-                              <td class="amount-cell">{{ user.miles_balance?.toLocaleString() || '0' }}</td>
-                              <td><span :class="['bank-badge', user.has_bank_account ? 'yes' : 'no']">{{ user.has_bank_account ? '已綁定' : '未綁定' }}</span></td>
-                              <td>
-                                  <button class="deposit-btn" @click="openDeposit(user)">儲值</button>
-                              </td>
-                          </tr>
-                      </tbody>
-                  </table>
-                </div>
-            </div>
+      <!-- ── 使用者管理 ── -->
+      <div v-if="currentSection === 'users'" class="panel">
+        <div class="panel-header">
+          <span class="panel-title">使用者列表</span>
+          <button class="btn btn-outline" :disabled="loadingUsers" @click="loadUsers">
+            <RefreshCw :size="14" />{{ loadingUsers ? '載入中...' : '重新整理' }}
+          </button>
         </div>
-
-        <!-- 里程兌換項目管理 -->
-        <div v-else-if="selectedKey === 'mileage-items'" class="content-panel">
-            <div class="panel-header">
-                <h2>里程兌換項目管理</h2>
-                <div style="display:flex;gap:0.5rem;">
-                  <button class="refresh-btn" :disabled="loadingMileageItems" @click="loadMileageItems">{{ loadingMileageItems ? '載入中...' : '重新整理' }}</button>
-                  <button class="add-btn" @click="openMileageItemForm()">＋ 新增項目</button>
-                </div>
-            </div>
-            <div class="panel-body">
-                <div v-if="loadingMileageItems" class="loading-state">載入中...</div>
-                <div v-else-if="mileageItemsList.length === 0" class="empty-state">尚無項目，請點擊「新增項目」</div>
-                <div v-else class="table-container">
-                  <table class="user-table">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>名稱</th>
-                        <th>簡短說明</th>
-                        <th>Logo字母</th>
-                        <th>Logo顏色</th>
-                        <th>精選</th>
-                        <th>精選標籤</th>
-                        <th>狀態</th>
-                        <th>排序</th>
-                        <th>操作</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="item in mileageItemsList" :key="item.id">
-                        <td>{{ item.id }}</td>
-                        <td>{{ item.name }}</td>
-                        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ item.short_desc || '-' }}</td>
-                        <td>{{ item.logo_letter }}</td>
-                        <td>
-                          <span class="color-swatch" :style="{ backgroundColor: item.logo_color }"></span>
-                          {{ item.logo_color }}
-                        </td>
-                        <td><span :class="['status-badge', item.is_featured == 1 ? 'active' : 'inactive']">{{ item.is_featured == 1 ? '是' : '否' }}</span></td>
-                        <td>{{ item.featured_label || '-' }}</td>
-                        <td><span :class="['status-badge', item.is_active == 1 ? 'active' : 'inactive']">{{ item.is_active == 1 ? '啟用' : '停用' }}</span></td>
-                        <td>{{ item.sort_order }}</td>
-                        <td>
-                          <button class="edit-btn" @click="openMileageItemForm(item)">編輯</button>
-                          <button class="delete-item-btn" @click="deleteMileageItem(item.id)">刪除</button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-            </div>
+        <div class="table-wrap">
+          <div v-if="loadingUsers" class="state-msg">載入中...</div>
+          <table v-else class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>姓名</th><th>Email</th><th>Email驗證</th>
+                <th>電話</th><th>國家</th><th>角色</th><th>KYC</th>
+                <th>餘額</th><th>里程</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="u in usersList" :key="u.id">
+                <td class="td-muted">{{ u.id }}</td>
+                <td class="td-name">{{ u.full_name || '-' }}</td>
+                <td>{{ u.email }}</td>
+                <td><span :class="['badge', u.is_verified == 1 ? 'badge-green' : 'badge-gray']">{{ u.is_verified == 1 ? '已驗證' : '未驗證' }}</span></td>
+                <td>{{ u.phone || '-' }}</td>
+                <td>{{ u.country || '-' }}</td>
+                <td><span :class="['badge', u.role === 'admin' ? 'badge-purple' : 'badge-blue']">{{ u.role || 'user' }}</span></td>
+                <td><span :class="['badge', kycBadgeClass(u.verify_status)]">{{ kycLabel(u.verify_status) }}</span></td>
+                <td class="td-num">${{ (u.balance || 0).toLocaleString() }}</td>
+                <td class="td-num">{{ (u.miles_balance || 0).toLocaleString() }}</td>
+                <td><button class="btn btn-sm btn-primary" @click="openDeposit(u)">儲值</button></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </div>
 
-        <!-- Skywards 權益管理 -->
-        <div v-else-if="selectedKey === 'skywards-benefits'" class="content-panel">
-            <div class="panel-header">
-                <h2>Skywards 權益管理</h2>
-                <div style="display:flex;gap:0.5rem;">
-                  <button class="refresh-btn" :disabled="loadingBenefits" @click="loadSkywardsBenefits">{{ loadingBenefits ? '載入中...' : '重新整理' }}</button>
-                  <button class="add-btn" @click="openBenefitForm()">＋ 新增權益</button>
-                </div>
-            </div>
-            <div class="panel-body">
-                <div v-if="loadingBenefits" class="loading-state">載入中...</div>
-                <div v-else-if="benefitsList.length === 0" class="empty-state">尚無資料，請點擊「新增權益」</div>
-                <div v-else class="table-container">
-                  <table class="user-table">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>類型</th>
-                        <th>標籤</th>
-                        <th>內容</th>
-                        <th>狀態</th>
-                        <th>排序</th>
-                        <th>操作</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="item in benefitsList" :key="item.id">
-                        <td>{{ item.id }}</td>
-                        <td><span :class="['type-badge', item.type]">{{ { hint: '提示文字', rule: '規則條文', note: '備註' }[item.type] || item.type }}</span></td>
-                        <td>{{ item.label || '-' }}</td>
-                        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ item.content }}</td>
-                        <td><span :class="['status-badge', item.is_active == 1 ? 'active' : 'inactive']">{{ item.is_active == 1 ? '啟用' : '停用' }}</span></td>
-                        <td>{{ item.sort_order }}</td>
-                        <td>
-                          <button class="edit-btn" @click="openBenefitForm(item)">編輯</button>
-                          <button class="delete-item-btn" @click="deleteBenefit(item.id)">刪除</button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-            </div>
-        </div>
-
-        <div v-else-if="!selectedItem" class="empty-selection">
-          <div class="empty-icon">👈</div>
-          <p>Please select a key from the sidebar</p>
-        </div>
-
-        <div v-else class="content-panel">
-          <div class="panel-header">
-            <h2>{{ getLabel(selectedItem.key) }}</h2>
-            <span class="panel-badge">{{ selectedItem.key }}</span>
+      <!-- ── KYC 審核 ── -->
+      <div v-if="currentSection === 'kyc'" class="panel">
+        <div class="panel-header">
+          <span class="panel-title">實名認證審核</span>
+          <div class="tab-pills">
+            <button v-for="t in kycTabs" :key="t.key" class="pill" :class="{ active: kycTab === t.key }" @click="kycTab = t.key; loadKyc()">{{ t.label }}</button>
           </div>
+          <button class="btn btn-outline" :disabled="loadingKyc" @click="loadKyc"><RefreshCw :size="14" /></button>
+        </div>
+        <div class="table-wrap">
+          <div v-if="loadingKyc" class="state-msg">載入中...</div>
+          <div v-else-if="kycList.length === 0" class="state-msg">目前無資料</div>
+          <table v-else class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>Email</th><th>姓名</th><th>手機</th>
+                <th>身分證字號</th><th>代表人姓名</th><th>狀態</th>
+                <th v-if="kycTab === 'pending'">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="u in kycList" :key="u.id">
+                <td class="td-muted">{{ u.id }}</td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.full_name || '-' }}</td>
+                <td>{{ u.phone || '-' }}</td>
+                <td>{{ u.verification_data?.idNumber || u.verification_data?.id_number || '-' }}</td>
+                <td>{{ u.verification_data?.fullName || u.verification_data?.real_name || '-' }}</td>
+                <td><span :class="['badge', kycBadgeClass(u.verify_status)]">{{ kycLabel(u.verify_status) }}</span></td>
+                <td v-if="kycTab === 'pending'" class="td-actions">
+                  <button class="btn btn-sm btn-green" @click="reviewKyc(u.id, 'approve')">通過</button>
+                  <button class="btn btn-sm btn-danger" @click="openKycReject(u)">拒絕</button>
+                  <button class="btn btn-sm btn-outline" @click="openKycDetail(u)">詳情</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-          <div class="panel-body">
-            <!-- Image View -->
-            <div v-if="isImage(selectedItem.parsedValue)" class="image-viewer">
-              <img :src="selectedItem.parsedValue" alt="Content Image" />
-            </div>
-
-            <!-- Array Table View -->
-            <div v-else-if="Array.isArray(selectedItem.parsedValue) && selectedItem.parsedValue.length > 0" class="table-view">
-               <div class="table-container">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th v-for="header in getHeaders(selectedItem.parsedValue)" :key="header">
-                          {{ getLabel(header) }}
-                          <span class="sub-header">{{ header }}</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="(row, idx) in selectedItem.parsedValue" :key="idx">
-                        <td v-for="header in getHeaders(selectedItem.parsedValue)" :key="header" :title="String(row[header])">
-                          <template v-if="isImage(row[header])">
-                            <img :src="row[header]" class="thumbnail" />
-                          </template>
-                          <template v-else-if="isObject(row[header])">
-                            <div class="nested-obj">
-                                <div v-for="(subVal, subKey) in row[header]" :key="subKey" class="nested-item">
-                                    <span class="nested-label">{{ getLabel(subKey) }}: </span>
-                                    <template v-if="isImage(subVal)">
-                                      <img :src="subVal" class="nested-img" @click.stop="openImage(subVal)" />
-                                    </template>
-                                    <template v-else>
-                                      <span class="nested-text" :title="String(subVal)">{{ formatCell(subVal) }}</span>
-                                    </template>
-                                </div>
-                            </div>
-                          </template>
-                          <template v-else>
-                            <div class="cell-content">{{ formatCell(row[header]) }}</div>
-                          </template>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-               </div>
-            </div>
-
-             <!-- Object Key-Value View -->
-             <div v-else-if="isObject(selectedItem.parsedValue)" class="object-view">
-                <div class="kv-table">
-                    <div v-for="(val, key) in selectedItem.parsedValue" :key="key" class="kv-row">
-                        <div class="kv-key">
-                            <div class="kv-label-primary">{{ getLabel(key) }}</div>
-                            <div class="kv-label-secondary">{{ key }}</div>
-                        </div>
-                        <div class="kv-value">
-                            <template v-if="isImage(val)">
-                                <img :src="val" class="preview-image" />
-                            </template>
-                            <template v-else-if="isObject(val) || Array.isArray(val)">
-                                <pre>{{ JSON.stringify(val, null, 2) }}</pre>
-                            </template>
-                            <template v-else>
-                                {{ formatCell(val) }}
-                            </template>
-                        </div>
-                    </div>
-                </div>
-             </div>
-
-             <!-- Simple Value View -->
-             <div v-else class="simple-view">
-               <pre>{{ String(selectedItem.parsedValue) }}</pre>
-             </div>
-
+      <!-- ── 里程兌換項目 ── -->
+      <div v-if="currentSection === 'mileage-items'" class="panel">
+        <div class="panel-header">
+          <span class="panel-title">里程兌換項目管理</span>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-outline" :disabled="loadingMileageItems" @click="loadMileageItems"><RefreshCw :size="14" /></button>
+            <button class="btn btn-primary" @click="openMileageForm()"><Plus :size="14" />新增項目</button>
           </div>
+        </div>
+        <div class="table-wrap">
+          <div v-if="loadingMileageItems" class="state-msg">載入中...</div>
+          <div v-else-if="mileageItemsList.length === 0" class="state-msg">尚無項目</div>
+          <table v-else class="data-table">
+            <thead><tr><th>ID</th><th>名稱</th><th>Logo</th><th>精選</th><th>狀態</th><th>排序</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr v-for="item in mileageItemsList" :key="item.id">
+                <td class="td-muted">{{ item.id }}</td>
+                <td>
+                  <div class="td-name">{{ item.name }}</div>
+                  <div class="td-sub">{{ item.short_desc }}</div>
+                </td>
+                <td><div class="logo-chip" :style="{ backgroundColor: item.logo_color }">{{ item.logo_letter }}</div></td>
+                <td><span :class="['badge', item.is_featured == 1 ? 'badge-yellow' : 'badge-gray']">{{ item.is_featured == 1 ? '精選' : '-' }}</span></td>
+                <td><span :class="['badge', item.is_active == 1 ? 'badge-green' : 'badge-red']">{{ item.is_active == 1 ? '啟用' : '停用' }}</span></td>
+                <td>{{ item.sort_order }}</td>
+                <td class="td-actions">
+                  <button class="btn btn-sm btn-outline" @click="openMileageForm(item)">編輯</button>
+                  <button class="btn btn-sm btn-danger" @click="deleteMileageItem(item.id)">刪除</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── 內容管理 ── -->
+      <div v-if="currentSection === 'content'" class="panel">
+        <div class="panel-header"><span class="panel-title">內容管理</span></div>
+
+        <div class="content-block">
+          <div class="content-block-header">
+            <div>
+              <div class="cb-title">銀卡進階說明（Skywards 頁面卡片）</div>
+              <div class="cb-desc">顯示在「達到銀卡」卡片的說明文字</div>
+            </div>
+            <div style="display:flex;gap:0.5rem">
+              <button class="btn btn-outline" @click="silverCardPreview = !silverCardPreview"><Eye :size="14" />{{ silverCardPreview ? '隱藏預覽' : '預覽卡片' }}</button>
+              <button class="btn btn-primary" :disabled="savingSilver" @click="saveSilverCard"><Save :size="14" />{{ savingSilver ? '儲存中...' : '儲存' }}</button>
+            </div>
+          </div>
+          <textarea v-model="silverCardDesc" class="cfg-textarea" rows="3" placeholder="例：在2027年2月28日之前賺取25,000級哩程數,或再搭乘 25 次合格航班"></textarea>
+          <div v-if="silverCardPreview" class="preview-box">
+            <div class="preview-label">預覽效果</div>
+            <div class="mock-card">
+              <img src="/go-silver.png" alt="Silver" class="mock-card-img" />
+              <div class="mock-card-body">
+                <h4 class="mock-card-title">達到 <span style="color:#a0a0a0">銀卡</span></h4>
+                <p class="mock-card-desc">{{ silverCardDesc || '(空白)' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="content-block">
+          <div class="content-block-header">
+            <div>
+              <div class="cb-title">升級規則 Modal 內容（富文本）</div>
+              <div class="cb-desc">點擊「檢視您的權益」後彈出的 Modal 內容</div>
+            </div>
+            <div style="display:flex;gap:0.5rem">
+              <button class="btn btn-outline" @click="benefitsModalPreview = !benefitsModalPreview"><Eye :size="14" />{{ benefitsModalPreview ? '隱藏預覽' : '預覽Modal' }}</button>
+              <button class="btn btn-primary" :disabled="savingBenefitsHtml" @click="saveBenefitsHtml"><Save :size="14" />{{ savingBenefitsHtml ? '儲存中...' : '儲存' }}</button>
+            </div>
+          </div>
+          <RichTextEditor v-model="benefitsHtml" />
+          <div v-if="benefitsModalPreview" class="preview-box" style="margin-top:1rem">
+            <div class="preview-label">Modal 預覽</div>
+            <div class="mock-modal">
+              <div class="mock-modal-header">
+                <h3 class="mock-modal-title">升級規則</h3>
+                <button class="mock-modal-close">✕</button>
+              </div>
+              <div class="mock-modal-body" v-html="benefitsHtml || '<p style=\'color:#999\'>(尚無內容)</p>'"></div>
+              <button class="mock-modal-confirm">我知道了</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ── 儲值 Modal ── -->
+    <div v-if="depositModal.show" class="modal-overlay" @click.self="depositModal.show = false">
+      <div class="modal-box">
+        <div class="modal-hd"><span>儲值 — {{ depositModal.user?.full_name || depositModal.user?.email }}</span><button class="modal-x" @click="depositModal.show = false">✕</button></div>
+        <div class="modal-bd">
+          <p style="font-size:0.85rem;color:#64748b;margin-bottom:0.75rem">目前餘額：<strong>${{ (depositModal.user?.balance || 0).toLocaleString() }}</strong></p>
+          <label class="f-label">儲值金額</label>
+          <input v-model="depositModal.amount" type="number" min="1" class="f-input" placeholder="請輸入金額" @keyup.enter="submitDeposit" />
+          <label class="f-label" style="margin-top:0.75rem">備註（選填）</label>
+          <input v-model="depositModal.description" type="text" class="f-input" placeholder="例：測試儲值" />
+        </div>
+        <div class="modal-ft">
+          <button class="btn btn-outline" @click="depositModal.show = false">取消</button>
+          <button class="btn btn-primary" :disabled="depositModal.submitting" @click="submitDeposit">{{ depositModal.submitting ? '處理中...' : '確認儲值' }}</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- 儲值 Modal -->
-  <div v-if="depositModal.show" class="modal-overlay" @click.self="depositModal.show = false">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3>儲值</h3>
-        <button class="modal-close" @click="depositModal.show = false">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-user-info">
-          <div class="modal-user-name">{{ depositModal.user?.full_name || '(無姓名)' }}</div>
-          <div class="modal-user-email">{{ depositModal.user?.email }}</div>
-          <div class="modal-user-balance">目前餘額：<strong>${{ depositModal.user?.balance?.toLocaleString() || '0' }}</strong></div>
+    <!-- ── KYC 詳情 Modal ── -->
+    <div v-if="kycDetailModal.show" class="modal-overlay" @click.self="kycDetailModal.show = false">
+      <div class="modal-box" style="max-width:560px">
+        <div class="modal-hd"><span>KYC 詳情 — {{ kycDetailModal.user?.email }}</span><button class="modal-x" @click="kycDetailModal.show = false">✕</button></div>
+        <div class="modal-bd">
+          <div class="kyc-rows">
+            <div class="kyc-row"><span class="kyc-lbl">Email</span><span>{{ kycDetailModal.user?.email }}</span></div>
+            <div class="kyc-row"><span class="kyc-lbl">姓名</span><span>{{ kycDetailModal.user?.full_name }}</span></div>
+            <div class="kyc-row"><span class="kyc-lbl">手機</span><span>{{ kycDetailModal.user?.phone }}</span></div>
+            <div class="kyc-row"><span class="kyc-lbl">身分證字號</span><span>{{ kycDetailModal.user?.verification_data?.idNumber || kycDetailModal.user?.verification_data?.id_number || '-' }}</span></div>
+            <div class="kyc-row"><span class="kyc-lbl">代表人姓名</span><span>{{ kycDetailModal.user?.verification_data?.fullName || kycDetailModal.user?.verification_data?.real_name || '-' }}</span></div>
+          </div>
+          <div v-if="kycDetailModal.user?.verification_data" class="kyc-imgs">
+            <div v-if="kycDetailModal.user.verification_data.front_image_url || kycDetailModal.user.verification_data.frontImageUrl" class="kyc-img-wrap">
+              <div class="kyc-img-label">身分證正面</div>
+              <img :src="kycDetailModal.user.verification_data.front_image_url || kycDetailModal.user.verification_data.frontImageUrl" class="kyc-img" />
+            </div>
+            <div v-if="kycDetailModal.user.verification_data.back_image_url || kycDetailModal.user.verification_data.backImageUrl" class="kyc-img-wrap">
+              <div class="kyc-img-label">身分證背面</div>
+              <img :src="kycDetailModal.user.verification_data.back_image_url || kycDetailModal.user.verification_data.backImageUrl" class="kyc-img" />
+            </div>
+          </div>
         </div>
-        <label class="modal-label">儲值金額</label>
-        <input
-          v-model="depositModal.amount"
-          type="number"
-          min="1"
-          step="1"
-          placeholder="請輸入金額"
-          class="modal-input"
-          @keyup.enter="submitDeposit"
-        />
-        <label class="modal-label" style="margin-top: 0.75rem;">備註（選填）</label>
-        <input
-          v-model="depositModal.description"
-          type="text"
-          placeholder="例：測試儲值"
-          class="modal-input"
-        />
-      </div>
-      <div class="modal-footer">
-        <button class="modal-cancel-btn" @click="depositModal.show = false">取消</button>
-        <button class="modal-submit-btn" :disabled="depositModal.submitting" @click="submitDeposit">
-          {{ depositModal.submitting ? '處理中...' : '確認儲值' }}
-        </button>
+        <div class="modal-ft"><button class="btn btn-outline" @click="kycDetailModal.show = false">關閉</button></div>
       </div>
     </div>
-  </div>
 
-  <!-- 里程兌換項目 Modal -->
-  <div v-if="mileageItemForm.show" class="modal-overlay" @click.self="mileageItemForm.show = false">
-    <div class="modal-box" style="width:520px;max-height:90vh;overflow-y:auto;">
-      <div class="modal-header">
-        <h3>{{ mileageItemForm.id ? '編輯項目' : '新增項目' }}</h3>
-        <button class="modal-close" @click="mileageItemForm.show = false">✕</button>
-      </div>
-      <div class="modal-body">
-        <label class="modal-label">名稱 *</label>
-        <input v-model="mileageItemForm.name" class="modal-input" placeholder="例：Skywards Miles Mall" />
-        <label class="modal-label" style="margin-top:0.75rem;">簡短說明</label>
-        <input v-model="mileageItemForm.short_desc" class="modal-input" placeholder="顯示在列表的副標題" />
-        <label class="modal-label" style="margin-top:0.75rem;">詳細內容（支援 HTML）</label>
-        <textarea v-model="mileageItemForm.details" class="modal-input" rows="4" placeholder="點開 modal 後顯示的完整說明，支援 HTML 標籤" style="resize:vertical;"></textarea>
-        <div style="display:flex;gap:1rem;margin-top:0.75rem;">
-          <div style="flex:1;">
-            <label class="modal-label">Logo 字母</label>
-            <input v-model="mileageItemForm.logo_letter" class="modal-input" placeholder="S" maxlength="5" />
-          </div>
-          <div style="flex:1;">
-            <label class="modal-label">Logo 背景色</label>
-            <input v-model="mileageItemForm.logo_color" class="modal-input" placeholder="#ffffff" />
-          </div>
+    <!-- ── KYC 拒絕 Modal ── -->
+    <div v-if="kycRejectModal.show" class="modal-overlay" @click.self="kycRejectModal.show = false">
+      <div class="modal-box" style="max-width:440px">
+        <div class="modal-hd"><span>拒絕原因</span><button class="modal-x" @click="kycRejectModal.show = false">✕</button></div>
+        <div class="modal-bd">
+          <label class="f-label">請輸入拒絕原因（選填）</label>
+          <textarea v-model="kycRejectModal.reason" class="f-input" rows="3" placeholder="例：身分證照片不清晰，請重新上傳" style="resize:vertical"></textarea>
         </div>
-        <div style="display:flex;gap:1rem;margin-top:0.75rem;align-items:center;">
-          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
-            <input type="checkbox" v-model="mileageItemForm.is_featured" :true-value="1" :false-value="0" />
-            <span class="modal-label" style="margin:0;">精選項目</span>
-          </label>
-          <div style="flex:1;">
-            <input v-model="mileageItemForm.featured_label" class="modal-input" placeholder="精選標籤文字（預設：精選）" :disabled="!mileageItemForm.is_featured" />
-          </div>
+        <div class="modal-ft">
+          <button class="btn btn-outline" @click="kycRejectModal.show = false">取消</button>
+          <button class="btn btn-danger" :disabled="kycRejectModal.submitting" @click="submitKycReject">{{ kycRejectModal.submitting ? '處理中...' : '確認拒絕' }}</button>
         </div>
-        <div style="display:flex;gap:1rem;margin-top:0.75rem;align-items:center;">
-          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
-            <input type="checkbox" v-model="mileageItemForm.is_active" :true-value="1" :false-value="0" />
-            <span class="modal-label" style="margin:0;">啟用</span>
-          </label>
-          <div style="flex:1;">
-            <label class="modal-label">排序（數字越小越前）</label>
-            <input v-model.number="mileageItemForm.sort_order" class="modal-input" type="number" min="0" />
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="modal-cancel-btn" @click="mileageItemForm.show = false">取消</button>
-        <button class="modal-submit-btn" :disabled="mileageItemForm.submitting" @click="submitMileageItem">
-          {{ mileageItemForm.submitting ? '處理中...' : (mileageItemForm.id ? '儲存變更' : '新增') }}
-        </button>
       </div>
     </div>
-  </div>
 
-  <!-- Skywards 權益 Modal -->
-  <div v-if="benefitForm.show" class="modal-overlay" @click.self="benefitForm.show = false">
-    <div class="modal-box" style="width:480px;max-height:90vh;overflow-y:auto;">
-      <div class="modal-header">
-        <h3>{{ benefitForm.id ? '編輯權益' : '新增權益' }}</h3>
-        <button class="modal-close" @click="benefitForm.show = false">✕</button>
-      </div>
-      <div class="modal-body">
-        <label class="modal-label">類型 *</label>
-        <select v-model="benefitForm.type" class="modal-input">
-          <option value="hint">提示文字（hint）</option>
-          <option value="rule">規則條文（rule）</option>
-          <option value="note">備註（note）</option>
-        </select>
-        <label class="modal-label" style="margin-top:0.75rem;">標籤（rule 類型顯示為粗體前置文字）</label>
-        <input v-model="benefitForm.label" class="modal-input" placeholder="例：銀卡" />
-        <label class="modal-label" style="margin-top:0.75rem;">內容 *</label>
-        <textarea v-model="benefitForm.content" class="modal-input" rows="3" placeholder="輸入說明文字" style="resize:vertical;"></textarea>
-        <div style="display:flex;gap:1rem;margin-top:0.75rem;align-items:center;">
-          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
-            <input type="checkbox" v-model="benefitForm.is_active" :true-value="1" :false-value="0" />
-            <span class="modal-label" style="margin:0;">啟用</span>
-          </label>
-          <div style="flex:1;">
-            <label class="modal-label">排序（數字越小越前）</label>
-            <input v-model.number="benefitForm.sort_order" class="modal-input" type="number" min="0" />
+    <!-- ── 里程項目 Modal ── -->
+    <div v-if="mileageForm.show" class="modal-overlay" @click.self="mileageForm.show = false">
+      <div class="modal-box" style="max-width:560px;max-height:90vh;overflow-y:auto">
+        <div class="modal-hd"><span>{{ mileageForm.id ? '編輯項目' : '新增項目' }}</span><button class="modal-x" @click="mileageForm.show = false">✕</button></div>
+        <div class="modal-bd">
+          <label class="f-label">名稱 *</label>
+          <input v-model="mileageForm.name" class="f-input" placeholder="例：Skywards Miles Mall" />
+          <label class="f-label" style="margin-top:0.75rem">簡短說明</label>
+          <input v-model="mileageForm.short_desc" class="f-input" placeholder="列表副標題" />
+          <label class="f-label" style="margin-top:0.75rem">詳細內容（支援 HTML 富文本）</label>
+          <RichTextEditor v-model="mileageForm.details" />
+          <button class="btn btn-outline btn-sm" style="margin-top:0.5rem" @click="mileageModalPreview = !mileageModalPreview">
+            <Eye :size="14" />{{ mileageModalPreview ? '隱藏預覽' : '預覽 Modal' }}
+          </button>
+          <div v-if="mileageModalPreview" class="preview-box" style="margin-top:0.5rem">
+            <div class="preview-label">Modal 預覽</div>
+            <div class="mock-modal">
+              <div class="mock-modal-header">
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                  <div class="logo-chip" :style="{ backgroundColor: mileageForm.logo_color }">{{ mileageForm.logo_letter }}</div>
+                  <h3 style="font-size:1rem;font-weight:700;margin:0">{{ mileageForm.name || '項目名稱' }}</h3>
+                </div>
+                <button class="mock-modal-close">✕</button>
+              </div>
+              <div class="mock-modal-body">
+                <p v-if="mileageForm.short_desc" style="color:#555;margin-bottom:0.75rem">{{ mileageForm.short_desc }}</p>
+                <div v-if="mileageForm.details" v-html="mileageForm.details"></div>
+                <div v-else style="color:#999;font-style:italic">暫無詳細說明</div>
+              </div>
+              <button class="mock-modal-confirm">關閉</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:1rem;margin-top:0.75rem">
+            <div style="flex:1">
+              <label class="f-label">Logo 字母</label>
+              <input v-model="mileageForm.logo_letter" class="f-input" placeholder="S" maxlength="5" />
+            </div>
+            <div style="flex:1">
+              <label class="f-label">Logo 背景色</label>
+              <div style="display:flex;gap:0.5rem;align-items:center">
+                <input v-model="mileageForm.logo_color" type="color" style="width:36px;height:36px;padding:2px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer" />
+                <input v-model="mileageForm.logo_color" class="f-input" placeholder="#ffffff" />
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:1rem;margin-top:0.75rem;align-items:flex-end;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="checkbox" v-model="mileageForm.is_featured" :true-value="1" :false-value="0" style="width:16px;height:16px" />
+              <span class="f-label" style="margin:0">精選</span>
+            </label>
+            <div style="flex:1;min-width:120px">
+              <label class="f-label">精選標籤</label>
+              <input v-model="mileageForm.featured_label" class="f-input" :disabled="!mileageForm.is_featured" placeholder="精選" />
+            </div>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="checkbox" v-model="mileageForm.is_active" :true-value="1" :false-value="0" style="width:16px;height:16px" />
+              <span class="f-label" style="margin:0">啟用</span>
+            </label>
+            <div style="flex:1;min-width:80px">
+              <label class="f-label">排序</label>
+              <input v-model.number="mileageForm.sort_order" class="f-input" type="number" min="0" />
+            </div>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="modal-cancel-btn" @click="benefitForm.show = false">取消</button>
-        <button class="modal-submit-btn" :disabled="benefitForm.submitting" @click="submitBenefit">
-          {{ benefitForm.submitting ? '處理中...' : (benefitForm.id ? '儲存變更' : '新增') }}
-        </button>
+        <div class="modal-ft">
+          <button class="btn btn-outline" @click="mileageForm.show = false">取消</button>
+          <button class="btn btn-primary" :disabled="mileageForm.submitting" @click="submitMileageItem">{{ mileageForm.submitting ? '處理中...' : (mileageForm.id ? '儲存' : '新增') }}</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useApi } from '../composables/useApi'
+import { Users, ShieldCheck, Coins, FileEdit, Home, RefreshCw, Plus, Eye, Save, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import RichTextEditor from '../components/admin/RichTextEditor.vue'
 
 const router = useRouter()
-const { user: userService } = useApi()
-const items = ref([])
-const selectedKey = ref('users')
+const sidebarCollapsed = ref(false)
+const currentSection = ref('users')
 
-const selectedItem = computed(() => items.value.find(i => i.key === selectedKey.value))
+const navItems = [
+  { key: 'users',         label: '使用者管理',  icon: Users },
+  { key: 'kyc',           label: 'KYC 審核',     icon: ShieldCheck },
+  { key: 'mileage-items', label: '里程兌換項目', icon: Coins },
+  { key: 'content',       label: '內容管理',     icon: FileEdit },
+]
+const currentNavItem = computed(() => navItems.find(n => n.key === currentSection.value))
 
-// ── 使用者列表 (from API) ──────────────────────────────────────────────────
+const navigate = (key) => {
+  currentSection.value = key
+  if (key === 'users' && usersList.value.length === 0) loadUsers()
+  if (key === 'kyc' && kycList.value.length === 0) loadKyc()
+  if (key === 'mileage-items' && mileageItemsList.value.length === 0) loadMileageItems()
+  if (key === 'content') loadContentConfigs()
+}
+
+// ── 使用者 ──────────────────────────────────────────────────
 const usersList    = ref([])
 const loadingUsers = ref(false)
-
 const loadUsers = async () => {
   loadingUsers.value = true
   try {
-    const res  = await fetch('/api/v1/admin-panel/users?limit=100')
+    const res  = await fetch('/api/v1/admin-panel/users?limit=200')
     const data = await res.json()
     usersList.value = data.items || []
-  } catch (e) {
-    console.error('載入使用者失敗', e)
-  } finally {
-    loadingUsers.value = false
-  }
+  } finally { loadingUsers.value = false }
 }
 
-// ── 儲值 Modal ──────────────────────────────────────────────────────────────
-const depositModal = ref({
-  show: false,
-  user: null,
-  amount: '',
-  description: '',
-  submitting: false,
-})
-
-const openDeposit = (user) => {
-  depositModal.value = { show: true, user, amount: '', description: '', submitting: false }
-}
-
+// ── 儲值 ────────────────────────────────────────────────────
+const depositModal = ref({ show: false, user: null, amount: '', description: '', submitting: false })
+const openDeposit  = (user) => { depositModal.value = { show: true, user, amount: '', description: '', submitting: false } }
 const submitDeposit = async () => {
   const amount = parseFloat(depositModal.value.amount)
-  if (!amount || amount <= 0) {
-    alert('請輸入有效的正數金額')
-    return
-  }
+  if (!amount || amount <= 0) { alert('請輸入有效的正數金額'); return }
   depositModal.value.submitting = true
   try {
-    // 使用 service 層，相容 mock 與真實 API，並自動帶入 JWT
-    const data = await userService.updateUserBalance(
-      depositModal.value.user.id,
-      amount,
-      depositModal.value.description || '管理員儲值',
-    )
-    // 更新本地列表中的餘額
-    const newBalance = data?.balance ?? data?.data?.balance
-    const user = usersList.value.find(u => u.id === depositModal.value.user.id)
-    if (user && newBalance != null) user.balance = newBalance
-    if (newBalance != null) depositModal.value.user.balance = newBalance
-    alert(`儲值成功！新餘額：$${Number(newBalance ?? 0).toLocaleString()}`)
+    const res  = await fetch(`/api/v1/admin-panel/users/${depositModal.value.user.id}/deposit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount, description: depositModal.value.description || '管理員儲值' }) })
+    const data = await res.json()
+    if (!res.ok) { alert(data.message || '儲值失敗'); return }
+    const u = usersList.value.find(u => u.id === depositModal.value.user.id)
+    if (u) u.balance = data.balance
+    depositModal.value.user.balance = data.balance
+    alert(`儲值成功！新餘額：$${Number(data.balance).toLocaleString()}`)
     depositModal.value.show = false
-  } catch (e) {
-    alert(e?.response?.data?.message || e?.message || '儲值失敗，請稍後再試')
-  } finally {
-    depositModal.value.submitting = false
-  }
+  } finally { depositModal.value.submitting = false }
 }
 
-// ── 驗證狀態標籤 ────────────────────────────────────────────────────────────
-const verifyLabel = (status) => {
-  const map = { approved: '已驗證', pending: '審核中', rejected: '已拒絕', none: '未提交' }
-  return map[status] || '未提交'
+// ── KYC ─────────────────────────────────────────────────────
+const kycTabs     = [{ key: 'pending', label: '待審核' }, { key: 'approved', label: '已通過' }, { key: 'rejected', label: '未通過' }]
+const kycTab      = ref('pending')
+const kycList     = ref([])
+const loadingKyc  = ref(false)
+const kycDetailModal = ref({ show: false, user: null })
+const kycRejectModal = ref({ show: false, user: null, reason: '', submitting: false })
+
+const kycLabel     = (s) => ({ approved: '已通過', pending: '待審核', rejected: '未通過', none: '未提交' }[s] || '未提交')
+const kycBadgeClass= (s) => ({ approved: 'badge-green', pending: 'badge-yellow', rejected: 'badge-red', none: 'badge-gray' }[s] || 'badge-gray')
+
+const loadKyc = async () => {
+  loadingKyc.value = true
+  try {
+    const res  = await fetch(`/api/v1/admin-panel/kyc?status=${kycTab.value}`)
+    const data = await res.json()
+    kycList.value = data.items || []
+  } finally { loadingKyc.value = false }
 }
 
-// Dictionary for Labels
-const fieldMap = {
-  // Storage Keys
-  'user': '使用者資訊',
-  'token': '存取憑證',
-  'iv_idNumber': '身分證字號',
-  'iv_fullName': '姓名(驗證)',
-  'iv_frontImage': '身分證正面',
-  'iv_backImage': '身分證背面',
-  'skywards_db_users': 'Skywards 使用者資料庫',
-  'skywards_db_transactions': 'Skywards 交易紀錄',
-  'skywards_db_announcements': 'Skywards 公告列表',
-  'mock_db_transactions': '交易紀錄',
-  'mock_db_users': '使用者資料庫',
-  'mock_db_announcements': '公告列表',
+const openKycDetail = (u) => { kycDetailModal.value = { show: true, user: u } }
+const openKycReject = (u) => { kycRejectModal.value = { show: true, user: u, reason: '', submitting: false } }
 
-  // Common Fields
-  'id': 'ID',
-  'username': '使用者名稱',
-  'email': '電子郵件',
-  'phone': '電話號碼',
-  'wallet': '錢包資訊',
-  'balance': '餘額',
-  'password': '密碼', 
-  'bankName': '銀行名稱',
-  'branchName': '分行名稱',
-  'accountNo': '銀行帳號',
-  'accountName': '戶名',
-  'amount': '金額',
-  'status': '狀態',
-  'date': '日期',
-  'type': '類型',
-  'title': '標題',
-  'content': '內容',
-  'createdAt': '建立時間',
-  'updatedAt': '更新時間',
-  'name': '名稱',
-  'role': '角色',
-  'gender': '性別',
-  'birthday': '生日',
-  'address': '地址',
-  'isVerified': '已驗證',
-  'avatar': '頭像',
-  'nickname': '暱稱',
-  'level': '等級',
-  'points': '積分',
-  'vip': 'VIP等級',
-  'isActive': '啟用狀態',
-  'lastLogin': '最後登入',
-  'registerIp': '註冊IP',
-  'loginIp': '登入IP',
-  'signature': '個性簽名',
-  'firstName': '名字',
-  'lastName': '姓氏',
-  'country': '國家',
-  'city': '城市',
-  'zipCode': '郵遞區號',
-  'memo': '備註',
-  'remark': '備註',
-  'description': '描述',
-  'category': '分類',
-  'orderNo': '訂單編號',
-  'paymentMethod': '付款方式',
-  'currency': '貨幣',
-  'exchangeRate': '匯率',
-  'fee': '手續費',
-  'tax': '稅金',
-  'discount': '折扣',
-  'total': '總計',
-  'quantity': '數量',
-  'price': '價格',
-  'productName': '商品名稱',
-  'productId': '商品ID',
-  'sku': 'SKU',
-  'imageUrl': '圖片連結',
-  'link': '連結',
-  'sort': '排序',
-  'isVisible': '是否顯示',
-  'isDeleted': '是否刪除',
-  'creator': '建立者',
-  'updater': '更新者',
-  'ip': 'IP位址',
-  'device': '裝置',
-  'browser': '瀏覽器',
-  'os': '作業系統',
-  'userAgent': 'User Agent',
-  'action': '動作',
-  'target': '目標',
-  'result': '結果',
-  'message': '訊息',
-  'code': '代碼',
-  'data': '資料',
-  'verificationData': '實名驗證資料',
-  'frontImage': '正面照片',
-  'backImage': '背面照片',
-  'idNumber': '身分證字號',
-  'fullName': '真實姓名'
+const reviewKyc = async (userId, action, reason = null) => {
+  try {
+    const res  = await fetch(`/api/v1/admin-panel/kyc/${userId}/review`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, reason }) })
+    const data = await res.json()
+    alert(data.message || '操作成功')
+    await loadKyc()
+  } catch { alert('操作失敗') }
 }
 
-const getLabel = (key) => {
-  return fieldMap[key] || key
+const submitKycReject = async () => {
+  kycRejectModal.value.submitting = true
+  await reviewKyc(kycRejectModal.value.user.id, 'reject', kycRejectModal.value.reason || null)
+  kycRejectModal.value.show = false
+  kycRejectModal.value.submitting = false
 }
 
-const handleBack = () => {
-  router.push('/')
-}
-
-const clearStorage = () => {
-  if (confirm('Are you sure you want to clear all localStorage data?')) {
-    localStorage.clear()
-    items.value = []
-    selectedKey.value = null
-  }
-}
-
-const selectKey = (item) => {
-  selectedKey.value = item.key
-  if (item.key === 'mileage-items' && mileageItemsList.value.length === 0) loadMileageItems()
-  if (item.key === 'skywards-benefits' && benefitsList.value.length === 0) loadSkywardsBenefits()
-}
-
-const openImage = (src) => {
-  const w = window.open('about:blank')
-  const image = new Image()
-  image.src = src
-  setTimeout(function() {
-    w.document.write(image.outerHTML)
-  }, 0)
-}
-
-const isImage = (val) => {
-  if (typeof val !== 'string') return false
-  // Check for data URI or image URL extension
-  return val.startsWith('data:image') || /\.(jpeg|jpg|gif|png|webp)($|\?)/i.test(val)
-}
-
-const isObject = (val) => {
-  return val && typeof val === 'object' && !Array.isArray(val)
-}
-
-const getHeaders = (data) => {
-  if (!Array.isArray(data) || data.length === 0) return []
-  // Collect all unique keys from all objects in the data array
-  const keys = new Set()
-  data.forEach(item => {
-    if (isObject(item)) {
-      Object.keys(item).forEach(k => keys.add(k))
-    }
-  })
-  return Array.from(keys)
-}
-
-const formatCell = (val) => {
-  if (val === null || val === undefined) return '-'
-  if (typeof val === 'boolean') return val ? 'Yes' : 'No'
-  // If it's an object/array inside a cell, stringify it
-  if (typeof val === 'object') return JSON.stringify(val)
-  return String(val)
-}
-
-const deleteKey = (key, event) => {
-  event.stopPropagation()
-  if (confirm(`確定要刪除 "${getLabel(key)}" (${key}) 嗎？`)) {
-    localStorage.removeItem(key)
-    updateView()
-    if (selectedKey.value === key) {
-      selectedKey.value = null
-    }
-  }
-}
-
-const updateView = () => {
-    // Force Vue to re-render via a small tick if needed, but reactivity handles it.
-    // However, we need to re-read localStorage
-    const keys = Object.keys(localStorage)
-    items.value = keys.map(key => {
-        const rawVal = localStorage.getItem(key)
-        let parsedVal = rawVal
-        try {
-        parsedVal = JSON.parse(rawVal)
-        } catch (e) {
-        // Keep as string
-        }
-        return {
-        key: key,
-        rawValue: rawVal,
-        parsedValue: parsedVal
-        }
-    })
-}
-
-// ── 里程兌換項目 ────────────────────────────────────────────────────────────
+// ── 里程兌換項目 ─────────────────────────────────────────────
 const mileageItemsList    = ref([])
 const loadingMileageItems = ref(false)
-const mileageItemForm = ref({ show: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0, submitting: false })
+const mileageModalPreview = ref(false)
+const mileageForm = ref({ show: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0, submitting: false })
 
 const loadMileageItems = async () => {
   loadingMileageItems.value = true
@@ -699,855 +446,203 @@ const loadMileageItems = async () => {
     const res  = await fetch('/api/v1/admin-panel/mileage-items')
     const data = await res.json()
     mileageItemsList.value = data.items || []
-  } catch (e) {
-    console.error('載入里程兌換項目失敗', e)
-  } finally {
-    loadingMileageItems.value = false
-  }
+  } finally { loadingMileageItems.value = false }
 }
 
-const openMileageItemForm = (item = null) => {
+const openMileageForm = (item = null) => {
+  mileageModalPreview.value = false
   if (item) {
-    mileageItemForm.value = { show: true, submitting: false, id: item.id, name: item.name, short_desc: item.short_desc || '', details: item.details || '', logo_letter: item.logo_letter || 'S', logo_color: item.logo_color || '#ffffff', is_featured: Number(item.is_featured), featured_label: item.featured_label || '精選', is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
+    mileageForm.value = { show: true, submitting: false, id: item.id, name: item.name, short_desc: item.short_desc || '', details: item.details || '', logo_letter: item.logo_letter || 'S', logo_color: item.logo_color || '#ffffff', is_featured: Number(item.is_featured), featured_label: item.featured_label || '精選', is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
   } else {
-    mileageItemForm.value = { show: true, submitting: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0 }
+    mileageForm.value = { show: true, submitting: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0 }
   }
 }
 
 const submitMileageItem = async () => {
-  const f = mileageItemForm.value
+  const f = mileageForm.value
   if (!f.name.trim()) { alert('請填寫名稱'); return }
   f.submitting = true
   try {
     const url    = f.id ? `/api/v1/admin-panel/mileage-items/${f.id}` : '/api/v1/admin-panel/mileage-items'
     const method = f.id ? 'PUT' : 'POST'
-    const body   = JSON.stringify({ name: f.name, short_desc: f.short_desc, details: f.details, logo_letter: f.logo_letter, logo_color: f.logo_color, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order })
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body })
+    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, short_desc: f.short_desc, details: f.details, logo_letter: f.logo_letter, logo_color: f.logo_color, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
     f.show = false
     await loadMileageItems()
-  } catch (e) {
-    alert('操作失敗，請稍後再試')
-  } finally {
-    f.submitting = false
-  }
+  } finally { f.submitting = false }
 }
 
 const deleteMileageItem = async (id) => {
   if (!confirm('確定要刪除此項目嗎？')) return
+  await fetch(`/api/v1/admin-panel/mileage-items/${id}`, { method: 'DELETE' })
+  await loadMileageItems()
+}
+
+// ── 內容管理（Config）────────────────────────────────────────
+const silverCardDesc       = ref('')
+const silverCardPreview    = ref(false)
+const savingSilver         = ref(false)
+const benefitsHtml         = ref('')
+const benefitsModalPreview = ref(false)
+const savingBenefitsHtml   = ref(false)
+
+const loadContentConfigs = async () => {
   try {
-    await fetch(`/api/v1/admin-panel/mileage-items/${id}`, { method: 'DELETE' })
-    await loadMileageItems()
-  } catch (e) {
-    alert('刪除失敗')
-  }
+    const [r1, r2] = await Promise.all([
+      fetch('/api/v1/config/skywards_silver_card_desc'),
+      fetch('/api/v1/config/skywards_benefits_html'),
+    ])
+    const d1 = await r1.json()
+    const d2 = await r2.json()
+    silverCardDesc.value = d1.value || ''
+    benefitsHtml.value   = d2.value || ''
+  } catch {}
 }
 
-// ── Skywards 權益 ────────────────────────────────────────────────────────────
-const benefitsList    = ref([])
-const loadingBenefits = ref(false)
-const benefitForm = ref({ show: false, id: null, type: 'rule', label: '', content: '', is_active: 1, sort_order: 0, submitting: false })
-
-const loadSkywardsBenefits = async () => {
-  loadingBenefits.value = true
+const saveSilverCard = async () => {
+  savingSilver.value = true
   try {
-    const res  = await fetch('/api/v1/admin-panel/skywards-benefits')
-    const data = await res.json()
-    benefitsList.value = data.items || []
-  } catch (e) {
-    console.error('載入Skywards權益失敗', e)
-  } finally {
-    loadingBenefits.value = false
-  }
+    await fetch('/api/v1/admin-panel/config/skywards_silver_card_desc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: silverCardDesc.value }) })
+    alert('儲存成功')
+  } finally { savingSilver.value = false }
 }
 
-const openBenefitForm = (item = null) => {
-  if (item) {
-    benefitForm.value = { show: true, submitting: false, id: item.id, type: item.type, label: item.label || '', content: item.content, is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
-  } else {
-    benefitForm.value = { show: true, submitting: false, id: null, type: 'rule', label: '', content: '', is_active: 1, sort_order: 0 }
-  }
-}
-
-const submitBenefit = async () => {
-  const f = benefitForm.value
-  if (!f.content.trim()) { alert('請填寫內容'); return }
-  f.submitting = true
+const saveBenefitsHtml = async () => {
+  savingBenefitsHtml.value = true
   try {
-    const url    = f.id ? `/api/v1/admin-panel/skywards-benefits/${f.id}` : '/api/v1/admin-panel/skywards-benefits'
-    const method = f.id ? 'PUT' : 'POST'
-    const body   = JSON.stringify({ type: f.type, label: f.label, content: f.content, is_active: f.is_active, sort_order: f.sort_order })
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body })
-    if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
-    f.show = false
-    await loadSkywardsBenefits()
-  } catch (e) {
-    alert('操作失敗，請稍後再試')
-  } finally {
-    f.submitting = false
-  }
+    await fetch('/api/v1/admin-panel/config/skywards_benefits_html', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: benefitsHtml.value }) })
+    alert('儲存成功')
+  } finally { savingBenefitsHtml.value = false }
 }
 
-const deleteBenefit = async (id) => {
-  if (!confirm('確定要刪除此權益項目嗎？')) return
-  try {
-    await fetch(`/api/v1/admin-panel/skywards-benefits/${id}`, { method: 'DELETE' })
-    await loadSkywardsBenefits()
-  } catch (e) {
-    alert('刪除失敗')
-  }
-}
-
-onMounted(() => {
-  // Disable max-width constraint
-  const appEl = document.getElementById('app')
-  if (appEl) {
-    appEl.style.maxWidth = 'none'
-    appEl.style.backgroundColor = '#f0f2f5'
-    appEl.style.padding = '0'
-  }
-
-  updateView()
-  loadUsers()
-})
-
-onUnmounted(() => {
-  // Restore max-width constraint
-  const appEl = document.getElementById('app')
-  if (appEl) {
-    appEl.style.maxWidth = ''
-    appEl.style.backgroundColor = ''
-    appEl.style.padding = ''
-  }
-})
+onMounted(() => { loadUsers() })
 </script>
 
 <style scoped>
-.admin-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #f0f2f5;
-  color: #1f2937;
-  overflow: hidden;
-}
+@import '../admin.css';
 
-.admin-header-bar {
-  background: #ffffff;
-  padding: 0 1.5rem;
-  height: 60px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #e5e7eb;
-  flex-shrink: 0;
-  z-index: 10;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.header-left h1 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: #111827;
-  font-weight: 700;
-}
-
-.back-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  color: #6b7280;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-}
-
-.back-btn:hover {
-  background-color: #f3f4f6;
-  color: #111827;
-}
-
-.bg-red-btn {
-  background-color: #ef4444;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.bg-red-btn:hover {
-  background-color: #dc2626;
-}
-
-/* Layout */
-.admin-layout {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
+.admin-shell { display: flex; min-height: 100vh; background: #f1f5f9; color: #1e293b; font-family: 'Inter','Segoe UI',system-ui,sans-serif; }
 
 /* Sidebar */
-.admin-sidebar {
-  width: 280px;
-  background: #ffffff;
-  border-right: 1px solid #e5e7eb;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  flex-shrink: 0;
-}
-
-.sidebar-header {
-  padding: 1rem 1.5rem;
-  font-weight: 600;
-  color: #6b7280;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid #f3f4f6;
-  background: #f9fafb;
-}
-
-.sidebar-list {
-  padding: 0.5rem;
-}
-
-.sidebar-item {
-  display: flex;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 0.25rem;
-  transition: all 0.2s;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.sidebar-item:hover {
-  background-color: #f9fafb;
-}
-
-.sidebar-item.active {
-  background-color: #eff6ff;
-  border: 1px solid #bfdbfe;
-}
-
-.sidebar-item.active .sidebar-item-title {
-  color: #2563eb;
-}
-
-.sidebar-item.active .icon {
-  color: #2563eb;
-}
-
-.sidebar-item-content {
-  overflow: hidden;
-}
-
-.sidebar-item-title {
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.95rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sidebar-item-key {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  font-family: monospace;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.delete-icon-btn {
-  background: none;
-  border: none;
-  color: #9ca3af;
-  opacity: 0;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.delete-icon-btn:hover {
-  background-color: #fee2e2;
-  color: #ef4444;
-}
-
-.sidebar-item:hover .delete-icon-btn {
-  opacity: 1;
-}
-
-/* Main Content */
-.admin-main {
-  flex: 1;
-  overflow-y: auto;
-  padding: 2rem;
-  background-color: #f8fafc;
-}
-
-.empty-selection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #9ca3af;
-}
-
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.content-panel {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-  /* Ensure panel doesn't overflow horizontally without scroll inside */
-  max-width: 100%; 
-}
-
-.panel-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #ffffff;
-  border-radius: 12px 12px 0 0;
-}
-
-.panel-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #111827;
-  font-weight: 700;
-}
-
-.panel-badge {
-  background: #f3f4f6;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-family: monospace;
-  font-size: 0.875rem;
-  color: #4b5563;
-  border: 1px solid #e5e7eb;
-}
-
-.panel-body {
-  padding: 1.5rem;
-  overflow-x: auto;
-}
-
-/* Image View */
-.image-viewer {
-  display: flex;
-  justify-content: center;
-  background: #f9fafb;
-  padding: 2rem;
-  border-radius: 8px;
-  border: 1px dashed #e5e7eb;
-}
-
-.image-viewer img {
-  max-width: 100%;
-  max-height: 600px;
-  object-fit: contain;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  border-radius: 4px;
-}
-
-.thumbnail {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #e5e7eb;
-}
-
-.preview-image {
-  max-width: 300px;
-  max-height: 200px;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-  object-fit: contain;
-  background: #f9fafb;
-}
-
-/* Table View */
-.table-view {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.table-container {
-  border-radius: 8px;
-  overflow: auto;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-  max-width: 100%;
-  max-height: calc(100vh - 200px); /* Limit height for vertical scroll */
-}
-
-table {
-  width: max-content; /* Allow table to grow horizontally */
-  min-width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-  text-align: left;
-}
-
-th {
-  background: #f9fafb;
-  font-weight: 600;
-  color: #374151;
-  padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  white-space: nowrap;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  box-shadow: 0 1px 0 #e5e7eb; /* Separation line for sticky header */
-}
-
-.sub-header {
-  display: block;
-  font-size: 0.75rem;
-  color: #9ca3af;
-  font-family: monospace;
-  font-weight: 400;
-  margin-top: 0.25rem;
-}
-
-td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #f3f4f6;
-  color: #1f2937;
-  vertical-align: middle;
-  max-width: 300px; /* Limit cell width */
-}
-
-.cell-content {
-  white-space: nowrap; 
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.nested-obj {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.85rem;
-  background: #fff;
-  padding: 4px;
-  border-radius: 4px;
-  border: 1px solid #f0f0f0;
-}
-
-.nested-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.nested-label {
-  color: #6b7280;
-  font-size: 0.75rem;
-  flex-shrink: 0;
-}
-
-.nested-img {
-  width: 40px;
-  height: 25px;
-  object-fit: cover;
-  border: 1px solid #e5e7eb;
-  border-radius: 2px;
-  cursor: zoom-in;
-}
-
-.nested-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: #374151;
-}
-
-
-
-tr:last-child td {
-  border-bottom: none;
-}
-
-tr:hover td {
-  background: #f9fafb;
-}
-
-/* Object View */
-.kv-table {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-
-.kv-row {
-  display: flex;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.kv-row:last-child {
-  border-bottom: none;
-}
-
-.kv-row:hover {
-  background-color: #f9fafb;
-}
-
-.kv-key {
-  width: 20%;
-  min-width: 180px;
-  background: #f9fafb;
-  padding: 1rem;
-  border-right: 1px solid #e5e7eb;
-  flex-shrink: 0;
-}
-
-.kv-label-primary {
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.95rem;
-}
-
-.kv-label-secondary {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  font-family: monospace;
-  margin-top: 0.25rem;
-}
-
-.kv-value {
-  padding: 1rem;
-  flex: 1;
-  overflow-x: auto;
-  color: #1f2937;
-  display: flex;
-  align-items: center;
-}
-
-.simple-view {
-    background: #1f2937;
-    border-radius: 8px;
-    padding: 1.5rem;
-    color: #e5e7eb;
-}
-
-.simple-view pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-all;
-  font-family: monospace;
-}
-
-/* User table specifics */
-.user-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
-}
-
-.user-table th {
-  background: #f9fafb;
-  font-weight: 600;
-  color: #374151;
-  padding: 0.75rem 1rem;
-  text-align: left;
-  border-bottom: 2px solid #e5e7eb;
-  white-space: nowrap;
-}
-
-.user-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #f3f4f6;
-  color: #1f2937;
-  vertical-align: middle;
-  max-width: none;
-}
-
-.user-table tr:hover td {
-  background: #f9fafb;
-}
-
-.amount-cell {
-  font-family: monospace;
-  font-weight: 600;
-  color: #065f46;
-}
-
-.role-badge, .verify-badge, .bank-badge {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.role-badge.admin { background: #fef3c7; color: #92400e; }
-.role-badge.user  { background: #eff6ff; color: #1d4ed8; }
-
-.verify-badge.approved { background: #d1fae5; color: #065f46; }
-.verify-badge.pending  { background: #fef9c3; color: #854d0e; }
-.verify-badge.rejected { background: #fee2e2; color: #991b1b; }
-.verify-badge.none     { background: #f3f4f6; color: #6b7280; }
-
-.bank-badge.yes { background: #d1fae5; color: #065f46; }
-.bank-badge.no  { background: #f3f4f6; color: #6b7280; }
-
-.email-verified-badge {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.email-verified-badge.yes { background: #d1fae5; color: #065f46; }
-.email-verified-badge.no  { background: #fee2e2; color: #991b1b; }
-
-.deposit-btn {
-  background: #d71921;
-  color: #fff;
-  border: none;
-  padding: 0.4rem 0.9rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.deposit-btn:hover { background: #b71418; }
-
-.refresh-btn {
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  padding: 0.4rem 0.9rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  color: #374151;
-}
-.refresh-btn:hover { background: #e5e7eb; }
-.refresh-btn:disabled { opacity: 0.6; cursor: default; }
-
-.loading-state, .empty-state {
-  padding: 3rem;
-  text-align: center;
-  color: #9ca3af;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-box {
-  background: #fff;
-  border-radius: 12px;
-  width: 420px;
-  max-width: 90vw;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  cursor: pointer;
-  color: #9ca3af;
-  padding: 0.25rem;
-}
-.modal-close:hover { color: #374151; }
-
-.modal-body {
-  padding: 1.5rem;
-}
-
-.modal-user-info {
-  background: #f9fafb;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1.25rem;
-  border: 1px solid #e5e7eb;
-}
-
-.modal-user-name  { font-weight: 700; color: #111827; font-size: 1rem; }
-.modal-user-email { font-size: 0.85rem; color: #6b7280; margin-top: 0.2rem; }
-.modal-user-balance { font-size: 0.875rem; color: #374151; margin-top: 0.5rem; }
-
-.modal-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.4rem;
-}
-
-.modal-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  color: #111827;
-  box-sizing: border-box;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.modal-input:focus { border-color: #d71921; }
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.modal-cancel-btn {
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: #374151;
-}
-.modal-cancel-btn:hover { background: #e5e7eb; }
-
-.modal-submit-btn {
-  background: #d71921;
-  color: #fff;
-  border: none;
-  padding: 0.6rem 1.4rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.modal-submit-btn:hover:not(:disabled) { background: #b71418; }
-.modal-submit-btn:disabled { opacity: 0.6; cursor: default; }
-
-.add-btn {
-  background: #16a34a;
-  color: #fff;
-  border: none;
-  padding: 0.4rem 0.9rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.add-btn:hover { background: #15803d; }
-
-.edit-btn {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  padding: 0.3rem 0.7rem;
-  border-radius: 5px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-right: 0.4rem;
-  transition: background 0.2s;
-}
-.edit-btn:hover { background: #1d4ed8; }
-
-.delete-item-btn {
-  background: #ef4444;
-  color: #fff;
-  border: none;
-  padding: 0.3rem 0.7rem;
-  border-radius: 5px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.delete-item-btn:hover { background: #dc2626; }
-
-.status-badge {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.status-badge.active   { background: #d1fae5; color: #065f46; }
-.status-badge.inactive { background: #f3f4f6; color: #6b7280; }
-
-.type-badge {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-.type-badge.note { background: #fef9c3; color: #854d0e; }
-.type-badge.hint { background: #f3f4f6; color: #374151; }
-
-.color-swatch {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  border: 1px solid #d1d5db;
-  vertical-align: middle;
-  margin-right: 4px;
-}
+.sidebar { width: 240px; min-height: 100vh; background: #1e293b; color: #cbd5e1; display: flex; flex-direction: column; transition: width 0.2s; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow: hidden; }
+.sidebar.collapsed { width: 60px; }
+.sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 1.25rem 1rem; border-bottom: 1px solid #334155; overflow: hidden; }
+.logo-img { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; }
+.logo-text { font-size: 0.95rem; font-weight: 700; color: #f8fafc; white-space: nowrap; }
+.sidebar-nav { flex: 1; padding: 0.75rem 0.5rem; display: flex; flex-direction: column; gap: 2px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 0.6rem 0.75rem; border-radius: 8px; cursor: pointer; transition: all 0.15s; white-space: nowrap; color: #94a3b8; font-size: 0.875rem; }
+.nav-item:hover { background: #334155; color: #f8fafc; }
+.nav-item.active { background: #3b82f6; color: #fff; }
+.nav-label { flex: 1; overflow: hidden; }
+.sidebar-footer { padding: 0.75rem 0.5rem; border-top: 1px solid #334155; }
+.collapse-btn { background: transparent; border: none; color: #94a3b8; cursor: pointer; width: 100%; display: flex; justify-content: center; padding: 6px; border-radius: 6px; transition: background 0.15s; }
+.collapse-btn:hover { background: #334155; color: #fff; }
+
+/* Main */
+.main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.top-bar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; background: #fff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
+.section-heading { font-size: 1.1rem; font-weight: 700; margin: 0; }
+.icon-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.45rem 0.85rem; border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; }
+.icon-btn:hover { background: #f8fafc; }
+
+/* Panel */
+.panel { background: #fff; border-radius: 12px; margin: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow: hidden; }
+.panel-header { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; }
+.panel-title { font-size: 1rem; font-weight: 600; flex: 1; }
+
+/* Table */
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.data-table th { text-align: left; padding: 0.6rem 1rem; background: #f8fafc; color: #64748b; font-weight: 500; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.data-table td { padding: 0.65rem 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #f8fafc; }
+.td-muted { color: #94a3b8; }
+.td-name { font-weight: 500; }
+.td-sub { font-size: 0.75rem; color: #94a3b8; }
+.td-num { text-align: right; font-variant-numeric: tabular-nums; }
+.td-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 0.45rem 0.9rem; font-size: 0.85rem; font-weight: 500; border-radius: 8px; border: none; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: #3b82f6; color: #fff; }
+.btn-primary:hover:not(:disabled) { background: #2563eb; }
+.btn-outline { background: transparent; border: 1px solid #e2e8f0; color: #374151; }
+.btn-outline:hover:not(:disabled) { background: #f8fafc; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-danger:hover:not(:disabled) { background: #dc2626; }
+.btn-green { background: #22c55e; color: #fff; }
+.btn-green:hover:not(:disabled) { background: #16a34a; }
+.btn-sm { padding: 0.3rem 0.65rem; font-size: 0.8rem; border-radius: 6px; }
+
+/* Badges */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+.badge-green { background: #dcfce7; color: #166534; }
+.badge-red { background: #fee2e2; color: #991b1b; }
+.badge-yellow { background: #fef9c3; color: #854d0e; }
+.badge-blue { background: #dbeafe; color: #1d4ed8; }
+.badge-purple { background: #ede9fe; color: #5b21b6; }
+.badge-gray { background: #f1f5f9; color: #64748b; }
+
+/* States */
+.state-msg { padding: 3rem 1.5rem; text-align: center; color: #94a3b8; font-size: 0.9rem; }
+
+/* Tab Pills */
+.tab-pills { display: flex; gap: 4px; }
+.pill { padding: 0.3rem 0.75rem; border-radius: 9999px; border: 1px solid #e2e8f0; background: transparent; color: #64748b; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
+.pill.active { background: #1e293b; color: #fff; border-color: #1e293b; }
+
+/* Logo Chip */
+.logo-chip { width: 32px; min-width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: #1e293b; border: 1px solid rgba(0,0,0,0.08); }
+
+/* Content Management */
+.content-block { padding: 1.25rem; }
+.content-block-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.75rem; gap: 1rem; }
+.cb-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 3px; }
+.cb-desc { font-size: 0.8rem; color: #64748b; }
+.cfg-textarea { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; resize: vertical; outline: none; font-family: inherit; color: #1e293b; }
+.cfg-textarea:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.divider { height: 1px; background: #f1f5f9; }
+
+/* Preview */
+.preview-box { margin-top: 1rem; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 1rem; background: #f8fafc; }
+.preview-label { font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.mock-card { display: flex; gap: 0.75rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; padding: 0.75rem; }
+.mock-card-img { width: 110px; height: 75px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.mock-card-body { flex: 1; }
+.mock-card-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+.mock-card-desc { font-size: 0.85rem; color: #555; }
+.mock-modal { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; max-width: 380px; }
+.mock-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; }
+.mock-modal-title { font-size: 1rem; font-weight: 700; flex: 1; text-align: center; }
+.mock-modal-close { background: none; border: none; color: #94a3b8; cursor: pointer; }
+.mock-modal-body { padding: 1rem 1.25rem; font-size: 0.88rem; color: #374151; min-height: 60px; }
+.mock-modal-body :deep(ul) { padding-left: 1.5em; list-style: disc; }
+.mock-modal-body :deep(ol) { padding-left: 1.5em; list-style: decimal; }
+.mock-modal-confirm { display: block; width: calc(100% - 2.5rem); margin: 0 1.25rem 1rem; padding: 0.6rem; background: #1e293b; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; }
+
+/* Modal Overlay */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+.modal-box { background: #fff; border-radius: 14px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; }
+.modal-hd { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; font-weight: 600; font-size: 0.95rem; }
+.modal-x { background: none; border: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer; padding: 4px; line-height: 1; }
+.modal-x:hover { color: #1e293b; }
+.modal-bd { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.modal-ft { display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.25rem; border-top: 1px solid #f1f5f9; }
+
+/* Form */
+.f-label { display: block; font-size: 0.8rem; font-weight: 500; color: #64748b; margin-bottom: 4px; }
+.f-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box; color: #1e293b; background: #fff; }
+.f-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.f-input:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; }
+
+/* KYC */
+.kyc-rows { display: flex; flex-direction: column; gap: 0.5rem; }
+.kyc-row { display: flex; gap: 1rem; align-items: baseline; font-size: 0.9rem; }
+.kyc-lbl { min-width: 100px; flex-shrink: 0; color: #94a3b8; font-size: 0.8rem; }
+.kyc-imgs { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+.kyc-img-wrap { flex: 1; min-width: 140px; }
+.kyc-img-label { font-size: 0.8rem; color: #64748b; margin-bottom: 6px; }
+.kyc-img { width: 100%; max-width: 200px; border-radius: 8px; border: 1px solid #e2e8f0; }
 </style>

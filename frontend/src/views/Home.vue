@@ -30,7 +30,7 @@ const announcements = ref([
       <h2 class="upgrade-subtitle">SKYWARDS+</h2>
       <h1 class="upgrade-title">利用 Skywards+ 升級您的權益</h1>
       <p class="upgrade-description">隨心所好，從您最喜愛的三款套裝行程中選擇，從機場貴賓休息室使用權限和額外行李限額，到專屬「現金+哩程數」票價與折扣，為您提供精彩可期的服務內容。</p>
-      <button class="upgrade-button">更多資訊</button>
+      <router-link to="/skywards" class="upgrade-button">更多資訊</router-link>
     </div>
   </section>
 
@@ -181,6 +181,7 @@ const announcements = ref([
 }
 
 .upgrade-button {
+  display: block;
   background-color: white;
   color: black;
   border: 2px solid white;
@@ -190,6 +191,10 @@ const announcements = ref([
   cursor: pointer;
   transition: all 0.3s ease;
   width: 100%;
+  text-decoration: none;
+  text-align: center;
+  padding: 0.6rem 0;
+  box-sizing: border-box;
 }
 
 .upgrade-button:hover {
