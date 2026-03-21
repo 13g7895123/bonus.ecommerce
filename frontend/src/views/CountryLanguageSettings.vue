@@ -3,28 +3,73 @@
     <PageHeader title="國家/地區和語言" back-to="/settings" />
 
     <div class="cls-content">
-      <!-- 國家/地區 -->
-      <div class="cls-section-title">國家/地區</div>
-      <div class="cls-card">
-        <div class="cls-item">
-          <span class="cls-label">目前國家/地區</span>
-          <span class="cls-value">{{ currentCountry }}</span>
+      <!-- 兩行列表，帶底線 -->
+      <div class="cls-list">
+        <!-- 國家/地區（可點擊） -->
+        <div class="cls-row cls-row-clickable" @click="showCountryPicker = true">
+          <span class="cls-row-label">國家/地區</span>
+          <div class="cls-row-right">
+            <span class="cls-row-value">{{ currentCountryName }}</span>
+            <svg class="cls-chevron" width="7" height="12" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1 1L6 6L1 11" stroke="#bbb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 語言（可點擊） -->
+        <div class="cls-row cls-row-clickable" @click="showLangPicker = true">
+          <span class="cls-row-label">語言</span>
+          <div class="cls-row-right">
+            <span class="cls-row-value">{{ currentLangName }}</span>
+            <svg class="cls-chevron" width="7" height="12" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1 1L6 6L1 11" stroke="#bbb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- 語言 -->
-      <div class="cls-section-title">語言</div>
-      <div class="cls-card">
-        <div
-          v-for="lang in languages"
-          :key="lang.code"
-          class="cls-item cls-item-clickable"
-          :class="{ active: currentLocale === lang.code }"
-          @click="setLocale(lang.code)"
-        >
-          <span class="cls-label">{{ lang.name }}</span>
-          <span v-if="currentLocale === lang.code" class="cls-check">✓</span>
+    <!-- 國家/地區選擇 Bottom Sheet -->
+    <div v-if="showCountryPicker" class="lang-overlay" @click.self="showCountryPicker = false">
+      <div class="lang-sheet">
+        <div class="lang-sheet-header">
+          <span class="lang-sheet-title">選擇國家/地區</span>
+          <button class="lang-sheet-close" @click="showCountryPicker = false">✕</button>
         </div>
+        <ul class="lang-list">
+          <li
+            v-for="country in countries"
+            :key="country.code"
+            class="lang-option"
+            :class="{ selected: currentCountry === country.code }"
+            @click="setCountry(country.code)"
+          >
+            <span>{{ country.name }}</span>
+            <svg v-if="currentCountry === country.code" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d71921" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 語言選擇 Bottom Sheet -->
+    <div v-if="showLangPicker" class="lang-overlay" @click.self="showLangPicker = false">
+      <div class="lang-sheet">
+        <div class="lang-sheet-header">
+          <span class="lang-sheet-title">選擇語言</span>
+          <button class="lang-sheet-close" @click="showLangPicker = false">✕</button>
+        </div>
+        <ul class="lang-list">
+          <li
+            v-for="lang in languages"
+            :key="lang.code"
+            class="lang-option"
+            :class="{ selected: currentLocale === lang.code }"
+            @click="setLocale(lang.code)"
+          >
+            <span>{{ lang.name }}</span>
+            <svg v-if="currentLocale === lang.code" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d71921" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
@@ -38,17 +83,42 @@ import PageHeader from '../components/PageHeader.vue'
 const { locale } = useI18n()
 
 const currentLocale = computed(() => locale.value)
+const showLangPicker = ref(false)
+const showCountryPicker = ref(false)
+
+const countries = [
+  { code: 'TW', name: '中國台灣' },
+  { code: 'CN', name: '中國大陸' },
+  { code: 'HK', name: '香港' },
+  { code: 'US', name: '美國' },
+  { code: 'JP', name: '日本' },
+  { code: 'SG', name: '新加坡' },
+]
+
+const currentCountry = ref(localStorage.getItem('app_country') || 'TW')
+const currentCountryName = computed(
+  () => countries.find(c => c.code === currentCountry.value)?.name ?? '中國台灣'
+)
+
+const setCountry = (code) => {
+  currentCountry.value = code
+  localStorage.setItem('app_country', code)
+  showCountryPicker.value = false
+}
 
 const languages = [
   { code: 'zh-TW', name: '繁體中文（台灣）' },
   { code: 'en',    name: 'English' },
 ]
 
-const currentCountry = ref('台灣')
+const currentLangName = computed(
+  () => languages.find(l => l.code === currentLocale.value)?.name ?? '繁體中文（台灣）'
+)
 
 const setLocale = (code) => {
   locale.value = code
   localStorage.setItem('app_locale', code)
+  showLangPicker.value = false
 }
 </script>
 
@@ -58,62 +128,128 @@ const setLocale = (code) => {
   background: #f5f5f5;
 }
 
+/* Content */
 .cls-content {
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 0;
 }
 
-.cls-section-title {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 1.25rem 0 0.5rem;
-}
-
-.cls-card {
+/* List */
+.cls-list {
   background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
-.cls-item {
+.cls-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid #f5f5f5;
-  font-size: 0.95rem;
-  color: #1a1a1a;
+  padding: 1.05rem 1.5rem;
+  border-bottom: 1px solid #efefef;
 }
 
-.cls-item:last-child {
+.cls-row:last-child {
   border-bottom: none;
 }
 
-.cls-item-clickable {
+.cls-row-clickable {
   cursor: pointer;
   transition: background 0.15s;
 }
 
-.cls-item-clickable:hover {
+.cls-row-clickable:active {
+  background: #f9f9f9;
+}
+
+.cls-row-label {
+  font-size: 0.95rem;
+  color: #1a1a1a;
+}
+
+.cls-row-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cls-row-value {
+  font-size: 0.9rem;
+  color: #999;
+}
+
+.cls-chevron {
+  flex-shrink: 0;
+}
+
+/* Language bottom sheet */
+.lang-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.lang-sheet {
+  background: #fff;
+  width: 100%;
+  max-width: var(--app-max-width, 480px);
+  border-radius: 16px 16px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+.lang-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.lang-sheet-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.lang-sheet-close {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.lang-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  cursor: pointer;
+  border-bottom: 1px solid #f8f8f8;
+  transition: background 0.15s;
+}
+
+.lang-option:last-child {
+  border-bottom: none;
+}
+
+.lang-option:hover {
   background: #fafafa;
 }
 
-.cls-item-clickable.active {
+.lang-option.selected {
   color: #d71921;
   font-weight: 600;
-}
-
-.cls-check {
-  color: #d71921;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.cls-value {
-  color: #666;
-  font-size: 0.9rem;
 }
 </style>

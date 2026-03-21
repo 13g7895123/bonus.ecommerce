@@ -316,5 +316,7 @@ const handleLogout = () => {
   text-decoration: none;
   color: inherit;
   outline: none;
+  box-sizing: border-box;
+  display: flex;
 }
 </style>

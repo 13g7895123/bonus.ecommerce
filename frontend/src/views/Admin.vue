@@ -521,7 +521,14 @@ onMounted(() => { loadUsers() })
 <style scoped>
 @import '../admin.css';
 
-.admin-shell { display: flex; min-height: 100vh; background: #f1f5f9; color: #1e293b; font-family: 'Inter','Segoe UI',system-ui,sans-serif; }
+.admin-shell { display: flex; min-height: 100vh; background: #f1f5f9; color: #1e293b; font-family: 'Inter','Segoe UI',system-ui,sans-serif;
+  /* 透過負 margin + 100vw 跳出 #app 的 max-width 限制 */
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+}
 
 /* Sidebar */
 .sidebar { width: 240px; min-height: 100vh; background: #1e293b; color: #cbd5e1; display: flex; flex-direction: column; transition: width 0.2s; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow: hidden; }
