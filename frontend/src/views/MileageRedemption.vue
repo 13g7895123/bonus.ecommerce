@@ -37,8 +37,9 @@
           @click="openItemModal(item)"
         >
           <div class="item-left">
-            <div class="logo-box" :style="item.logo_color ? { backgroundColor: item.logo_color } : {}">
-              <span class="logo-text">{{ item.logo_letter || 'S' }}</span>
+            <div class="logo-box" :style="item.logo_url ? {} : (item.logo_color ? { backgroundColor: item.logo_color } : {})">
+              <img v-if="item.logo_url" :src="item.logo_url" style="width:100%;height:100%;object-fit:contain;border-radius:inherit" />
+              <span v-else class="logo-text">{{ item.logo_letter || 'S' }}</span>
             </div>
             <div class="item-info">
               <div v-if="item.is_featured == 1" class="featured-tag">
@@ -80,8 +81,9 @@
       <transition name="slide-up">
         <div class="item-modal">
           <div class="item-modal-header">
-            <div class="item-modal-logo" :style="selectedItem.logo_color ? { backgroundColor: selectedItem.logo_color } : {}">
-              <span class="item-modal-letter">{{ selectedItem.logo_letter || 'S' }}</span>
+            <div class="item-modal-logo" :style="selectedItem.logo_url ? {} : (selectedItem.logo_color ? { backgroundColor: selectedItem.logo_color } : {})">
+              <img v-if="selectedItem.logo_url" :src="selectedItem.logo_url" style="width:100%;height:100%;object-fit:contain;border-radius:inherit" />
+              <span v-else class="item-modal-letter">{{ selectedItem.logo_letter || 'S' }}</span>
             </div>
             <div class="item-modal-title-wrap">
               <div v-if="selectedItem.is_featured == 1" class="featured-tag">
@@ -341,14 +343,14 @@ onMounted(() => {
   background: rgba(0,0,0,0.5);
   z-index: 1000;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
 }
 
 .item-modal {
   background: #fff;
-  border-radius: 16px 16px 0 0;
-  width: 100%;
+  border-radius: 16px;
+  width: 90%;
   max-width: 480px;
   max-height: 80vh;
   display: flex;
@@ -421,6 +423,7 @@ onMounted(() => {
   font-size: 0.88rem;
   color: #444;
   line-height: 1.7;
+  text-align: left;
 }
 
 .item-modal-empty {

@@ -98,6 +98,7 @@ onBeforeUnmount(() => {
 :deep(.ProseMirror) {
   min-height: 120px;
   outline: none;
+  text-align: left;
 }
 :deep(.ProseMirror p) { margin-bottom: 0.5em; }
 :deep(.ProseMirror ul) { padding-left: 1.5em; list-style: disc; }

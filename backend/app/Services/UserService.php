@@ -58,6 +58,12 @@ class UserService
 
     public function submitVerification(int $userId, array $files, array $data): array
     {
+        // Guard: prevent re-submission if already approved/verified
+        $current = $this->userRepo->find($userId);
+        if ($current && in_array($current['verify_status'] ?? '', ['approved', 'verified'], true)) {
+            return ['success' => false, 'message' => '身份驗證已通過，無法重新提交'];
+        }
+
         $fileIds = [];
         // 處理實體檔案上傳（multipart）
         foreach ($files as $key => $file) {

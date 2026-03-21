@@ -261,8 +261,8 @@ class AdminPanelController extends Controller
         $action = $data['action'] ?? '';
         $reason = $data['reason'] ?? null;
 
-        if (!in_array($action, ['approve', 'reject'], true)) {
-            return $this->json(['message' => 'action 必須為 approve 或 reject'], 400);
+        if (!in_array($action, ['approve', 'reject', 'revoke'], true)) {
+            return $this->json(['message' => 'action 必須為 approve、reject 或 revoke'], 400);
         }
 
         $repo   = new UserRepository();
@@ -274,6 +274,8 @@ class AdminPanelController extends Controller
         $updateData = [];
         if ($action === 'approve') {
             $updateData['verify_status'] = 'approved';
+        } elseif ($action === 'revoke') {
+            $updateData['verify_status'] = 'pending';
         } else {
             $updateData['verify_status'] = 'rejected';
             if ($reason) {
@@ -286,7 +288,8 @@ class AdminPanelController extends Controller
         }
 
         $repo->update($userId, $updateData);
-        return $this->json(['success' => true, 'message' => $action === 'approve' ? '已審核通過' : '已拒絕']);
+        $msg = match($action) { 'approve' => '已審核通過', 'revoke' => '已退回待審核', default => '已拒絕' };
+        return $this->json(['success' => true, 'message' => $msg]);
     }
 
     // ── HTML Panel ────────────────────────────────────────────────────────────

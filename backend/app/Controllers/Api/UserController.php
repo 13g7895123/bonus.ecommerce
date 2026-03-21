@@ -31,6 +31,9 @@ class UserController extends BaseApiController
         // 前端傳 JSON（file ID 已預先上傳），用 getJson() 讀取
         $json = $this->getJson(true);  // true = assoc array
         $result = (new UserService())->submitVerification(Auth::id(), [], $json ?? []);
+        if (!$result['success']) {
+            return $this->error($result['message'], 422);
+        }
         return $this->success(null, $result['message']);
     }
 

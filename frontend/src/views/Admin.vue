@@ -39,7 +39,7 @@
       <!-- ── 使用者管理 ── -->
       <div v-if="currentSection === 'users'" class="panel">
         <div class="panel-header">
-          <span class="panel-title">使用者列表</span>
+          <span class="panel-title"></span>
           <button class="btn btn-outline" :disabled="loadingUsers" @click="loadUsers">
             <RefreshCw :size="14" />{{ loadingUsers ? '載入中...' : '重新整理' }}
           </button>
@@ -49,14 +49,13 @@
           <table v-else class="data-table">
             <thead>
               <tr>
-                <th>ID</th><th>姓名</th><th>Email</th><th>Email驗證</th>
+                <th>姓名</th><th>Email</th><th>Email驗證</th>
                 <th>電話</th><th>國家</th><th>角色</th><th>KYC</th>
                 <th>餘額</th><th>里程</th><th>操作</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="u in usersList" :key="u.id">
-                <td class="td-muted">{{ u.id }}</td>
                 <td class="td-name">{{ u.full_name || '-' }}</td>
                 <td>{{ u.email }}</td>
                 <td><span :class="['badge', u.is_verified == 1 ? 'badge-green' : 'badge-gray']">{{ u.is_verified == 1 ? '已驗證' : '未驗證' }}</span></td>
@@ -76,10 +75,14 @@
       <!-- ── KYC 審核 ── -->
       <div v-if="currentSection === 'kyc'" class="panel">
         <div class="panel-header">
-          <span class="panel-title">實名認證審核</span>
+          <span class="panel-title"></span>
           <div class="tab-pills">
             <button v-for="t in kycTabs" :key="t.key" class="pill" :class="{ active: kycTab === t.key }" @click="kycTab = t.key; loadKyc()">{{ t.label }}</button>
           </div>
+          <label class="dev-toggle" title="開啟後可對已通過/未通過的記錄執行退回操作">
+            <input type="checkbox" v-model="kycDevMode" />
+            <span>測試模式</span>
+          </label>
           <button class="btn btn-outline" :disabled="loadingKyc" @click="loadKyc"><RefreshCw :size="14" /></button>
         </div>
         <div class="table-wrap">
@@ -88,24 +91,28 @@
           <table v-else class="data-table">
             <thead>
               <tr>
-                <th>ID</th><th>Email</th><th>姓名</th><th>手機</th>
+                <th>Email</th><th>姓名</th><th>手機</th>
                 <th>身分證字號</th><th>代表人姓名</th><th>狀態</th>
-                <th v-if="kycTab === 'pending'">操作</th>
+                <th v-if="kycTab === 'pending' || kycDevMode">操作</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="u in kycList" :key="u.id">
-                <td class="td-muted">{{ u.id }}</td>
                 <td>{{ u.email }}</td>
                 <td>{{ u.full_name || '-' }}</td>
                 <td>{{ u.phone || '-' }}</td>
                 <td>{{ u.verification_data?.idNumber || u.verification_data?.id_number || '-' }}</td>
                 <td>{{ u.verification_data?.fullName || u.verification_data?.real_name || '-' }}</td>
                 <td><span :class="['badge', kycBadgeClass(u.verify_status)]">{{ kycLabel(u.verify_status) }}</span></td>
-                <td v-if="kycTab === 'pending'" class="td-actions">
-                  <button class="btn btn-sm btn-green" @click="reviewKyc(u.id, 'approve')">通過</button>
-                  <button class="btn btn-sm btn-danger" @click="openKycReject(u)">拒絕</button>
-                  <button class="btn btn-sm btn-outline" @click="openKycDetail(u)">詳情</button>
+                <td v-if="kycTab === 'pending' || kycDevMode" class="td-actions">
+                  <template v-if="kycTab === 'pending'">
+                    <button class="btn btn-sm btn-green" @click="reviewKyc(u.id, 'approve')">通過</button>
+                    <button class="btn btn-sm btn-danger" @click="openKycReject(u)">拒絕</button>
+                    <button class="btn btn-sm btn-outline" @click="openKycDetail(u)">詳情</button>
+                  </template>
+                  <template v-else-if="kycDevMode">
+                    <button class="btn btn-sm btn-outline" style="border-color:#f59e0b;color:#f59e0b" @click="reviewKyc(u.id, 'revoke')">↩ 退回</button>
+                  </template>
                 </td>
               </tr>
             </tbody>
@@ -116,7 +123,7 @@
       <!-- ── 里程兌換項目 ── -->
       <div v-if="currentSection === 'mileage-items'" class="panel">
         <div class="panel-header">
-          <span class="panel-title">里程兌換項目管理</span>
+          <span class="panel-title"></span>
           <div style="display:flex;gap:0.5rem">
             <button class="btn btn-outline" :disabled="loadingMileageItems" @click="loadMileageItems"><RefreshCw :size="14" /></button>
             <button class="btn btn-primary" @click="openMileageForm()"><Plus :size="14" />新增項目</button>
@@ -126,15 +133,17 @@
           <div v-if="loadingMileageItems" class="state-msg">載入中...</div>
           <div v-else-if="mileageItemsList.length === 0" class="state-msg">尚無項目</div>
           <table v-else class="data-table">
-            <thead><tr><th>ID</th><th>名稱</th><th>Logo</th><th>精選</th><th>狀態</th><th>排序</th><th>操作</th></tr></thead>
+            <thead><tr><th>名稱</th><th>Logo</th><th>精選</th><th>狀態</th><th>排序</th><th>操作</th></tr></thead>
             <tbody>
               <tr v-for="item in mileageItemsList" :key="item.id">
-                <td class="td-muted">{{ item.id }}</td>
                 <td>
                   <div class="td-name">{{ item.name }}</div>
                   <div class="td-sub">{{ item.short_desc }}</div>
                 </td>
-                <td><div class="logo-chip" :style="{ backgroundColor: item.logo_color }">{{ item.logo_letter }}</div></td>
+                <td>
+                  <img v-if="item.logo_url" :src="item.logo_url" style="width:32px;height:32px;object-fit:contain;border-radius:6px" />
+                  <div v-else class="logo-chip" :style="{ backgroundColor: item.logo_color }">{{ item.logo_letter }}</div>
+                </td>
                 <td><span :class="['badge', item.is_featured == 1 ? 'badge-yellow' : 'badge-gray']">{{ item.is_featured == 1 ? '精選' : '-' }}</span></td>
                 <td><span :class="['badge', item.is_active == 1 ? 'badge-green' : 'badge-red']">{{ item.is_active == 1 ? '啟用' : '停用' }}</span></td>
                 <td>{{ item.sort_order }}</td>
@@ -150,7 +159,7 @@
 
       <!-- ── 內容管理 ── -->
       <div v-if="currentSection === 'content'" class="panel">
-        <div class="panel-header"><span class="panel-title">內容管理</span></div>
+        <div class="panel-header"><span class="panel-title"></span></div>
 
         <div class="content-block">
           <div class="content-block-header">
@@ -284,7 +293,8 @@
             <div class="mock-modal">
               <div class="mock-modal-header">
                 <div style="display:flex;align-items:center;gap:0.75rem">
-                  <div class="logo-chip" :style="{ backgroundColor: mileageForm.logo_color }">{{ mileageForm.logo_letter }}</div>
+                  <img v-if="mileageForm.logo_mode==='image' && mileageForm.logo_url" :src="mileageForm.logo_url" style="width:40px;height:40px;object-fit:contain;border-radius:6px" />
+                  <div v-else class="logo-chip" :style="{ backgroundColor: mileageForm.logo_color }">{{ mileageForm.logo_letter }}</div>
                   <h3 style="font-size:1rem;font-weight:700;margin:0">{{ mileageForm.name || '項目名稱' }}</h3>
                 </div>
                 <button class="mock-modal-close">✕</button>
@@ -297,16 +307,71 @@
               <button class="mock-modal-confirm">關閉</button>
             </div>
           </div>
-          <div style="display:flex;gap:1rem;margin-top:0.75rem">
-            <div style="flex:1">
-              <label class="f-label">Logo 字母</label>
-              <input v-model="mileageForm.logo_letter" class="f-input" placeholder="S" maxlength="5" />
+          <div style="margin-top:0.75rem">
+            <label class="f-label">Logo 模式</label>
+            <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
+              <button type="button" @click="switchLogoMode('letter')" :style="{ padding:'4px 14px', borderRadius:'6px', border:'1px solid #e2e8f0', cursor:'pointer', background: mileageForm.logo_mode==='letter' ? '#3b82f6' : '#f8fafc', color: mileageForm.logo_mode==='letter' ? '#fff' : '#374151' }">字母</button>
+              <button type="button" @click="switchLogoMode('image')" :style="{ padding:'4px 14px', borderRadius:'6px', border:'1px solid #e2e8f0', cursor:'pointer', background: mileageForm.logo_mode==='image' ? '#3b82f6' : '#f8fafc', color: mileageForm.logo_mode==='image' ? '#fff' : '#374151' }">上傳圖片</button>
+              <button type="button" @click="switchLogoMode('pick')" :style="{ padding:'4px 14px', borderRadius:'6px', border:'1px solid #e2e8f0', cursor:'pointer', background: mileageForm.logo_mode==='pick' ? '#3b82f6' : '#f8fafc', color: mileageForm.logo_mode==='pick' ? '#fff' : '#374151' }">選擇已上傳</button>
             </div>
-            <div style="flex:1">
-              <label class="f-label">Logo 背景色</label>
-              <div style="display:flex;gap:0.5rem;align-items:center">
-                <input v-model="mileageForm.logo_color" type="color" style="width:36px;height:36px;padding:2px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer" />
-                <input v-model="mileageForm.logo_color" class="f-input" placeholder="#ffffff" />
+            <div v-if="mileageForm.logo_mode==='letter'" style="display:flex;gap:1rem">
+              <div style="flex:1">
+                <label class="f-label">Logo 字母</label>
+                <input v-model="mileageForm.logo_letter" class="f-input" placeholder="S" maxlength="5" />
+              </div>
+              <div style="flex:1">
+                <label class="f-label">Logo 背景色</label>
+                <div style="display:flex;gap:0.5rem;align-items:center">
+                  <input v-model="mileageForm.logo_color" type="color" style="width:36px;height:36px;padding:2px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer" />
+                  <input v-model="mileageForm.logo_color" class="f-input" placeholder="#ffffff" />
+                </div>
+              </div>
+            </div>
+            <div v-else-if="mileageForm.logo_mode==='image'" style="display:flex;align-items:center;gap:1rem">
+              <label style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;cursor:pointer;font-size:0.85rem;color:#0369a1">
+                <span>{{ logoUploading ? '上傳中...' : '選擇圖片' }}</span>
+                <input type="file" accept="image/*" style="display:none" :disabled="logoUploading" @change="uploadLogoImage" />
+              </label>
+              <img v-if="mileageForm.logo_url" :src="mileageForm.logo_url" style="width:48px;height:48px;object-fit:contain;border-radius:8px;border:1px solid #e2e8f0" />
+              <span v-else style="color:#999;font-size:0.85rem">尚未上傳圖片</span>
+            </div>
+            <div v-else style="margin-top:0.25rem">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+                <span style="font-size:0.8rem;color:#64748b">點選圖片即可套用</span>
+                <button type="button" @click="loadLogoGallery" style="font-size:0.75rem;padding:2px 10px;border-radius:5px;border:1px solid #e2e8f0;background:#f8fafc;cursor:pointer;color:#374151">{{ logoGalleryLoading ? '載入中...' : '重新整理' }}</button>
+              </div>
+              <div v-if="logoGalleryLoading" style="text-align:center;padding:1rem;color:#94a3b8;font-size:0.85rem">載入中...</div>
+              <template v-else>
+                <div style="font-size:0.75rem;color:#94a3b8;margin-bottom:4px">內建圖片</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:0.5rem;padding:4px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:0.6rem">
+                  <div
+                    v-for="img in STATIC_LOGO_IMAGES" :key="img.id"
+                    @click="mileageForm.logo_url = img.url"
+                    :title="img.original_name"
+                    :style="{ border: mileageForm.logo_url===img.url ? '2px solid #3b82f6' : '2px solid #e2e8f0', borderRadius:'8px', overflow:'hidden', cursor:'pointer', background: mileageForm.logo_url===img.url ? '#eff6ff' : '#f8fafc', flexShrink:0 }"
+                  >
+                    <img :src="img.url" :alt="img.original_name" style="width:100%;height:64px;object-fit:contain;display:block" />
+                    <div style="font-size:0.62rem;color:#64748b;padding:2px 4px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ img.original_name }}</div>
+                  </div>
+                </div>
+                <div style="font-size:0.75rem;color:#94a3b8;margin-bottom:4px">已上傳圖片</div>
+                <div v-if="logoGallery.length === 0" style="text-align:center;padding:0.75rem;color:#94a3b8;font-size:0.85rem;border:1px solid #e2e8f0;border-radius:8px">尚無已上傳圖片，請先使用「上傳圖片」模式</div>
+                <div v-else style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:0.5rem;max-height:180px;overflow-y:auto;padding:4px;border:1px solid #e2e8f0;border-radius:8px">
+                  <div
+                    v-for="img in logoGallery" :key="img.id"
+                    @click="mileageForm.logo_url = img.url"
+                    :title="img.original_name"
+                    :style="{ border: mileageForm.logo_url===img.url ? '2px solid #3b82f6' : '2px solid #e2e8f0', borderRadius:'8px', overflow:'hidden', cursor:'pointer', background: mileageForm.logo_url===img.url ? '#eff6ff' : '#f8fafc', flexShrink:0 }"
+                  >
+                    <img :src="img.url" :alt="img.original_name" style="width:100%;height:64px;object-fit:contain;display:block" />
+                    <div style="font-size:0.62rem;color:#64748b;padding:2px 4px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ img.original_name }}</div>
+                  </div>
+                </div>
+              </template>
+              <div v-if="mileageForm.logo_url" style="margin-top:0.5rem;display:flex;align-items:center;gap:0.5rem">
+                <img :src="mileageForm.logo_url" style="width:36px;height:36px;object-fit:contain;border-radius:6px;border:1px solid #e2e8f0" />
+                <span style="font-size:0.8rem;color:#059669">✓ 已選擇</span>
+                <button type="button" @click="mileageForm.logo_url=''" style="font-size:0.75rem;padding:2px 8px;border-radius:5px;border:1px solid #fca5a5;background:#fef2f2;cursor:pointer;color:#dc2626">取消選擇</button>
               </div>
             </div>
           </div>
@@ -343,6 +408,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Users, ShieldCheck, Coins, FileEdit, Home, RefreshCw, Plus, Eye, Save, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import RichTextEditor from '../components/admin/RichTextEditor.vue'
+import { fileService } from '../services/FileService'
 
 const router = useRouter()
 const sidebarCollapsed = ref(false)
@@ -350,7 +416,7 @@ const currentSection = ref('users')
 
 const navItems = [
   { key: 'users',         label: '使用者管理',  icon: Users },
-  { key: 'kyc',           label: 'KYC 審核',     icon: ShieldCheck },
+  { key: 'kyc',           label: '實名認證審核', icon: ShieldCheck },
   { key: 'mileage-items', label: '里程兌換項目', icon: Coins },
   { key: 'content',       label: '內容管理',     icon: FileEdit },
 ]
@@ -398,13 +464,14 @@ const submitDeposit = async () => {
 // ── KYC ─────────────────────────────────────────────────────
 const kycTabs     = [{ key: 'pending', label: '待審核' }, { key: 'approved', label: '已通過' }, { key: 'rejected', label: '未通過' }]
 const kycTab      = ref('pending')
+const kycDevMode  = ref(false)
 const kycList     = ref([])
 const loadingKyc  = ref(false)
 const kycDetailModal = ref({ show: false, user: null })
 const kycRejectModal = ref({ show: false, user: null, reason: '', submitting: false })
 
-const kycLabel     = (s) => ({ approved: '已通過', pending: '待審核', rejected: '未通過', none: '未提交' }[s] || '未提交')
-const kycBadgeClass= (s) => ({ approved: 'badge-green', pending: 'badge-yellow', rejected: 'badge-red', none: 'badge-gray' }[s] || 'badge-gray')
+const kycLabel     = (s) => ({ approved: '已通過', verified: '已通過', pending: '待審核', rejected: '未通過', none: '未提交' }[s] || '未提交')
+const kycBadgeClass= (s) => ({ approved: 'badge-green', verified: 'badge-green', pending: 'badge-yellow', rejected: 'badge-red', none: 'badge-gray' }[s] || 'badge-gray')
 
 const loadKyc = async () => {
   loadingKyc.value = true
@@ -438,7 +505,10 @@ const submitKycReject = async () => {
 const mileageItemsList    = ref([])
 const loadingMileageItems = ref(false)
 const mileageModalPreview = ref(false)
-const mileageForm = ref({ show: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0, submitting: false })
+const logoUploading       = ref(false)
+const logoGallery         = ref([])
+const logoGalleryLoading  = ref(false)
+const mileageForm = ref({ show: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0, submitting: false })
 
 const loadMileageItems = async () => {
   loadingMileageItems.value = true
@@ -451,10 +521,60 @@ const loadMileageItems = async () => {
 
 const openMileageForm = (item = null) => {
   mileageModalPreview.value = false
+  logoUploading.value = false
   if (item) {
-    mileageForm.value = { show: true, submitting: false, id: item.id, name: item.name, short_desc: item.short_desc || '', details: item.details || '', logo_letter: item.logo_letter || 'S', logo_color: item.logo_color || '#ffffff', is_featured: Number(item.is_featured), featured_label: item.featured_label || '精選', is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
+    mileageForm.value = { show: true, submitting: false, id: item.id, name: item.name, short_desc: item.short_desc || '', details: item.details || '', logo_letter: item.logo_letter || 'S', logo_color: item.logo_color || '#ffffff', logo_url: item.logo_url || '', logo_mode: item.logo_url ? 'image' : 'letter', is_featured: Number(item.is_featured), featured_label: item.featured_label || '精選', is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
   } else {
-    mileageForm.value = { show: true, submitting: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0 }
+    mileageForm.value = { show: true, submitting: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0 }
+  }
+}
+
+const uploadLogoImage = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  logoUploading.value = true
+  try {
+    const result = await fileService.upload(file, 'general')
+    mileageForm.value.logo_url = result.url
+  } catch {
+    alert('圖片上傳失敗')
+  } finally {
+    logoUploading.value = false
+    e.target.value = ''
+  }
+}
+
+const STATIC_LOGO_IMAGES = [
+  { id: 'static-logo',    url: '/logo.png',             original_name: 'logo.png' },
+  { id: 'static-coin',   url: '/coin.png',             original_name: 'coin.png' },
+  { id: 'static-plane',  url: '/plane.png',            original_name: 'plane.png' },
+  { id: 'static-product1', url: '/product-1.png',      original_name: 'product-1.png' },
+  { id: 'static-product2', url: '/product-2.png',      original_name: 'product-2.png' },
+  { id: 'static-gosilver', url: '/go-silver.png',      original_name: 'go-silver.png' },
+]
+
+const loadLogoGallery = async () => {
+  logoGalleryLoading.value = true
+  try {
+    const files = await fileService.getMyFiles('general')
+    const uploaded = (files || []).filter(f => f.mime_type && f.mime_type.startsWith('image/'))
+    // 把其他項目現有的 logo_url 也納入（去重）
+    const allKnownUrls = new Set([...uploaded.map(f => f.url), ...STATIC_LOGO_IMAGES.map(f => f.url)])
+    const fromItems = mileageItemsList.value
+      .filter(i => i.logo_url && !allKnownUrls.has(i.logo_url))
+      .map(i => ({ id: `item-${i.id}`, url: i.logo_url, original_name: i.name }))
+    logoGallery.value = [...uploaded, ...fromItems]
+  } catch {
+    logoGallery.value = []
+  } finally {
+    logoGalleryLoading.value = false
+  }
+}
+
+const switchLogoMode = (mode) => {
+  mileageForm.value.logo_mode = mode
+  if (mode === 'pick' && logoGallery.value.length === 0) {
+    loadLogoGallery()
   }
 }
 
@@ -465,7 +585,8 @@ const submitMileageItem = async () => {
   try {
     const url    = f.id ? `/api/v1/admin-panel/mileage-items/${f.id}` : '/api/v1/admin-panel/mileage-items'
     const method = f.id ? 'PUT' : 'POST'
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, short_desc: f.short_desc, details: f.details, logo_letter: f.logo_letter, logo_color: f.logo_color, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order }) })
+    const logoUrl = (f.logo_mode === 'image' || f.logo_mode === 'pick') ? (f.logo_url || null) : null
+    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, short_desc: f.short_desc, details: f.details, logo_letter: f.logo_letter, logo_color: f.logo_color, logo_url: logoUrl, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
     f.show = false
     await loadMileageItems()
@@ -597,6 +718,8 @@ onMounted(() => { loadUsers() })
 
 /* Tab Pills */
 .tab-pills { display: flex; gap: 4px; }
+.dev-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #f59e0b; font-weight: 600; cursor: pointer; margin-left: auto; }
+.dev-toggle input { accent-color: #f59e0b; cursor: pointer; }
 .pill { padding: 0.3rem 0.75rem; border-radius: 9999px; border: 1px solid #e2e8f0; background: transparent; color: #64748b; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
 .pill.active { background: #1e293b; color: #fff; border-color: #1e293b; }
 
@@ -624,7 +747,7 @@ onMounted(() => { loadUsers() })
 .mock-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; }
 .mock-modal-title { font-size: 1rem; font-weight: 700; flex: 1; text-align: center; }
 .mock-modal-close { background: none; border: none; color: #94a3b8; cursor: pointer; }
-.mock-modal-body { padding: 1rem 1.25rem; font-size: 0.88rem; color: #374151; min-height: 60px; }
+.mock-modal-body { padding: 1rem 1.25rem; font-size: 0.88rem; color: #374151; min-height: 60px; text-align: left; }
 .mock-modal-body :deep(ul) { padding-left: 1.5em; list-style: disc; }
 .mock-modal-body :deep(ol) { padding-left: 1.5em; list-style: decimal; }
 .mock-modal-confirm { display: block; width: calc(100% - 2.5rem); margin: 0 1.25rem 1rem; padding: 0.6rem; background: #1e293b; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; }

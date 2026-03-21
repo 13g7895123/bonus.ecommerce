@@ -351,18 +351,14 @@ onMounted(async () => {
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.modal-header { position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
+.modal-title { font-size: 1.25rem; font-weight: 800; margin: 0; text-align: center; }
+.modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+.benefits-rich-content { text-align: left; }
 .benefits-rich-content :deep(ul) { padding-left: 1.5em; list-style: disc; margin: 0.5rem 0; }
 .benefits-rich-content :deep(ol) { padding-left: 1.5em; list-style: decimal; margin: 0.5rem 0; }
 .benefits-rich-content :deep(p) { margin: 0 0 0.5rem 0; }
 .benefits-rich-content :deep(strong) { font-weight: 700; }
-
-.modal-title { font-size: 1.25rem; font-weight: 800; margin: 0; flex: 1; }
-.benefits-rich-content :deep(ul) { padding-left: 1.5em; list-style: disc; margin: 0.5rem 0; }
-.benefits-rich-content :deep(ol) { padding-left: 1.5em; list-style: decimal; margin: 0.5rem 0; }
-.benefits-rich-content :deep(p) { margin: 0 0 0.5rem 0; }
-.benefits-rich-content :deep(strong) { font-weight: 700; }
-.modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
 .rule-hint { font-weight: 700; margin-bottom: 1rem; }
 .rule-list { padding-left: 1.25rem; margin-bottom: 1.5rem; }
 .rule-list li { margin-bottom: 0.75rem; font-size: 0.95rem; line-height: 1.4; }

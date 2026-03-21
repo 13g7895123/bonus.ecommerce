@@ -153,12 +153,15 @@ onMounted(async () => {
     const profile = await userService.getProfile(userId)
 
     // 判斷驗證狀態（相容真實 API verify_status 欄位 與 mock verificationStatus）
-    const status =
+    const rawStatus =
       profile?.verify_status        ||   // 真實 API DB 欄位名
       profile?.verification_status  ||   // 備用
       profile?.verificationStatus   ||   // mock 新版
       (profile?.verificationData ? 'pending' : 'none')  // mock 舊版
-    verificationStatus.value = status || 'none'
+
+    // verify_status 若為空字串（舊資料），依 verification_data 是否存在推斷
+    const status = rawStatus || (profile?.verification_data ? 'pending' : 'none')
+    verificationStatus.value = status
 
     // 從 API 返回的 verification_data 預填表單
     const vd = profile?.verification_data
