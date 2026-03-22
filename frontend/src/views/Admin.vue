@@ -535,6 +535,43 @@
               <span class="f-label" style="margin:0">啟用</span>
             </label>
           </div>
+          <div style="margin-top:0.75rem">
+            <label class="f-label">詳情頁顯示樣式</label>
+            <select v-model="rewardProductForm.display_style" class="f-input">
+              <option value="default">預設（垂直列表）</option>
+              <option value="horizontal">水平並排</option>
+            </select>
+          </div>
+          <!-- 預覽 -->
+          <div style="margin-top:0.75rem;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem;background:#fafafa">
+            <div style="font-size:0.78rem;color:#888;margin-bottom:0.5rem">預覽效果</div>
+            <!-- 預設樣式 -->
+            <template v-if="rewardProductForm.display_style === 'default'">
+              <div style="display:flex;justify-content:flex-end;align-items:center;gap:0.75rem;padding:0.2rem 0">
+                <span style="font-size:0.82rem;color:#555">帳戶餘額</span>
+                <span style="font-size:0.9rem;font-weight:600;color:#d71921;min-width:80px;text-align:right">$ 51,120</span>
+              </div>
+              <div style="display:flex;justify-content:flex-end;align-items:center;gap:0.75rem;padding:0.2rem 0">
+                <span style="font-size:0.82rem;color:#555">里程回饋</span>
+                <span style="font-size:0.9rem;font-weight:600;color:#d71921;min-width:80px;text-align:right">$ {{ Number(rewardProductForm.mileage_amount).toLocaleString() || '0' }}</span>
+              </div>
+              <div style="margin-top:0.5rem;background:#c8a96e;color:#fff;text-align:center;padding:0.4rem;border-radius:6px;font-size:0.82rem;font-weight:600">確認</div>
+            </template>
+            <!-- 水平樣式 -->
+            <template v-else>
+              <div style="display:flex;gap:0.5rem">
+                <div style="flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:0.5rem;text-align:center">
+                  <div style="font-size:0.78rem;color:#555;margin-bottom:0.35rem">里程回饋</div>
+                  <div style="font-size:0.95rem;font-weight:700;color:#d71921">$ {{ Number(rewardProductForm.mileage_amount).toLocaleString() || '0' }}</div>
+                </div>
+                <div style="flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:0.5rem;text-align:center">
+                  <div style="font-size:0.78rem;color:#555;margin-bottom:0.35rem">帳戶餘額</div>
+                  <div style="font-size:0.95rem;font-weight:700;color:#d71921">$ 51,120</div>
+                </div>
+              </div>
+              <div style="margin-top:0.5rem;background:#c8a96e;color:#fff;text-align:center;padding:0.4rem;border-radius:6px;font-size:0.82rem;font-weight:600">確認</div>
+            </template>
+          </div>
         </div>
         <div class="modal-ft">
           <button class="btn btn-outline" @click="rewardProductForm.show = false">取消</button>
@@ -749,7 +786,7 @@ const deleteMileageItem = async (id) => {
 const rewardProductsList    = ref([])
 const loadingRewardProducts = ref(false)
 const rewardImgUploading    = ref(false)
-const rewardProductForm     = ref({ show: false, id: null, name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0, submitting: false })
+const rewardProductForm     = ref({ show: false, id: null, name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0, display_style: 'default', submitting: false })
 
 const loadRewardProducts = async () => {
   loadingRewardProducts.value = true
@@ -763,9 +800,9 @@ const loadRewardProducts = async () => {
 const openRewardProductForm = (item = null) => {
   rewardImgUploading.value = false
   if (item) {
-    rewardProductForm.value = { show: true, submitting: false, id: item.id, name: item.name, image_url: item.image_url || '', price: Number(item.price), mileage_amount: Number(item.mileage_amount), miles_points: Number(item.miles_points || 0), stock: Number(item.stock), is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
+    rewardProductForm.value = { show: true, submitting: false, id: item.id, name: item.name, image_url: item.image_url || '', price: Number(item.price), mileage_amount: Number(item.mileage_amount), miles_points: Number(item.miles_points || 0), stock: Number(item.stock), is_active: Number(item.is_active), sort_order: item.sort_order || 0, display_style: item.display_style || 'default' }
   } else {
-    rewardProductForm.value = { show: true, submitting: false, id: null, name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0 }
+    rewardProductForm.value = { show: true, submitting: false, id: null, name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0, display_style: 'default' }
   }
 }
 
@@ -791,7 +828,7 @@ const submitRewardProduct = async () => {
   try {
     const url    = f.id ? `/api/v1/admin-panel/mileage-reward-products/${f.id}` : '/api/v1/admin-panel/mileage-reward-products'
     const method = f.id ? 'PUT' : 'POST'
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: f.mileage_amount, miles_points: f.miles_points, stock: f.stock, is_active: f.is_active, sort_order: f.sort_order }) })
+    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: f.mileage_amount, miles_points: f.miles_points, stock: f.stock, is_active: f.is_active, sort_order: f.sort_order, display_style: f.display_style || 'default' }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
     f.show = false
     await loadRewardProducts()

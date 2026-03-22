@@ -117,7 +117,7 @@ onMounted(async () => {
     if (res.ok) {
       const data = await res.json()
       const items = data.items || data.data?.items || []
-      product.value = items.find(p => p.id === productId) || null
+      product.value = items.find(p => Number(p.id) === productId) || null
     }
   } catch {
     // ignore

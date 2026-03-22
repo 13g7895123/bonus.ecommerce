@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\MileageRewardOrderRepository;
 use App\Repositories\MileageRewardProductRepository;
+use App\Repositories\MileageRecordRepository;
 use App\Repositories\UserWalletRepository;
 
 class MileageRewardOrderService
@@ -12,6 +13,7 @@ class MileageRewardOrderService
         private readonly MileageRewardOrderRepository   $orderRepo   = new MileageRewardOrderRepository(),
         private readonly MileageRewardProductRepository $productRepo = new MileageRewardProductRepository(),
         private readonly UserWalletRepository           $walletRepo  = new UserWalletRepository(),
+        private readonly MileageRecordRepository        $mileageRepo = new MileageRecordRepository(),
     ) {}
 
     /**
@@ -114,6 +116,25 @@ class MileageRewardOrderService
         }
 
         $newStatus = $action === 'approve' ? 'approved' : 'rejected';
+
+        // 若審核通過，發放里程回饋
+        if ($action === 'approve') {
+            $rewardAmount = (int) $order['mileage_reward_amount'];
+            if ($rewardAmount > 0) {
+                $wallet = $this->walletRepo->findByUserId($order['user_id']);
+                if ($wallet) {
+                    $this->walletRepo->updateByUserId($order['user_id'], [
+                        'miles_balance' => (int) $wallet['miles_balance'] + $rewardAmount,
+                    ]);
+                }
+                $this->mileageRepo->create([
+                    'user_id' => $order['user_id'],
+                    'type'    => 'earn',
+                    'amount'  => $rewardAmount,
+                    'source'  => 'reward_purchase',
+                ]);
+            }
+        }
 
         // 若拒絕，退還餘額與里程點數
         if ($action === 'reject') {
