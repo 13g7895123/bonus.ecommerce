@@ -6,7 +6,8 @@
     <div v-else-if="!product" class="state-empty">{{ t('mileageRewards.empty') }}</div>
     <template v-else>
       <div class="page-body">
-        <div class="product-section">
+        <div class="content-wrap">
+          <div class="product-section">
           <!-- 產品圖片 -->
           <div class="product-image-wrap">
             <img :src="product.image_url || '/product-1.png'" :alt="product.name" class="product-image" />
@@ -15,9 +16,9 @@
           </div>
 
           <!-- 數量列 -->
-          <div class="qty-row">
+          <div class="qty-row" :class="{ 'qty-row--horizontal': displayStyle === 'horizontal' }">
             <span class="qty-label">數量</span>
-            <div class="qty-controls">
+            <div class="qty-controls" :class="{ 'qty-controls--horizontal': displayStyle === 'horizontal' }">
               <div class="qty-box">
                 <button class="qty-btn" @click="decQty">－</button>
                 <span class="qty-num">{{ quantity }}</span>
@@ -29,41 +30,53 @@
         </div>
 
         <!-- 金額資訊 - 預設樣式 -->
-        <div v-if="displayStyle !== 'horizontal'" class="amount-section">
-          <div class="amount-row">
-            <span class="amount-label">{{ t('mileageRewards.accountBalance') }}</span>
-            <span class="amount-value red">$ {{ balance.toLocaleString() }}</span>
+          <div v-if="displayStyle !== 'horizontal'" class="amount-section">
+            <div class="amount-row">
+              <span class="amount-label">{{ t('mileageRewards.accountBalance') }}</span>
+              <span class="amount-value red">$ {{ balance.toLocaleString() }}</span>
+            </div>
+            <div class="amount-row">
+              <span class="amount-label">{{ t('mileageRewards.mileageReward') }}</span>
+              <span class="amount-value red">$ {{ mileageReward.toLocaleString() }}</span>
+            </div>
           </div>
-          <div class="amount-row">
-            <span class="amount-label">{{ t('mileageRewards.mileageReward') }}</span>
-            <span class="amount-value red">$ {{ mileageReward.toLocaleString() }}</span>
-          </div>
-        </div>
 
-        <!-- 金額資訊 - 水平樣式 -->
-        <div v-else class="amount-section-horizontal">
-          <div class="amount-card amount-card-left">
-            <span class="amount-card-label">{{ t('mileageRewards.mileageReward') }}</span>
-            <span class="amount-card-value">$ {{ mileageReward.toLocaleString() }}</span>
+          <!-- 金額資訊 - 水平樣式 -->
+          <div v-else class="amount-section-horizontal">
+            <div class="amount-card amount-card-left">
+              <span class="amount-card-label">{{ t('mileageRewards.mileageReward') }}</span>
+              <span class="amount-card-value">$ {{ mileageReward.toLocaleString() }}</span>
+            </div>
+            <div class="amount-card amount-card-right">
+              <span class="amount-card-label">{{ t('mileageRewards.accountBalance') }}</span>
+              <span class="amount-card-value">$ {{ balance.toLocaleString() }}</span>
+            </div>
           </div>
-          <div class="amount-card amount-card-right">
-            <span class="amount-card-label">{{ t('mileageRewards.accountBalance') }}</span>
-            <span class="amount-card-value">$ {{ balance.toLocaleString() }}</span>
-          </div>
-        </div>
 
         <!-- 錯誤提示 -->
-        <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
+          <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
+
+          <!-- 垂直模式：確認按鈕在里程回饋下方 -->
+          <div v-if="displayStyle !== 'horizontal'" class="action-section">
+            <AppButton block @click="confirmPurchase">{{ t('mileageRewards.confirm') }}</AppButton>
+            <div class="support-section">
+              <span>{{ t('mileageRewards.helpText') }}</span>
+              <router-link to="/customer-service" class="support-link">{{ t('mileageRewards.contactCS') }}</router-link>
+            </div>
+          </div>
+        </div><!-- end content-wrap -->
       </div>
 
-      <!-- 固定底部：確認按鈕 + 客服連結 -->
-      <div class="page-footer">
-        <div class="action-section">
-          <AppButton block @click="confirmPurchase">{{ t('mileageRewards.confirm') }}</AppButton>
-        </div>
-        <div class="support-section">
-          <span>{{ t('mileageRewards.helpText') }}</span>
-          <router-link to="/customer-service" class="support-link">{{ t('mileageRewards.contactCS') }}</router-link>
+      <!-- 底部：水平模式確認按鈕 + 客服連結 -->
+      <div class="page-footer" :class="{ 'page-footer--no-border': displayStyle === 'horizontal' }">
+        <div v-if="displayStyle === 'horizontal'" class="content-wrap">
+          <div class="action-section">
+            <AppButton block @click="confirmPurchase">{{ t('mileageRewards.confirm') }}</AppButton>
+            <div class="support-section">
+              <span>{{ t('mileageRewards.helpText') }}</span>
+              <router-link to="/customer-service" class="support-link">{{ t('mileageRewards.contactCS') }}</router-link>
+            </div>
+          </div>
         </div>
       </div>
     </template>
@@ -184,9 +197,10 @@ onMounted(loadData)
 <style scoped>
 .ml-page {
   background-color: #ffffff;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .state-loading,
@@ -213,8 +227,10 @@ onMounted(loadData)
 }
 
 .product-image {
-  width: 240px;
-  height: 240px;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  aspect-ratio: 1;
   object-fit: contain;
   border-radius: 8px;
 }
@@ -243,7 +259,6 @@ onMounted(loadData)
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  flex-wrap: wrap;
   padding: 0 0.25rem;
 }
 
@@ -312,6 +327,27 @@ onMounted(loadData)
   white-space: nowrap;
 }
 
+/* 水平模式：數量靠左與加減同列，尚有庫存在下一列 */
+.qty-row--horizontal {
+  align-items: flex-start; /* 讓 label 與 controls 從頂端對齊 */
+}
+
+.qty-row--horizontal .qty-label {
+  height: 32px;            /* 與 qty-btn 同高 */
+  display: flex;
+  align-items: center;     /* 文字在 32px 內垂直置中 */
+}
+
+.qty-controls--horizontal {
+  flex-direction: column;
+  align-items: flex-end;   /* qty-box 與 stock-label 靠右 */
+  gap: 0;
+}
+
+.qty-controls--horizontal .stock-label {
+  margin-top: 0.5rem;
+}
+
 /* 金額資訊 */
 .amount-section {
   margin-top: 1.5rem;
@@ -341,7 +377,7 @@ onMounted(loadData)
 }
 
 .amount-card-right {
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .amount-card-label {
@@ -393,15 +429,28 @@ onMounted(loadData)
 /* 頁面主體（可捲動部份） */
 .page-body {
   flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 內容最大寬度居中 */
+.content-wrap {
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* 固定在底部的操作區 */
 .page-footer {
-  position: sticky;
-  bottom: 0;
+  flex-shrink: 0;
   background: #fff;
   padding-top: 0.25rem;
   border-top: 1px solid #f1f5f9;
+}
+
+.page-footer--no-border {
+  border-top: none;
+  padding-top: 0;
 }
 
 /* 確認按鈕 */
@@ -412,7 +461,7 @@ onMounted(loadData)
 /* 客服連結 */
 .support-section {
   text-align: center;
-  padding: 0.25rem 1rem 1rem;
+  padding: 0.5rem 0 0.25rem;
   font-size: 0.88rem;
   color: #666;
 }
