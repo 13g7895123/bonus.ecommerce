@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\MileageCodeModel;
 use App\Repositories\MileageRecordRepository;
 use App\Repositories\UserWalletRepository;
 
@@ -10,6 +11,7 @@ class MileageService
     public function __construct(
         private readonly MileageRecordRepository $repo       = new MileageRecordRepository(),
         private readonly UserWalletRepository    $walletRepo = new UserWalletRepository(),
+        private readonly MileageCodeModel        $codeModel  = new MileageCodeModel(),
     ) {}
 
     public function getHistory(int $userId, int $page = 1, int $limit = 20): array
@@ -22,15 +24,16 @@ class MileageService
 
     public function redeem(int $userId, string $code): array
     {
-        // 简單校驗：以 BONUS 開頭的代碼給予 500 哩程
-        if (strlen($code) < 4) {
-            return ['success' => false, 'message' => '無效的里程代碼'];
-        }
-        if (strtoupper(substr($code, 0, 5)) !== 'BONUS') {
-            return ['success' => false, 'message' => '無效的里程代碼'];
+        if ($code === '') {
+            return ['success' => false, 'message' => '請輸入里程代碼'];
         }
 
-        $bonus  = 500;
+        $record = $this->codeModel->findValidCode($code);
+        if (!$record) {
+            return ['success' => false, 'message' => '無效或已失效的里程代碼'];
+        }
+
+        $bonus  = (int) $record['miles_amount'];
         $wallet = $this->walletRepo->findByUserId($userId);
         if (!$wallet) {
             return ['success' => false, 'message' => 'Wallet not found'];
@@ -38,6 +41,7 @@ class MileageService
 
         $newMiles = (int) $wallet['miles_balance'] + $bonus;
         $this->walletRepo->updateByUserId($userId, ['miles_balance' => $newMiles]);
+        $this->codeModel->incrementUsed((int) $record['id']);
         $this->repo->createBatch([[
             'user_id'    => $userId,
             'type'       => 'earn',

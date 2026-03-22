@@ -39,6 +39,11 @@ $routes->group('api/v1', static function ($routes) {
         // Mileage Reward Orders
         $routes->get('reward-orders',                'AdminPanelController::rewardOrders');
         $routes->post('reward-orders/(:num)/review', 'AdminPanelController::reviewRewardOrder/$1');
+        // Mileage Codes
+        $routes->get('mileage-codes',           'AdminPanelController::mileageCodes');
+        $routes->post('mileage-codes',          'AdminPanelController::createMileageCode');
+        $routes->put('mileage-codes/(:num)',    'AdminPanelController::updateMileageCode/$1');
+        $routes->delete('mileage-codes/(:num)', 'AdminPanelController::deleteMileageCode/$1');
         // App Config
         $routes->get('config/(:segment)',   'AdminPanelController::getConfig/$1');
         $routes->post('config/(:segment)',  'AdminPanelController::setConfig/$1');

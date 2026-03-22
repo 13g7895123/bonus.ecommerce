@@ -42,7 +42,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Users, ShieldCheck, Coins, FileEdit, Gift, ShoppingBag, Home, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { Users, ShieldCheck, Coins, FileEdit, Gift, ShoppingBag, TicketPercent, Home, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 
 const router = useRouter()
 const route  = useRoute()
@@ -55,6 +55,7 @@ const navItems = [
   { key: 'mileage-items',   label: '里程兌換項目', icon: Coins },
   { key: 'mileage-rewards', label: '里程回饋商品', icon: Gift },
   { key: 'reward-orders',   label: '里程回饋訂單', icon: ShoppingBag },
+  { key: 'mileage-codes',   label: '里程代碼管理', icon: TicketPercent },
   { key: 'content',         label: '內容管理',      icon: FileEdit },
 ]
 

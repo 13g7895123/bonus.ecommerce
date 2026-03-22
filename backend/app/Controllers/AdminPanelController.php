@@ -340,6 +340,85 @@ class AdminPanelController extends Controller
         return $this->json(['success' => true, 'message' => $msg]);
     }
 
+    // ── Mileage Codes ─────────────────────────────────────────────────────────
+
+    public function mileageCodes(): ResponseInterface
+    {
+        $items = model(\App\Models\MileageCodeModel::class)
+            ->orderBy('created_at', 'DESC')
+            ->findAll();
+        return $this->json(['items' => $items, 'total' => count($items)]);
+    }
+
+    public function createMileageCode(): ResponseInterface
+    {
+        $data = $this->request->getJSON(true) ?? [];
+        $code = trim($data['code'] ?? '');
+      $expiresAt = !empty($data['expires_at']) ? $data['expires_at'] : null;
+        if (!$code) {
+            return $this->json(['message' => 'code 為必填'], 400);
+        }
+        $miles = (int) ($data['miles_amount'] ?? 0);
+        if ($miles <= 0) {
+            return $this->json(['message' => 'miles_amount 必須大於 0'], 400);
+        }
+
+        $codeModel = model(\App\Models\MileageCodeModel::class);
+        $escaped = \Config\Database::connect()->escape($code);
+        if ($codeModel->where("BINARY `code` = {$escaped}", null, false)->first()) {
+            return $this->json(['message' => '代碼已存在'], 409);
+        }
+
+        $id = $codeModel->insert([
+            'code'        => $code,
+            'description' => $data['description'] ?? null,
+            'miles_amount'=> $miles,
+            'usage_limit' => isset($data['usage_limit']) && $data['usage_limit'] !== '' ? (int) $data['usage_limit'] : null,
+            'is_active'   => isset($data['is_active']) ? (int) $data['is_active'] : 1,
+          'expires_at'  => $expiresAt,
+        ]);
+
+        return $this->json(['success' => true, 'id' => $id], 201);
+    }
+
+    public function updateMileageCode(int $id): ResponseInterface
+    {
+        $codeModel = model(\App\Models\MileageCodeModel::class);
+        if (!$codeModel->find($id)) {
+            return $this->json(['message' => 'Not found'], 404);
+        }
+
+        $data    = $this->request->getJSON(true) ?? [];
+        $payload = [];
+        if (isset($data['description']))  $payload['description']  = $data['description'];
+        if (isset($data['miles_amount'])) $payload['miles_amount']  = (int) $data['miles_amount'];
+        if (isset($data['usage_limit']))  $payload['usage_limit']   = $data['usage_limit'] !== '' ? (int) $data['usage_limit'] : null;
+        if (isset($data['is_active']))    $payload['is_active']     = (int) $data['is_active'];
+        if (isset($data['expires_at']))   $payload['expires_at']    = $data['expires_at'] ?: null;
+        if (isset($data['code'])) {
+            $code = trim($data['code']);
+            $escapedCode = \Config\Database::connect()->escape($code);
+            $dup  = $codeModel->where("BINARY `code` = {$escapedCode}", null, false)->where('id !=', $id)->first();
+            if ($dup) {
+                return $this->json(['message' => '代碼已存在'], 409);
+            }
+            $payload['code'] = $code;
+        }
+
+        $codeModel->update($id, $payload);
+        return $this->json(['success' => true]);
+    }
+
+    public function deleteMileageCode(int $id): ResponseInterface
+    {
+        $codeModel = model(\App\Models\MileageCodeModel::class);
+        if (!$codeModel->find($id)) {
+            return $this->json(['message' => 'Not found'], 404);
+        }
+        $codeModel->delete($id);
+        return $this->json(['success' => true]);
+    }
+
     // ── HTML Panel ────────────────────────────────────────────────────────────
 
     public function index(): ResponseInterface
