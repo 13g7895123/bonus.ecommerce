@@ -23,6 +23,12 @@ import MileageRedemption from '../views/MileageRedemption.vue'
 import MileageRewardConfirm from '../views/MileageRewardConfirm.vue'
 import AnnouncementDetail from '../views/AnnouncementDetail.vue'
 import Admin from '../views/Admin.vue'
+import AdminUsers from '../views/admin/AdminUsers.vue'
+import AdminKyc from '../views/admin/AdminKyc.vue'
+import AdminMileageItems from '../views/admin/AdminMileageItems.vue'
+import AdminMileageRewards from '../views/admin/AdminMileageRewards.vue'
+import AdminRewardOrders from '../views/admin/AdminRewardOrders.vue'
+import AdminContent from '../views/admin/AdminContent.vue'
 import CountryLanguageSettings from '../views/CountryLanguageSettings.vue'
 
 const routes = [
@@ -38,8 +44,16 @@ const routes = [
   },
   {
     path: '/admin',
-    name: 'Admin',
-    component: Admin
+    component: Admin,
+    children: [
+      { path: '', redirect: '/admin/users' },
+      { path: 'users',           name: 'AdminUsers',          component: AdminUsers },
+      { path: 'kyc',             name: 'AdminKyc',            component: AdminKyc },
+      { path: 'mileage-items',   name: 'AdminMileageItems',   component: AdminMileageItems },
+      { path: 'mileage-rewards', name: 'AdminMileageRewards', component: AdminMileageRewards },
+      { path: 'reward-orders',   name: 'AdminRewardOrders',   component: AdminRewardOrders },
+      { path: 'content',         name: 'AdminContent',        component: AdminContent },
+    ],
   },
   {
     path: '/settings/language',

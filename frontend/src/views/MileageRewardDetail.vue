@@ -5,64 +5,66 @@
     <div v-if="loading" class="state-loading">{{ t('common.loading') }}</div>
     <div v-else-if="!product" class="state-empty">{{ t('mileageRewards.empty') }}</div>
     <template v-else>
-      <div class="product-section">
-        <!-- 產品圖片 -->
-        <div class="product-image-wrap">
-          <img :src="product.image_url || '/product-1.png'" :alt="product.name" class="product-image" />
-          <!-- 審核中徽章 -->
-          <span v-if="hasPendingOrder" class="pending-badge">{{ t('mileageRewards.pendingReview') }}</span>
-        </div>
+      <div class="page-body">
+        <div class="product-section">
+          <!-- 產品圖片 -->
+          <div class="product-image-wrap">
+            <img :src="product.image_url || '/product-1.png'" :alt="product.name" class="product-image" />
+            <!-- 審核中徽章 -->
+            <span v-if="hasPendingOrder" class="pending-badge">{{ t('mileageRewards.pendingReview') }}</span>
+          </div>
 
-        <!-- 數量列 -->
-        <div class="qty-row">
-          <span class="qty-label">數量</span>
-          <div class="qty-controls">
-            <div class="qty-box">
-              <button class="qty-btn" @click="decQty">－</button>
-              <span class="qty-num">{{ quantity }}</span>
-              <button class="qty-btn" @click="incQty">＋</button>
+          <!-- 數量列 -->
+          <div class="qty-row">
+            <span class="qty-label">數量</span>
+            <div class="qty-controls">
+              <div class="qty-box">
+                <button class="qty-btn" @click="decQty">－</button>
+                <span class="qty-num">{{ quantity }}</span>
+                <button class="qty-btn" @click="incQty">＋</button>
+              </div>
+              <span class="stock-label">尚有庫存</span>
             </div>
-            <span class="stock-label">尚有庫存</span>
           </div>
         </div>
+
+        <!-- 金額資訊 - 預設樣式 -->
+        <div v-if="displayStyle !== 'horizontal'" class="amount-section">
+          <div class="amount-row">
+            <span class="amount-label">{{ t('mileageRewards.accountBalance') }}</span>
+            <span class="amount-value red">$ {{ balance.toLocaleString() }}</span>
+          </div>
+          <div class="amount-row">
+            <span class="amount-label">{{ t('mileageRewards.mileageReward') }}</span>
+            <span class="amount-value red">$ {{ mileageReward.toLocaleString() }}</span>
+          </div>
+        </div>
+
+        <!-- 金額資訊 - 水平樣式 -->
+        <div v-else class="amount-section-horizontal">
+          <div class="amount-card amount-card-left">
+            <span class="amount-card-label">{{ t('mileageRewards.mileageReward') }}</span>
+            <span class="amount-card-value">$ {{ mileageReward.toLocaleString() }}</span>
+          </div>
+          <div class="amount-card amount-card-right">
+            <span class="amount-card-label">{{ t('mileageRewards.accountBalance') }}</span>
+            <span class="amount-card-value">$ {{ balance.toLocaleString() }}</span>
+          </div>
+        </div>
+
+        <!-- 錯誤提示 -->
+        <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
       </div>
 
-      <!-- 金額資訊 - 預設樣式 -->
-      <div v-if="product.display_style !== 'horizontal'" class="amount-section">
-        <div class="amount-row">
-          <span class="amount-label">{{ t('mileageRewards.accountBalance') }}</span>
-          <span class="amount-value red">$ {{ balance.toLocaleString() }}</span>
+      <!-- 固定底部：確認按鈕 + 客服連結 -->
+      <div class="page-footer">
+        <div class="action-section">
+          <AppButton block @click="confirmPurchase">{{ t('mileageRewards.confirm') }}</AppButton>
         </div>
-        <div class="amount-row">
-          <span class="amount-label">{{ t('mileageRewards.mileageReward') }}</span>
-          <span class="amount-value red">$ {{ mileageReward.toLocaleString() }}</span>
+        <div class="support-section">
+          <span>{{ t('mileageRewards.helpText') }}</span>
+          <router-link to="/customer-service" class="support-link">{{ t('mileageRewards.contactCS') }}</router-link>
         </div>
-      </div>
-
-      <!-- 金額資訊 - 水平樣式 -->
-      <div v-else class="amount-section-horizontal">
-        <div class="amount-card">
-          <span class="amount-card-label">{{ t('mileageRewards.mileageReward') }}</span>
-          <span class="amount-card-value">$ {{ mileageReward.toLocaleString() }}</span>
-        </div>
-        <div class="amount-card">
-          <span class="amount-card-label">{{ t('mileageRewards.accountBalance') }}</span>
-          <span class="amount-card-value">$ {{ balance.toLocaleString() }}</span>
-        </div>
-      </div>
-
-      <!-- 錯誤提示 -->
-      <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
-
-      <!-- 確認按鈕 -->
-      <div class="action-section">
-        <AppButton block @click="confirmPurchase">{{ t('mileageRewards.confirm') }}</AppButton>
-      </div>
-
-      <!-- 客服連結 -->
-      <div class="support-section">
-        <span>{{ t('mileageRewards.helpText') }}</span>
-        <router-link to="/customer-service" class="support-link">{{ t('mileageRewards.contactCS') }}</router-link>
       </div>
     </template>
   </div>
@@ -86,6 +88,7 @@ const balance       = ref(0)
 const milesBalance  = ref(0)
 const pendingOrders = ref([])
 const errorMsg      = ref('')
+const displayStyle  = ref('default')
 
 const mileageReward = computed(() => {
   if (!product.value) return 0
@@ -139,10 +142,11 @@ const loadData = async () => {
     const token = localStorage.getItem('token') || ''
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-    const [productsRes, walletRes, pendingRes] = await Promise.all([
+    const [productsRes, walletRes, pendingRes, configRes] = await Promise.all([
       fetch('/api/v1/mileage/reward-products', { headers }),
       fetch('/api/v1/wallet/info', { headers }),
       fetch('/api/v1/mileage/reward-orders/my-pending', { headers }),
+      fetch('/api/v1/config/reward_detail_display_style'),
     ])
 
     if (productsRes.ok) {
@@ -161,6 +165,11 @@ const loadData = async () => {
     if (pendingRes.ok) {
       const data = await pendingRes.json()
       pendingOrders.value = data.items || data.data?.items || []
+    }
+
+    if (configRes.ok) {
+      const data = await configRes.json()
+      displayStyle.value = data.value || 'default'
     }
   } catch {
     // silently ignore
@@ -317,18 +326,22 @@ onMounted(loadData)
   margin-top: 1.5rem;
   padding: 0 1rem;
   display: flex;
-  gap: 0.75rem;
+  justify-content: space-between;
 }
 
 .amount-card {
-  flex: 1;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 0.75rem 0.5rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
+  padding: 0.5rem 0;
+}
+
+.amount-card-left {
+  align-items: flex-start;
+}
+
+.amount-card-right {
+  align-items: flex-end;
 }
 
 .amount-card-label {
@@ -377,15 +390,29 @@ onMounted(loadData)
   font-size: 0.88rem;
 }
 
+/* 頁面主體（可捲動部份） */
+.page-body {
+  flex: 1;
+}
+
+/* 固定在底部的操作區 */
+.page-footer {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding-top: 0.25rem;
+  border-top: 1px solid #f1f5f9;
+}
+
 /* 確認按鈕 */
 .action-section {
-  padding: 1.5rem 1rem 0.75rem;
+  padding: 0.75rem 1rem 0.5rem;
 }
 
 /* 客服連結 */
 .support-section {
   text-align: center;
-  padding: 0.5rem 1rem 1.5rem;
+  padding: 0.25rem 1rem 1rem;
   font-size: 0.88rem;
   color: #666;
 }
