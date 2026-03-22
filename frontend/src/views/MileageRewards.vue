@@ -1,14 +1,16 @@
 <template>
   <div class="ml-page">
-    <PageHeader title="里程回饋" back-to="/settings" :bordered="false" />
+    <PageHeader :title="t('mileageRewards.title')" back-to="/settings" :bordered="false" />
 
-    <div v-if="loading" class="state-loading">載入中...</div>
-    <div v-else-if="!product" class="state-empty">目前無可購買的商品</div>
+    <div v-if="loading" class="state-loading">{{ t('common.loading') }}</div>
+    <div v-else-if="!product" class="state-empty">{{ t('mileageRewards.empty') }}</div>
     <template v-else>
       <div class="product-section">
         <!-- 產品圖片 -->
         <div class="product-image-wrap">
           <img :src="product.image_url || '/product-1.png'" :alt="product.name" class="product-image" />
+          <!-- 審核中徽章 -->
+          <span v-if="hasPendingOrder" class="pending-badge">{{ t('mileageRewards.pendingReview') }}</span>
         </div>
 
         <!-- 數量列 -->
@@ -20,7 +22,7 @@
               <span class="qty-num">{{ quantity }}</span>
               <button class="qty-btn" @click="incQty">＋</button>
             </div>
-            <span class="stock-label">尚有庫存 {{ product.stock }} 件</span>
+            <span class="stock-label">{{ t('mileageRewards.stockLabel', { n: product.stock }) }}</span>
           </div>
         </div>
       </div>
@@ -28,24 +30,31 @@
       <!-- 金額資訊 -->
       <div class="amount-section">
         <div class="amount-row">
-          <span class="amount-label">帳戶餘額</span>
+          <span class="amount-label">{{ t('mileageRewards.accountBalance') }}</span>
           <span class="amount-value">$ {{ balance.toLocaleString() }}</span>
         </div>
         <div class="amount-row">
-          <span class="amount-label">里程回饋</span>
+          <span class="amount-label">{{ t('mileageRewards.mileageReward') }}</span>
           <span class="amount-value reward">$ {{ mileageReward.toLocaleString() }}</span>
+        </div>
+        <div class="amount-row">
+          <span class="amount-label">{{ t('mileageRewards.milesPoints') }}</span>
+          <span class="amount-value miles">{{ milesPoints.toLocaleString() }}</span>
         </div>
       </div>
 
+      <!-- 錯誤提示 -->
+      <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
+
       <!-- 確認按鈕 -->
       <div class="action-section">
-        <AppButton block @click="confirmPurchase">確認</AppButton>
+        <AppButton block @click="confirmPurchase">{{ t('mileageRewards.confirm') }}</AppButton>
       </div>
 
       <!-- 客服連結 -->
       <div class="support-section">
-        <span class="support-text">如有幫助，請</span>
-        <router-link to="/customer-service" class="support-link">聯繫客服</router-link>
+        <span>{{ t('mileageRewards.helpText') }}</span>
+        <router-link to="/customer-service" class="support-link">{{ t('mileageRewards.contactCS') }}</router-link>
       </div>
     </template>
   </div>
@@ -53,31 +62,66 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/PageHeader.vue'
 import AppButton from '../components/AppButton.vue'
 
-const loading  = ref(true)
-const product  = ref(null)
-const quantity = ref(1)
-const balance  = ref(0)
+const { t } = useI18n()
+const router = useRouter()
+
+const loading       = ref(true)
+const product       = ref(null)
+const quantity      = ref(1)
+const balance       = ref(0)
+const milesBalance  = ref(0)
+const pendingOrders = ref([])
+const errorMsg      = ref('')
 
 const mileageReward = computed(() => {
   if (!product.value) return 0
   return Number(product.value.mileage_amount) * quantity.value
 })
 
+const milesPoints = computed(() => {
+  if (!product.value) return 0
+  return Number(product.value.miles_points || 0) * quantity.value
+})
+
+const hasPendingOrder = computed(() =>
+  pendingOrders.value.some(o => o.product_id === product.value?.id)
+)
+
 const decQty = () => {
   if (quantity.value > 1) quantity.value--
+  errorMsg.value = ''
 }
 
 const incQty = () => {
   if (!product.value) return
   if (quantity.value < product.value.stock) quantity.value++
+  errorMsg.value = ''
 }
 
 const confirmPurchase = () => {
-  // TODO: call purchase API
-  alert('購買功能開發中')
+  errorMsg.value = ''
+  const totalPrice  = Number(product.value.price) * quantity.value
+  const totalMiles  = Number(product.value.miles_points || 0) * quantity.value
+
+  if (balance.value < totalPrice) {
+    errorMsg.value = t('mileageRewards.errInsuffBalance')
+    return
+  }
+  if (milesBalance.value < totalMiles) {
+    errorMsg.value = t('mileageRewards.errInsuffMiles')
+    return
+  }
+
+  // 驗證通過 → 前往確認頁
+  router.push({
+    path: '/mileage-reward-confirm',
+    query: { product_id: product.value.id, qty: quantity.value },
+  })
 }
 
 const loadData = async () => {
@@ -86,9 +130,10 @@ const loadData = async () => {
     const token = localStorage.getItem('token') || ''
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-    const [productsRes, walletRes] = await Promise.all([
+    const [productsRes, walletRes, pendingRes] = await Promise.all([
       fetch('/api/v1/mileage/reward-products', { headers }),
       fetch('/api/v1/wallet/info', { headers }),
+      fetch('/api/v1/mileage/reward-orders/my-pending', { headers }),
     ])
 
     if (productsRes.ok) {
@@ -99,10 +144,17 @@ const loadData = async () => {
 
     if (walletRes.ok) {
       const data = await walletRes.json()
-      balance.value = Number(data.balance ?? data.data?.balance ?? 0)
+      const info = data.data || data
+      balance.value      = Number(info.balance ?? 0)
+      milesBalance.value = Number(info.miles_balance ?? 0)
+    }
+
+    if (pendingRes.ok) {
+      const data = await pendingRes.json()
+      pendingOrders.value = data.items || data.data?.items || []
     }
   } catch {
-    // silently ignore, show empty state
+    // silently ignore
   } finally {
     loading.value = false
   }
@@ -136,6 +188,7 @@ onMounted(loadData)
 }
 
 .product-image-wrap {
+  position: relative;
   display: flex;
   justify-content: center;
   margin-bottom: 1.25rem;
@@ -146,6 +199,21 @@ onMounted(loadData)
   height: 180px;
   object-fit: contain;
   border-radius: 8px;
+}
+
+/* 審核中徽章 */
+.pending-badge {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(calc(-50% - 60px));
+  background-color: #d71921;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  white-space: nowrap;
 }
 
 /* 數量列 */
@@ -245,6 +313,21 @@ onMounted(loadData)
 
 .amount-value.reward {
   color: #d71921;
+}
+
+.amount-value.miles {
+  color: #2563eb;
+}
+
+/* 錯誤訊息 */
+.error-msg {
+  margin: 0.75rem 1rem 0;
+  padding: 0.6rem 0.9rem;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.88rem;
 }
 
 /* 確認按鈕 */

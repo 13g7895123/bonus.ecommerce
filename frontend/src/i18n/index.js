@@ -136,8 +136,31 @@ const messages = {
       withdrawal: '提款',
       mileage: '里程',
       transfer: '轉帳',
+    },    // 里程回饋商品
+    mileageRewards: {
+      title: '里程回饋',
+      loading: '載入中...',
+      empty: '目前無可購買的商品',
+      stockLabel: '尚有庫存 {n} 件',
+      accountBalance: '帳戶餘額',
+      mileageReward: '里程回饋',
+      milesPoints: '里程點數',
+      confirm: '確認',
+      helpText: '如有幫助，請',
+      contactCS: '聯繫客服',
+      pendingReview: '審核中',
+      errInsuffBalance: '帳戶餘額不足，無法購買',
+      errInsuffMiles: '里程點數不足，無法購買',
     },
-  },
+    // 里程回饋確認頁
+    mileageRewardConfirm: {
+      title: '確認訂單',
+      quantity: '數量',
+      totalPrice: '總金額',
+      totalMilesPoints: '消耗里程點數',
+      mileageReward: '里程回饋',
+      submit: '送出',
+    },  },
   'en': {
     // Navigation
     nav: {
@@ -273,6 +296,31 @@ const messages = {
       withdrawal: 'Withdrawal',
       mileage: 'Mileage',
       transfer: 'Transfer',
+    },
+    // Mileage Rewards
+    mileageRewards: {
+      title: 'Mileage Rewards',
+      loading: 'Loading...',
+      empty: 'No products available',
+      stockLabel: '{n} in stock',
+      accountBalance: 'Account Balance',
+      mileageReward: 'Mileage Reward',
+      milesPoints: 'Miles Points',
+      confirm: 'Confirm',
+      helpText: 'Need help? Please',
+      contactCS: 'Contact Support',
+      pendingReview: 'Under Review',
+      errInsuffBalance: 'Insufficient account balance',
+      errInsuffMiles: 'Insufficient miles points',
+    },
+    // Mileage Reward Order Confirmation
+    mileageRewardConfirm: {
+      title: 'Order Confirmation',
+      quantity: 'Quantity',
+      totalPrice: 'Total Amount',
+      totalMilesPoints: 'Miles Points Used',
+      mileageReward: 'Mileage Reward',
+      submit: 'Submit',
     },
   },
 }

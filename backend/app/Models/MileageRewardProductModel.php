@@ -10,7 +10,7 @@ class MileageRewardProductModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
     protected $allowedFields = [
-        'name', 'image_url', 'price', 'mileage_amount', 'stock', 'is_active', 'sort_order',
+        'name', 'image_url', 'price', 'mileage_amount', 'miles_points', 'stock', 'is_active', 'sort_order',
     ];
 
     public function getActive(): array

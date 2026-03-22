@@ -36,6 +36,9 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('mileage-reward-products',          'AdminPanelController::createMileageRewardProduct');
         $routes->put('mileage-reward-products/(:num)',    'AdminPanelController::updateMileageRewardProduct/$1');
         $routes->delete('mileage-reward-products/(:num)', 'AdminPanelController::deleteMileageRewardProduct/$1');
+        // Mileage Reward Orders
+        $routes->get('reward-orders',                'AdminPanelController::rewardOrders');
+        $routes->post('reward-orders/(:num)/review', 'AdminPanelController::reviewRewardOrder/$1');
         // App Config
         $routes->get('config/(:segment)',   'AdminPanelController::getConfig/$1');
         $routes->post('config/(:segment)',  'AdminPanelController::setConfig/$1');
@@ -86,10 +89,13 @@ $routes->group('api/v1', static function ($routes) {
 
     // ── Mileage (JWT required) ──
     $routes->group('mileage', ['filter' => 'jwt'], static function ($routes) {
-        $routes->get('history',           'Api\MileageController::history');
-        $routes->post('redeem',           'Api\MileageController::redeem');
-        $routes->get('redemption-items',  'Api\MileageController::redemptionItems');
-        $routes->get('reward-products',   'Api\MileageController::rewardProducts');
+        $routes->get('history',                          'Api\MileageController::history');
+        $routes->post('redeem',                          'Api\MileageController::redeem');
+        $routes->get('redemption-items',                 'Api\MileageController::redemptionItems');
+        $routes->get('reward-products',                  'Api\MileageController::rewardProducts');
+        $routes->get('reward-orders/my',                 'Api\MileageController::myRewardOrders');
+        $routes->get('reward-orders/my-pending',         'Api\MileageController::myPendingRewardOrders');
+        $routes->post('reward-products/(:num)/purchase', 'Api\MileageController::purchaseRewardProduct/$1');
     });
 
     // ── Announcements (JWT required) ──

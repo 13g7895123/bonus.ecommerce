@@ -4,6 +4,7 @@ namespace App\Controllers\Api;
 
 use App\Libraries\Auth;
 use App\Services\MileageRedemptionItemService;
+use App\Services\MileageRewardOrderService;
 use App\Services\MileageRewardProductService;
 use App\Services\MileageService;
 
@@ -47,5 +48,29 @@ class MileageController extends BaseApiController
     {
         $items = (new MileageRewardProductService())->getActiveProducts();
         return $this->success(['items' => $items]);
+    }
+
+    public function myRewardOrders()
+    {
+        $orders = (new MileageRewardOrderService())->getUserOrders(Auth::id());
+        return $this->success(['items' => $orders]);
+    }
+
+    public function myPendingRewardOrders()
+    {
+        $orders = (new MileageRewardOrderService())->getUserPendingOrders(Auth::id());
+        return $this->success(['items' => $orders]);
+    }
+
+    public function purchaseRewardProduct(int $productId)
+    {
+        $data     = $this->getJson();
+        $quantity = (int) ($data['quantity'] ?? 1);
+
+        $result = (new MileageRewardOrderService())->purchase(Auth::id(), $productId, $quantity);
+        if (!$result['success']) {
+            return $this->error($result['message'], 422);
+        }
+        return $this->success(['order_id' => $result['order_id']], $result['message']);
     }
 }

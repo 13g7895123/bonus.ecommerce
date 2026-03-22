@@ -19,6 +19,7 @@ import MyMail from '../views/MyMail.vue'
 import MileageRewards from '../views/MileageRewards.vue'
 import MileageRecords from '../views/MileageRecords.vue'
 import MileageRedemption from '../views/MileageRedemption.vue'
+import MileageRewardConfirm from '../views/MileageRewardConfirm.vue'
 import AnnouncementDetail from '../views/AnnouncementDetail.vue'
 import Admin from '../views/Admin.vue'
 import CountryLanguageSettings from '../views/CountryLanguageSettings.vue'
@@ -138,6 +139,11 @@ const routes = [
     path: '/mileage-rewards',
     name: 'MileageRewards',
     component: MileageRewards
+  },
+  {
+    path: '/mileage-reward-confirm',
+    name: 'MileageRewardConfirm',
+    component: MileageRewardConfirm
   },
   {
     path: '/mileage-records',

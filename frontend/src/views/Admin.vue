@@ -170,7 +170,7 @@
           <div v-if="loadingRewardProducts" class="state-msg">載入中...</div>
           <div v-else-if="rewardProductsList.length === 0" class="state-msg">尚無商品</div>
           <table v-else class="data-table">
-            <thead><tr><th>商品名稱</th><th>圖片</th><th>售價</th><th>里程回饋</th><th>庫存</th><th>狀態</th><th>排序</th><th>操作</th></tr></thead>
+            <thead><tr><th>商品名稱</th><th>圖片</th><th>售價</th><th>里程回饋</th><th>里程點數</th><th>庫存</th><th>狀態</th><th>排序</th><th>操作</th></tr></thead>
             <tbody>
               <tr v-for="item in rewardProductsList" :key="item.id">
                 <td class="td-name">{{ item.name }}</td>
@@ -180,12 +180,66 @@
                 </td>
                 <td class="td-num">${{ Number(item.price).toLocaleString() }}</td>
                 <td class="td-num">${{ Number(item.mileage_amount).toLocaleString() }}</td>
+                <td class="td-num">{{ item.miles_points ?? 0 }}</td>
                 <td class="td-num">{{ item.stock }}</td>
                 <td><span :class="['badge', item.is_active == 1 ? 'badge-green' : 'badge-red']">{{ item.is_active == 1 ? '啟用' : '停用' }}</span></td>
                 <td>{{ item.sort_order }}</td>
                 <td class="td-actions">
                   <button class="btn btn-sm btn-outline" @click="openRewardProductForm(item)">編輯</button>
                   <button class="btn btn-sm btn-danger" @click="deleteRewardProduct(item.id)">刪除</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── 里程回饋訂單 ── -->
+      <div v-if="currentSection === 'reward-orders'" class="panel">
+        <div class="panel-header">
+          <span class="panel-title"></span>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <select v-model="rewardOrdersTab" class="f-input" style="width:auto;padding:0.3rem 0.65rem;font-size:0.85rem" @change="loadRewardOrders">
+              <option value="">全部</option>
+              <option value="pending_review">待審核</option>
+              <option value="approved">已批准</option>
+              <option value="rejected">已拒絕</option>
+            </select>
+            <button class="btn btn-outline" :disabled="loadingRewardOrders" @click="loadRewardOrders"><RefreshCw :size="14" /></button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div v-if="loadingRewardOrders" class="state-msg">載入中...</div>
+          <div v-else-if="rewardOrdersList.length === 0" class="state-msg">尚無訂單</div>
+          <table v-else class="data-table">
+            <thead>
+              <tr>
+                <th>#</th><th>用戶 ID</th><th>商品</th><th>數量</th>
+                <th>總金額</th><th>消耗點數</th><th>里程回饋</th>
+                <th>狀態</th><th>時間</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in rewardOrdersList" :key="order.id">
+                <td class="td-muted">{{ order.id }}</td>
+                <td>{{ order.user_id }}</td>
+                <td class="td-name">{{ order.product_name }}</td>
+                <td class="td-num">{{ order.quantity }}</td>
+                <td class="td-num">${{ Number(order.total_price).toLocaleString() }}</td>
+                <td class="td-num">{{ Number(order.total_miles_points).toLocaleString() }}</td>
+                <td class="td-num">${{ Number(order.mileage_reward_amount).toLocaleString() }}</td>
+                <td>
+                  <span :class="['badge', order.status === 'approved' ? 'badge-green' : order.status === 'rejected' ? 'badge-red' : 'badge-yellow']">
+                    {{ order.status === 'approved' ? '已批准' : order.status === 'rejected' ? '已拒絕' : '待審核' }}
+                  </span>
+                </td>
+                <td class="td-muted td-sub">{{ order.created_at ? order.created_at.substring(0,10) : '—' }}</td>
+                <td class="td-actions">
+                  <template v-if="order.status === 'pending_review'">
+                    <button class="btn btn-sm btn-green" @click="reviewRewardOrder(order.id, 'approve')">批准</button>
+                    <button class="btn btn-sm btn-danger" @click="reviewRewardOrder(order.id, 'reject')">拒絕</button>
+                  </template>
+                  <span v-else class="td-muted">—</span>
                 </td>
               </tr>
             </tbody>
@@ -462,6 +516,10 @@
               <label class="f-label">里程回饋 ($)</label>
               <input v-model.number="rewardProductForm.mileage_amount" class="f-input" type="number" min="0" step="0.01" placeholder="188" />
             </div>
+            <div style="flex:1">
+              <label class="f-label">里程點數</label>
+              <input v-model.number="rewardProductForm.miles_points" class="f-input" type="number" min="0" placeholder="0" />
+            </div>
           </div>
           <div style="display:flex;gap:1rem;margin-top:0.75rem;align-items:flex-end">
             <div style="flex:1">
@@ -490,7 +548,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Users, ShieldCheck, Coins, FileEdit, Gift, Home, RefreshCw, Plus, Eye, Save, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { Users, ShieldCheck, Coins, FileEdit, Gift, ShoppingBag, Home, RefreshCw, Plus, Eye, Save, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import RichTextEditor from '../components/admin/RichTextEditor.vue'
 import { fileService } from '../services/FileService'
 
@@ -503,6 +561,7 @@ const navItems = [
   { key: 'kyc',             label: '實名認證審核',  icon: ShieldCheck },
   { key: 'mileage-items',   label: '里程兌換項目',  icon: Coins },
   { key: 'mileage-rewards', label: '里程回饋商品',  icon: Gift },
+  { key: 'reward-orders',   label: '里程回饋訂單',  icon: ShoppingBag },
   { key: 'content',         label: '內容管理',       icon: FileEdit },
 ]
 const currentNavItem = computed(() => navItems.find(n => n.key === currentSection.value))
@@ -513,6 +572,7 @@ const navigate = (key) => {
   if (key === 'kyc' && kycList.value.length === 0) loadKyc()
   if (key === 'mileage-items' && mileageItemsList.value.length === 0) loadMileageItems()
   if (key === 'mileage-rewards' && rewardProductsList.value.length === 0) loadRewardProducts()
+  if (key === 'reward-orders') loadRewardOrders()
   if (key === 'content') loadContentConfigs()
 }
 
@@ -689,7 +749,7 @@ const deleteMileageItem = async (id) => {
 const rewardProductsList    = ref([])
 const loadingRewardProducts = ref(false)
 const rewardImgUploading    = ref(false)
-const rewardProductForm     = ref({ show: false, id: null, name: '', image_url: '', price: 0, mileage_amount: 0, stock: 0, is_active: 1, sort_order: 0, submitting: false })
+const rewardProductForm     = ref({ show: false, id: null, name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0, submitting: false })
 
 const loadRewardProducts = async () => {
   loadingRewardProducts.value = true
@@ -703,9 +763,9 @@ const loadRewardProducts = async () => {
 const openRewardProductForm = (item = null) => {
   rewardImgUploading.value = false
   if (item) {
-    rewardProductForm.value = { show: true, submitting: false, id: item.id, name: item.name, image_url: item.image_url || '', price: Number(item.price), mileage_amount: Number(item.mileage_amount), stock: Number(item.stock), is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
+    rewardProductForm.value = { show: true, submitting: false, id: item.id, name: item.name, image_url: item.image_url || '', price: Number(item.price), mileage_amount: Number(item.mileage_amount), miles_points: Number(item.miles_points || 0), stock: Number(item.stock), is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
   } else {
-    rewardProductForm.value = { show: true, submitting: false, id: null, name: '', image_url: '', price: 0, mileage_amount: 0, stock: 0, is_active: 1, sort_order: 0 }
+    rewardProductForm.value = { show: true, submitting: false, id: null, name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0 }
   }
 }
 
@@ -731,7 +791,7 @@ const submitRewardProduct = async () => {
   try {
     const url    = f.id ? `/api/v1/admin-panel/mileage-reward-products/${f.id}` : '/api/v1/admin-panel/mileage-reward-products'
     const method = f.id ? 'PUT' : 'POST'
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: f.mileage_amount, stock: f.stock, is_active: f.is_active, sort_order: f.sort_order }) })
+    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: f.mileage_amount, miles_points: f.miles_points, stock: f.stock, is_active: f.is_active, sort_order: f.sort_order }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
     f.show = false
     await loadRewardProducts()
@@ -742,6 +802,32 @@ const deleteRewardProduct = async (id) => {
   if (!confirm('確定要刪除此商品嗎？')) return
   await fetch(`/api/v1/admin-panel/mileage-reward-products/${id}`, { method: 'DELETE' })
   await loadRewardProducts()
+}
+
+// ── 里程回饋訂單 ─────────────────────────────────────────────
+const rewardOrdersList    = ref([])
+const loadingRewardOrders = ref(false)
+const rewardOrdersTab     = ref('')
+
+const loadRewardOrders = async () => {
+  loadingRewardOrders.value = true
+  try {
+    const qs  = rewardOrdersTab.value ? `?status=${rewardOrdersTab.value}` : ''
+    const res  = await fetch(`/api/v1/admin-panel/reward-orders${qs}`)
+    const data = await res.json()
+    rewardOrdersList.value = data.items || []
+  } finally { loadingRewardOrders.value = false }
+}
+
+const reviewRewardOrder = async (id, action) => {
+  const label = action === 'approve' ? '批准' : '拒絕'
+  if (!confirm(`確定要${label}此訂單嗎？`)) return
+  try {
+    const res  = await fetch(`/api/v1/admin-panel/reward-orders/${id}/review`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) })
+    const data = await res.json()
+    if (!res.ok) { alert(data.message || '操作失敗'); return }
+    await loadRewardOrders()
+  } catch { alert('操作失敗') }
 }
 
 // ── 內容管理（Config）────────────────────────────────────────

@@ -10,6 +10,7 @@ use App\Repositories\UserRepository;
 use App\Repositories\UserWalletRepository;
 use App\Services\AdminService;
 use App\Services\MileageRedemptionItemService;
+use App\Services\MileageRewardOrderService;
 use App\Services\MileageRewardProductService;
 use App\Services\SkywardsBenefitService;
 use CodeIgniter\Controller;
@@ -214,6 +215,24 @@ class AdminPanelController extends Controller
     {
         $result = (new MileageRewardProductService())->delete($id);
         return $this->json($result, $result['success'] ? 200 : 404);
+    }
+
+    // ── Mileage Reward Orders ─────────────────────────────────────────────────
+
+    public function rewardOrders(): ResponseInterface
+    {
+        $status = $this->request->getGet('status') ?? '';
+        $orders = (new MileageRewardOrderService())->getAllOrders($status);
+        return $this->json(['items' => $orders, 'total' => count($orders)]);
+    }
+
+    public function reviewRewardOrder(int $id): ResponseInterface
+    {
+        $data   = $this->request->getJSON(true) ?? [];
+        $action = $data['action'] ?? '';
+        $note   = $data['note'] ?? null;
+        $result = (new MileageRewardOrderService())->reviewOrder($id, $action, $note);
+        return $this->json($result, $result['success'] ? 200 : 400);
     }
 
     // ── Skywards Benefits ─────────────────────────────────────────────────────
