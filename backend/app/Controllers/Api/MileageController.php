@@ -4,6 +4,7 @@ namespace App\Controllers\Api;
 
 use App\Libraries\Auth;
 use App\Services\MileageRedemptionItemService;
+use App\Services\MileageRewardProductService;
 use App\Services\MileageService;
 
 class MileageController extends BaseApiController
@@ -39,6 +40,12 @@ class MileageController extends BaseApiController
     public function redemptionItems()
     {
         $items = (new MileageRedemptionItemService())->getActiveItems();
+        return $this->success(['items' => $items]);
+    }
+
+    public function rewardProducts()
+    {
+        $items = (new MileageRewardProductService())->getActiveProducts();
         return $this->success(['items' => $items]);
     }
 }

@@ -31,6 +31,11 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('skywards-benefits',          'AdminPanelController::createSkywardsBenefit');
         $routes->put('skywards-benefits/(:num)',    'AdminPanelController::updateSkywardsBenefit/$1');
         $routes->delete('skywards-benefits/(:num)', 'AdminPanelController::deleteSkywardsBenefit/$1');
+        // Mileage Reward Products
+        $routes->get('mileage-reward-products',           'AdminPanelController::mileageRewardProducts');
+        $routes->post('mileage-reward-products',          'AdminPanelController::createMileageRewardProduct');
+        $routes->put('mileage-reward-products/(:num)',    'AdminPanelController::updateMileageRewardProduct/$1');
+        $routes->delete('mileage-reward-products/(:num)', 'AdminPanelController::deleteMileageRewardProduct/$1');
         // App Config
         $routes->get('config/(:segment)',   'AdminPanelController::getConfig/$1');
         $routes->post('config/(:segment)',  'AdminPanelController::setConfig/$1');
@@ -84,6 +89,7 @@ $routes->group('api/v1', static function ($routes) {
         $routes->get('history',           'Api\MileageController::history');
         $routes->post('redeem',           'Api\MileageController::redeem');
         $routes->get('redemption-items',  'Api\MileageController::redemptionItems');
+        $routes->get('reward-products',   'Api\MileageController::rewardProducts');
     });
 
     // ── Announcements (JWT required) ──

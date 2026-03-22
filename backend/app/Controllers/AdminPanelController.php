@@ -10,6 +10,7 @@ use App\Repositories\UserRepository;
 use App\Repositories\UserWalletRepository;
 use App\Services\AdminService;
 use App\Services\MileageRedemptionItemService;
+use App\Services\MileageRewardProductService;
 use App\Services\SkywardsBenefitService;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -184,6 +185,34 @@ class AdminPanelController extends Controller
     public function deleteMileageItem(int $id): ResponseInterface
     {
         $result = (new MileageRedemptionItemService())->delete($id);
+        return $this->json($result, $result['success'] ? 200 : 404);
+    }
+
+    // ── Mileage Reward Products ────────────────────────────────────────────────
+
+    public function mileageRewardProducts(): ResponseInterface
+    {
+        $items = (new MileageRewardProductService())->getAllProducts();
+        return $this->json(['items' => $items]);
+    }
+
+    public function createMileageRewardProduct(): ResponseInterface
+    {
+        $data   = $this->request->getJSON(true) ?? [];
+        $result = (new MileageRewardProductService())->create($data);
+        return $this->json($result, $result['success'] ? 201 : 400);
+    }
+
+    public function updateMileageRewardProduct(int $id): ResponseInterface
+    {
+        $data   = $this->request->getJSON(true) ?? [];
+        $result = (new MileageRewardProductService())->update($id, $data);
+        return $this->json($result, $result['success'] ? 200 : 404);
+    }
+
+    public function deleteMileageRewardProduct(int $id): ResponseInterface
+    {
+        $result = (new MileageRewardProductService())->delete($id);
         return $this->json($result, $result['success'] ? 200 : 404);
     }
 
