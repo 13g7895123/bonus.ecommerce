@@ -1006,9 +1006,9 @@ onMounted(() => { loadUsers() })
 /* Preview */
 .preview-box { margin-top: 1rem; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 1rem; background: #f8fafc; }
 .preview-label { font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
-.mock-card { display: flex; gap: 0.75rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; padding: 0.75rem; }
-.mock-card-img { width: 110px; height: 75px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
-.mock-card-body { flex: 1; }
+.mock-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.mock-card-img { width: 100%; height: 200px; object-fit: cover; display: block; }
+.mock-card-body { padding: 1rem; padding-top: 0.75rem; }
 .mock-card-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
 .mock-card-desc { font-size: 0.85rem; color: #555; }
 .mock-modal { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; max-width: 380px; }
@@ -1022,11 +1022,11 @@ onMounted(() => { loadUsers() })
 
 /* Modal Overlay */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
-.modal-box { background: #fff; border-radius: 14px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; }
+.modal-box { background: #fff; border-radius: 14px; width: 100%; max-width: 480px; max-height: 90vh; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column; }
 .modal-hd { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; font-weight: 600; font-size: 0.95rem; }
 .modal-x { background: none; border: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer; padding: 4px; line-height: 1; }
 .modal-x:hover { color: #1e293b; }
-.modal-bd { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.modal-bd { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; overflow-y: auto; flex: 1; }
 .modal-ft { display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.25rem; border-top: 1px solid #f1f5f9; }
 
 /* Form */
