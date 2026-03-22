@@ -350,6 +350,29 @@ class AdminPanelController extends Controller
         return $this->json(['items' => $items, 'total' => count($items)]);
     }
 
+    public function mileageCodeRecords(): ResponseInterface
+    {
+      $builder = model(\App\Models\MileageRecordModel::class)
+        ->select('mileage_records.id, mileage_records.user_id, mileage_records.amount, mileage_records.code, mileage_records.created_at, users.email, users.full_name')
+        ->join('users', 'users.id = mileage_records.user_id', 'left')
+        ->where('mileage_records.source', 'code_redeem')
+        ->orderBy('mileage_records.created_at', 'DESC');
+
+      $code = trim((string) ($this->request->getGet('code') ?? ''));
+      if ($code !== '') {
+        $escapedCode = \Config\Database::connect()->escapeLikeString($code);
+        $builder->like('mileage_records.code', $escapedCode, 'both', false);
+      }
+
+      $userId = (int) ($this->request->getGet('user_id') ?? 0);
+      if ($userId > 0) {
+        $builder->where('mileage_records.user_id', $userId);
+      }
+
+      $items = $builder->findAll();
+      return $this->json(['items' => $items, 'total' => count($items)]);
+    }
+
     public function createMileageCode(): ResponseInterface
     {
         $data = $this->request->getJSON(true) ?? [];

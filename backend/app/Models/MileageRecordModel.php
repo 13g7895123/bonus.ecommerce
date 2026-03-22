@@ -9,7 +9,7 @@ class MileageRecordModel extends Model
     protected $table         = 'mileage_records';
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
-    protected $allowedFields = ['user_id', 'type', 'amount', 'source', 'created_at'];
+    protected $allowedFields = ['user_id', 'type', 'amount', 'source', 'code_id', 'code', 'created_at'];
 
     /**
      * @return array{items: array, total: int}

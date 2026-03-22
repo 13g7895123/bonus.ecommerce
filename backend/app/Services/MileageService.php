@@ -47,6 +47,8 @@ class MileageService
             'type'       => 'earn',
             'amount'     => $bonus,
             'source'     => 'code_redeem',
+            'code_id'    => (int) $record['id'],
+            'code'       => (string) $record['code'],
             'created_at' => date('Y-m-d H:i:s'),
         ]]);
 

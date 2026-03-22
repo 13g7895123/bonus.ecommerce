@@ -47,6 +47,47 @@
     </div>
   </div>
 
+  <div class="panel" style="margin-top:1rem">
+    <div class="panel-header">
+      <span class="panel-title">使用紀錄</span>
+      <div style="display:flex;gap:0.5rem;align-items:center">
+        <input v-model="recordFilters.code" class="f-input" style="width:180px" placeholder="搜尋代碼" @keyup.enter="loadRecords" />
+        <input v-model="recordFilters.user_id" class="f-input" style="width:140px" placeholder="用戶 ID" @keyup.enter="loadRecords" />
+        <button class="btn btn-outline" :disabled="recordsLoading" @click="loadRecords"><RefreshCw :size="14" /></button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div v-if="recordsLoading" class="state-msg">載入中...</div>
+      <div v-else-if="records.length === 0" class="state-msg">尚無使用紀錄</div>
+      <table v-else class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>代碼</th>
+            <th style="text-align:right">用戶 ID</th>
+            <th>用戶資訊</th>
+            <th style="text-align:right">兌換里程</th>
+            <th>時間</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="record in records" :key="record.id">
+            <td class="td-muted">{{ record.id }}</td>
+            <td><code style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:0.88rem">{{ record.code || '-' }}</code></td>
+            <td class="td-num">{{ record.user_id }}</td>
+            <td>
+              <div class="td-name">{{ record.full_name || '-' }}</div>
+              <div class="td-sub">{{ record.email || '-' }}</div>
+            </td>
+            <td class="td-num">{{ Number(record.amount || 0).toLocaleString() }}</td>
+            <td class="td-sub">{{ formatDateTime(record.created_at) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Modal -->
   <div v-if="form.show" class="modal-overlay" @click.self="form.show = false">
     <div class="modal-box" style="max-width:480px">
@@ -98,6 +139,9 @@ const list      = ref([])
 const loading   = ref(false)
 const saving    = ref(false)
 const formError = ref('')
+const records = ref([])
+const recordsLoading = ref(false)
+const recordFilters = ref({ code: '', user_id: '' })
 
 const defaultForm = () => ({
   show: false, id: null,
@@ -114,6 +158,21 @@ const load = async () => {
     list.value = data.items || []
   } finally {
     loading.value = false
+  }
+}
+
+const loadRecords = async () => {
+  recordsLoading.value = true
+  try {
+    const params = new URLSearchParams()
+    if (recordFilters.value.code.trim()) params.set('code', recordFilters.value.code.trim())
+    if (recordFilters.value.user_id.trim()) params.set('user_id', recordFilters.value.user_id.trim())
+    const qs = params.toString() ? `?${params.toString()}` : ''
+    const res = await fetch(`/api/v1/admin-panel/mileage-code-records${qs}`)
+    const data = await res.json()
+    records.value = data.items || []
+  } finally {
+    recordsLoading.value = false
   }
 }
 
@@ -143,6 +202,11 @@ const normalizeExpiresAt = (value) => {
 const formatExpiresAt = (value) => {
   if (!value || value === '0000-00-00 00:00:00') return '永久'
   return value.slice(0, 10)
+}
+
+const formatDateTime = (value) => {
+  if (!value) return '-'
+  return value.replace('T', ' ').slice(0, 19)
 }
 
 const save = async () => {
@@ -178,5 +242,7 @@ const remove = async (id) => {
   await load()
 }
 
-onMounted(load)
+onMounted(async () => {
+  await Promise.all([load(), loadRecords()])
+})
 </script>
