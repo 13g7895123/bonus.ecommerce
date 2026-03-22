@@ -23,7 +23,7 @@
         <!-- Product 2 -->
         <div class="product-item">
           <div class="product-image">
-            <img src="/product-2.png" alt="Product 2" />
+            <img src="/product-3.png" alt="Product 2" />
           </div>
           <div class="product-info">
             <div class="info-row name">APIVITA艾蜜塔仙人掌滋潤再生面膜(8mlX12)</div>
