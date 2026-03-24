@@ -6,7 +6,7 @@
       <!-- 兩行列表，帶底線 -->
       <div class="cls-list">
         <!-- 國家/地區（可點擊） -->
-        <div class="cls-row cls-row-clickable" @click="showCountryPicker = true">
+        <div class="cls-row cls-row-clickable" @click="openCountryPicker">
           <span class="cls-row-label">國家/地區</span>
           <div class="cls-row-right">
             <span class="cls-row-value">{{ currentCountryName }}</span>
@@ -30,23 +30,34 @@
     </div>
 
     <!-- 國家/地區選擇 Bottom Sheet -->
-    <div v-if="showCountryPicker" class="lang-overlay" @click.self="showCountryPicker = false">
-      <div class="lang-sheet">
+    <div v-if="showCountryPicker" class="lang-overlay" @click.self="closeCountryPicker">
+      <div class="lang-sheet lang-sheet-country">
         <div class="lang-sheet-header">
           <span class="lang-sheet-title">選擇國家/地區</span>
-          <button class="lang-sheet-close" @click="showCountryPicker = false">✕</button>
+          <button class="lang-sheet-close" @click="closeCountryPicker">✕</button>
+        </div>
+        <div class="lang-search-wrap">
+          <svg class="lang-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            v-model="countrySearch"
+            class="lang-search-input"
+            type="text"
+            placeholder="搜尋國家/地區"
+            autocomplete="off"
+          />
         </div>
         <ul class="lang-list">
           <li
-            v-for="country in countries"
+            v-for="country in filteredCountries"
             :key="country.code"
             class="lang-option"
             :class="{ selected: currentCountry === country.code }"
             @click="setCountry(country.code)"
           >
-            <span>{{ country.name }}</span>
+            <span>{{ getCountryName(country, currentLocale) }}</span>
             <svg v-if="currentCountry === country.code" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d71921" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </li>
+          <li v-if="filteredCountries.length === 0" class="lang-no-result">查無結果</li>
         </ul>
       </div>
     </div>
@@ -79,23 +90,43 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/PageHeader.vue'
-import { countries } from '../utils/countries'
+import { countries, getCountryName } from '../utils/countries'
 
 const { locale } = useI18n()
 
 const currentLocale = computed(() => locale.value)
 const showLangPicker = ref(false)
 const showCountryPicker = ref(false)
+const countrySearch = ref('')
 
 const currentCountry = ref(localStorage.getItem('app_country') || 'TW')
-const currentCountryName = computed(
-  () => countries.find(c => c.code === currentCountry.value)?.name ?? '台灣'
-)
+const currentCountryName = computed(() => {
+  const c = countries.find(c => c.code === currentCountry.value)
+  return c ? getCountryName(c, currentLocale.value) : '台灣'
+})
+
+const filteredCountries = computed(() => {
+  const q = countrySearch.value.trim()
+  if (!q) return countries
+  return countries.filter(c =>
+    c.name.includes(q) || c.en.toLowerCase().includes(q.toLowerCase())
+  )
+})
+
+const openCountryPicker = () => {
+  countrySearch.value = ''
+  showCountryPicker.value = true
+}
+
+const closeCountryPicker = () => {
+  showCountryPicker.value = false
+  countrySearch.value = ''
+}
 
 const setCountry = (code) => {
   currentCountry.value = code
   localStorage.setItem('app_country', code)
-  showCountryPicker.value = false
+  closeCountryPicker()
 }
 
 const languages = [
@@ -190,6 +221,12 @@ const setLocale = (code) => {
   padding-bottom: env(safe-area-inset-bottom, 1rem);
 }
 
+.lang-sheet-country {
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+}
+
 .lang-sheet-header {
   display: flex;
   align-items: center;
@@ -214,10 +251,37 @@ const setLocale = (code) => {
   line-height: 1;
 }
 
+.lang-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.lang-search-icon {
+  flex-shrink: 0;
+}
+
+.lang-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+  background: transparent;
+}
+
+.lang-search-input::placeholder {
+  color: #aaa;
+}
+
 .lang-list {
   list-style: none;
   margin: 0;
   padding: 0;
+  overflow-y: auto;
 }
 
 .lang-option {
@@ -243,5 +307,12 @@ const setLocale = (code) => {
 .lang-option.selected {
   color: #d71921;
   font-weight: 600;
+}
+
+.lang-no-result {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #aaa;
 }
 </style>
