@@ -285,12 +285,12 @@ const handleLogout = () => {
  * ================================================ */
 @media (max-width: 767px) {
   .section-wide {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 
   .logout-container {
-    padding: 2rem 1.5rem;
+    padding: 2rem 1rem;
   }
 }
 
