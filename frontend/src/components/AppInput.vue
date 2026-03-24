@@ -42,6 +42,7 @@ defineEmits(['update:modelValue'])
 
 .app-input {
   width: 100%;
+  min-width: 0;
   padding: 0.875rem 1rem;
   border: 1px solid #a8a8a9;
   border-radius: 8px;
