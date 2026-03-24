@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import { useToast } from '../composables/useToast'
@@ -14,6 +14,7 @@ import {
   getRandomDate, 
   getRandomPhone 
 } from '../utils/random'
+import { countries } from '../utils/countries'
 
 const router = useRouter()
 const api = useApi()
@@ -36,13 +37,23 @@ const fillRandomData = () => {
   form.lastName = getRandomSurname()
   form.password = 'password'
   form.dob = getRandomDate()
-  form.country = 'Taiwan'
+  form.country = 'TW'
   form.phone = getRandomPhone()
   form.terms = true
 }
 
 const loading = ref(false)
 const dobFocused = ref(false)
+const showCountryPicker = ref(false)
+
+const selectedCountryName = computed(
+  () => countries.find(c => c.code === form.country)?.name ?? ''
+)
+
+const selectCountry = (code) => {
+  form.country = code
+  showCountryPicker.value = false
+}
 
 const toast = useToast()
 
@@ -128,7 +139,14 @@ const handleRegister = async () => {
           </div>
         </div>
         <div class="form-field">
-          <AppInput v-model="form.country" type="text" placeholder="居住國家/地區" />
+          <div class="country-selector" @click="showCountryPicker = true">
+            <span :class="form.country ? 'country-value' : 'country-placeholder'">
+              {{ form.country ? selectedCountryName : '居住國家/地區' }}
+            </span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9L12 15L18 9" stroke="#676767" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
         </div>
         <div class="form-field">
           <AppInput v-model="form.phone" type="tel" placeholder="手機號碼" />
@@ -152,6 +170,28 @@ const handleRegister = async () => {
 
         <DebugFillButton @fill="fillRandomData" />
       </div>
+    </div>
+  </div>
+
+  <!-- 國家/地區選擇 Bottom Sheet -->
+  <div v-if="showCountryPicker" class="country-overlay" @click.self="showCountryPicker = false">
+    <div class="country-sheet">
+      <div class="country-sheet-header">
+        <span class="country-sheet-title">選擇國家/地區</span>
+        <button class="country-sheet-close" @click="showCountryPicker = false">✕</button>
+      </div>
+      <ul class="country-list">
+        <li
+          v-for="country in countries"
+          :key="country.code"
+          class="country-option"
+          :class="{ selected: form.country === country.code }"
+          @click="selectCountry(country.code)"
+        >
+          <span>{{ country.name }}</span>
+          <svg v-if="form.country === country.code" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d71921" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
@@ -370,5 +410,100 @@ const handleRegister = async () => {
   opacity: 0;
   cursor: pointer;
   box-sizing: border-box;
+}
+
+.country-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #a8a8a9;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background-color: #ffffff;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.country-placeholder {
+  color: #676767;
+}
+
+.country-value {
+  color: #333;
+}
+
+.country-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.country-sheet {
+  background: #fff;
+  width: 100%;
+  max-width: var(--app-max-width, 480px);
+  border-radius: 16px 16px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+.country-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.country-sheet-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.country-sheet-close {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.country-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.country-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  cursor: pointer;
+  border-bottom: 1px solid #f8f8f8;
+  transition: background 0.15s;
+}
+
+.country-option:last-child {
+  border-bottom: none;
+}
+
+.country-option:hover {
+  background: #fafafa;
+}
+
+.country-option.selected {
+  color: #d71921;
+  font-weight: 600;
 }
 </style>

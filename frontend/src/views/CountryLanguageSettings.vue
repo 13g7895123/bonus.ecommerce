@@ -79,6 +79,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/PageHeader.vue'
+import { countries } from '../utils/countries'
 
 const { locale } = useI18n()
 
@@ -86,18 +87,9 @@ const currentLocale = computed(() => locale.value)
 const showLangPicker = ref(false)
 const showCountryPicker = ref(false)
 
-const countries = [
-  { code: 'TW', name: '中國台灣' },
-  { code: 'CN', name: '中國大陸' },
-  { code: 'HK', name: '香港' },
-  { code: 'US', name: '美國' },
-  { code: 'JP', name: '日本' },
-  { code: 'SG', name: '新加坡' },
-]
-
 const currentCountry = ref(localStorage.getItem('app_country') || 'TW')
 const currentCountryName = computed(
-  () => countries.find(c => c.code === currentCountry.value)?.name ?? '中國台灣'
+  () => countries.find(c => c.code === currentCountry.value)?.name ?? '台灣'
 )
 
 const setCountry = (code) => {
