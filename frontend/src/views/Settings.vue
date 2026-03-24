@@ -23,7 +23,7 @@ const handleLogout = () => {
     </div>
 
     <!-- 旅行必需品區塊 -->
-    <div class="section section-wide" style="background-color: transparent; padding: 0 4rem;">
+    <div class="section section-wide" style="background-color: transparent;">
       <h3 class="section-title">{{ $t('settings.essentials') }}</h3>
       <div class="essentials-grid">
         <router-link to="/identity-verification" class="essential-card">
@@ -79,7 +79,7 @@ const handleLogout = () => {
     </div>
 
     <!-- 設定區塊 (標題再次顯示) -->
-    <div class="section section-wide" style="background-color: transparent; padding: 0 4rem;">
+    <div class="section section-wide" style="background-color: transparent;">
       <h3 class="section-title">{{ $t('settings.settingsSection') }}</h3>
       <div>
         <router-link to="/settings/language" class="settings-rounded-btn">
