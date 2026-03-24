@@ -94,7 +94,7 @@ const handleLogout = () => {
     </div>
 
     <!-- 登出按鈕 -->
-    <div class="logout-container" style="padding: 0 4rem;">
+    <div class="logout-container">
       <button class="logout-btn" @click="handleLogout">{{ $t('settings.logout') }}</button>
     </div>
   </div>
