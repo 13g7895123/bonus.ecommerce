@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     port: 3102,
     host: '0.0.0.0',
-    allowedHosts: ['ecommerce.l'],
+    allowedHosts: 'all',
     proxy: {
       '/api': {
         target: 'http://ecommerce.l',
