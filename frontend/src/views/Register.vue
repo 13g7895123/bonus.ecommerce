@@ -42,6 +42,7 @@ const fillRandomData = () => {
 }
 
 const loading = ref(false)
+const dobFocused = ref(false)
 
 const toast = useToast()
 
@@ -103,7 +104,28 @@ const handleRegister = async () => {
           <AppInput v-model="form.password" type="password" placeholder="密碼" />
         </div>
         <div class="form-field">
-          <AppInput v-model="form.dob" type="date" placeholder="出生日期" />
+          <div class="dob-wrapper">
+            <div class="dob-display" :class="{ 'dob-focused': dobFocused }">
+              <span :class="form.dob ? 'dob-value' : 'dob-placeholder'">
+                {{ form.dob ? form.dob : '出生日期' }}
+              </span>
+              <span class="dob-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="4" width="18" height="17" rx="2" stroke="#676767" stroke-width="2"/>
+                  <line x1="3" y1="9" x2="21" y2="9" stroke="#676767" stroke-width="2"/>
+                  <line x1="8" y1="2" x2="8" y2="6" stroke="#676767" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="16" y1="2" x2="16" y2="6" stroke="#676767" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </div>
+            <input
+              v-model="form.dob"
+              type="date"
+              class="dob-real-input"
+              @focus="dobFocused = true"
+              @blur="dobFocused = false"
+            />
+          </div>
         </div>
         <div class="form-field">
           <AppInput v-model="form.country" type="text" placeholder="居住國家/地區" />
@@ -295,5 +317,58 @@ const handleRegister = async () => {
   .login-page {
     padding: 1.5rem 1rem;
   }
+}
+
+.dob-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.dob-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.dob-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #a8a8a9;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background-color: #ffffff;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.dob-display.dob-focused {
+  border-color: #d71921;
+}
+
+.dob-placeholder {
+  color: #676767;
+}
+
+.dob-value {
+  color: #333;
+}
+
+.dob-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dob-real-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 </style>
