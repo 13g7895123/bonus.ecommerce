@@ -39,8 +39,6 @@ class TwilioService
             return ['success' => false, 'message' => 'Twilio 設定不完整，請確認 .env 中的 TWILIO_* 環境變數'];
         }
 
-        $to = $this->normalizeE164($to);
-
         $url = sprintf(
             'https://verify.twilio.com/v2/Services/%s/Verifications',
             $this->verifyServiceSid
@@ -70,8 +68,6 @@ class TwilioService
         if (!$this->isConfigured()) {
             return ['success' => false, 'message' => 'Twilio 設定不完整'];
         }
-
-        $to = $this->normalizeE164($to);
 
         $url = sprintf(
             'https://verify.twilio.com/v2/Services/%s/VerificationChecks',
