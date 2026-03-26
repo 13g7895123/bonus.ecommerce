@@ -127,6 +127,10 @@ class AuthController extends BaseApiController
             ]);
         }
 
-        return $this->success(null, 'Phone verified successfully');
+        // 驗證成功，發放 JWT token
+        $authService = new \App\Services\AuthService();
+        $tokenData   = $authService->createTokenForUserId(intval($data['userId'] ?? 0));
+
+        return $this->success($tokenData, 'Phone verified successfully');
     }
 }

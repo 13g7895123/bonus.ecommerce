@@ -36,10 +36,10 @@ class AuthService
             'miles_balance' => 0,
         ]);
 
-        $user  = $this->userRepo->find($userId);
-        $token = JwtHelper::generate(['user_id' => $userId, 'role' => $user['role']]);
+        $user = $this->userRepo->find($userId);
 
-        return ['success' => true, 'data' => ['token' => $token, 'user' => $this->sanitize($user)]];
+        // 不在此處發放 JWT，待手機 OTP 驗證通過後再發放
+        return ['success' => true, 'data' => ['id' => $userId, 'user' => $this->sanitize($user)]];
     }
 
     public function login(string $email, string $password): array
@@ -62,5 +62,16 @@ class AuthService
     {
         unset($user['password_hash']);
         return $user;
+    }
+
+    /**
+     * 根據 userId 產生 JWT token（OTP 驗證通過後使用）
+     */
+    public function createTokenForUserId(int $userId): ?array
+    {
+        $user = $this->userRepo->find($userId);
+        if (!$user) return null;
+        $token = JwtHelper::generate(['user_id' => $userId, 'role' => $user['role']]);
+        return ['token' => $token, 'user' => $this->sanitize($user)];
     }
 }

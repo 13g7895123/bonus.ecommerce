@@ -87,6 +87,14 @@ const selectCountry = (code) => {
 
 const toast = useToast()
 
+// 將 dialCode + phone 整合為 E.164 格式（去除皋碼前面的 0）
+// 例： +886 + 0912345678 → +886912345678
+const fullPhone = computed(() => {
+  const p = form.phone.replace(/\s/g, '') // 移除空白
+  const stripped = p.startsWith('0') ? p.slice(1) : p
+  return form.dialCode + stripped
+})
+
 // ——— OTP Modal 狀態 ———
 const showOtpModal = ref(false)
 const otpDigits = ref(['', '', '', '', '', ''])
@@ -136,7 +144,7 @@ const closeOtpModal = () => {
 
 const resendOtp = async () => {
   try {
-    await api.auth.sendPhoneOtp({ phone: form.dialCode + form.phone, userId: registeredUserId.value })
+    await api.auth.sendPhoneOtp({ phone: fullPhone.value, userId: registeredUserId.value })
     startOtpCountdown()
     toast.success('驗證碼已重新發送')
   } catch {
@@ -148,7 +156,7 @@ const submitOtp = async () => {
   if (otpCode.value.length < 6) return
   otpLoading.value = true
   try {
-    await api.auth.verifyPhoneOtp({ phone: form.dialCode + form.phone, code: otpCode.value, userId: registeredUserId.value })
+    await api.auth.verifyPhoneOtp({ phone: fullPhone.value, code: otpCode.value, userId: registeredUserId.value })
     closeOtpModal()
     toast.success('驗證成功！')
     router.push('/')
@@ -175,9 +183,9 @@ const handleRegister = async () => {
   loading.value = true
   try {
     const response = await api.auth.register({ ...form })
-    registeredUserId.value = response?.data?.id || response?.id || null
+    registeredUserId.value = response?.user?.id || response?.id || null
 
-    await api.auth.sendPhoneOtp({ phone: form.dialCode + form.phone, userId: registeredUserId.value })
+    await api.auth.sendPhoneOtp({ phone: fullPhone.value, userId: registeredUserId.value })
 
     otpDigits.value = ['', '', '', '', '', '']
     showOtpModal.value = true

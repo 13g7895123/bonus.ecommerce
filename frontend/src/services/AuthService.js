@@ -59,8 +59,7 @@ export class AuthService extends BaseService {
       phone: userData.phone || '',
     };
     const data = await this._post('/register', payload);
-    if (data?.token) localStorage.setItem('token', data.token);
-    if (data?.user) localStorage.setItem('user', JSON.stringify(this._mapUser(data.user)));
+    // 不在此儲存 token，待手機 OTP 驗證通過後儲存
     return data;
   }
 
@@ -94,7 +93,10 @@ export class AuthService extends BaseService {
         return { message: '驗證成功' };
       });
     }
-    return this._post('/verify-phone-otp', data);
+    const result = await this._post('/verify-phone-otp', data);
+    if (result?.token) localStorage.setItem('token', result.token);
+    if (result?.user) localStorage.setItem('user', JSON.stringify(this._mapUser(result.user)));
+    return result;
   }
 
   /* 登出 */

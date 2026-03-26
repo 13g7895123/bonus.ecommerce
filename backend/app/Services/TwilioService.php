@@ -39,6 +39,8 @@ class TwilioService
             return ['success' => false, 'message' => 'Twilio 設定不完整，請確認 .env 中的 TWILIO_* 環境變數'];
         }
 
+        $to = $this->normalizeE164($to);
+
         $url = sprintf(
             'https://verify.twilio.com/v2/Services/%s/Verifications',
             $this->verifyServiceSid
@@ -68,6 +70,8 @@ class TwilioService
         if (!$this->isConfigured()) {
             return ['success' => false, 'message' => 'Twilio 設定不完整'];
         }
+
+        $to = $this->normalizeE164($to);
 
         $url = sprintf(
             'https://verify.twilio.com/v2/Services/%s/VerificationChecks',
@@ -100,6 +104,17 @@ class TwilioService
         return !empty($this->accountSid)
             && !empty($this->authToken)
             && !empty($this->verifyServiceSid);
+    }
+
+    /**
+     * 將電話號碼正規化為 E.164 格式
+     * 公式：去除國碼後的前置 0
+     * 例： +8860912345678 → +886912345678
+     */
+    private function normalizeE164(string $phone): string
+    {
+        // 匹配：+国碼（0）號碼 → +国碼號碼
+        return preg_replace('/^(\+\d{1,4})0(\d{6,11})$/', '$1$2', $phone);
     }
 
     private function curlPost(string $url, array $fields): array
