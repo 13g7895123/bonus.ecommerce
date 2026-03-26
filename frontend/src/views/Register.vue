@@ -87,13 +87,9 @@ const selectCountry = (code) => {
 
 const toast = useToast()
 
-// 將 dialCode + phone 整合為 E.164 格式（去除皋碼前面的 0）
-// 例： +886 + 0912345678 → +886912345678
-const fullPhone = computed(() => {
-  const p = form.phone.replace(/\s/g, '') // 移除空白
-  const stripped = p.startsWith('0') ? p.slice(1) : p
-  return form.dialCode + stripped
-})
+// dialCode + phone 直接拼接，後端負責正規化 E.164
+// 使用者輸入本地格式即可（例如 0937067268），後端會去掉多餘的 0
+const fullPhone = computed(() => form.dialCode + form.phone.replace(/\s/g, ''))
 
 // ——— OTP Modal 狀態 ———
 const showOtpModal = ref(false)
