@@ -72,7 +72,7 @@ class TwilioService
         }
 
         $url = sprintf(
-            'https://verify.twilio.com/v2/Services/%s/VerificationChecks',
+            'https://verify.twilio.com/v2/Services/%s/VerificationCheck',
             $this->verifyServiceSid
         );
 
