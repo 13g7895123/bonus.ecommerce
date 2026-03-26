@@ -46,6 +46,8 @@ class TwilioService
 
         $result = $this->curlPost($url, ['To' => $to, 'Channel' => $channel]);
 
+        log_message('debug', '[TwilioService] sendOtp To=' . $to . ' HTTP=' . $result['http_code'] . ' Body=' . json_encode($result['body']));
+
         if ($result['http_code'] === 201) {
             return ['success' => true, 'message' => '驗證碼已發送'];
         }
@@ -75,6 +77,8 @@ class TwilioService
         );
 
         $result = $this->curlPost($url, ['To' => $to, 'Code' => $code]);
+
+        log_message('debug', '[TwilioService] verifyOtp To=' . $to . ' Code=' . $code . ' HTTP=' . $result['http_code'] . ' Body=' . json_encode($result['body']));
 
         if ($result['http_code'] === 200 && ($result['body']['status'] ?? '') === 'approved') {
             return ['success' => true, 'message' => '驗證成功'];
