@@ -101,7 +101,6 @@ const otpDigits = ref(['', '', '', '', '', ''])
 const otpRefs = []
 const otpLoading = ref(false)
 const otpCountdown = ref(0)
-const registeredUserId = ref(null)
 let otpTimer = null
 
 const otpCode = computed(() => otpDigits.value.join(''))
@@ -144,7 +143,7 @@ const closeOtpModal = () => {
 
 const resendOtp = async () => {
   try {
-    await api.auth.sendPhoneOtp({ phone: fullPhone.value, userId: registeredUserId.value })
+    await api.auth.sendPhoneOtp({ phone: fullPhone.value })
     startOtpCountdown()
     toast.success('驗證碼已重新發送')
   } catch {
@@ -156,14 +155,23 @@ const submitOtp = async () => {
   if (otpCode.value.length < 6) return
   otpLoading.value = true
   try {
-    await api.auth.verifyPhoneOtp({ phone: fullPhone.value, code: otpCode.value, userId: registeredUserId.value })
+    await api.auth.verifyPhoneOtp({ phone: fullPhone.value, code: otpCode.value })
+    // OTP 驗證成功，才將資料送到後端建立帳號
+    await api.auth.register({ ...form })
     closeOtpModal()
-    toast.success('驗證成功！')
+    toast.success('註冊成功！')
     router.push('/')
   } catch (e) {
-    toast.error(e.response?.data?.message || '驗證碼錯誤，請重試')
-    otpDigits.value = ['', '', '', '', '', '']
-    nextTick(() => otpRefs[0]?.focus())
+    const msg = e.response?.data?.message || e.message || ''
+    if (msg && (msg.includes('OTP') || msg.includes('驗證') || msg.includes('code') || msg.includes('expired') || msg.includes('approved'))) {
+      toast.error(msg || '驗證碼錯誤，請重試')
+      otpDigits.value = ['', '', '', '', '', '']
+      nextTick(() => otpRefs[0]?.focus())
+    } else {
+      // 驗證成功但register失敗（例如email重複）——關閉modal顯示錯誤
+      closeOtpModal()
+      toast.error(msg || '註冊失敗，請稍後再試')
+    }
   } finally {
     otpLoading.value = false
   }
@@ -182,10 +190,7 @@ const handleRegister = async () => {
 
   loading.value = true
   try {
-    const response = await api.auth.register({ ...form })
-    registeredUserId.value = response?.user?.id || response?.id || null
-
-    await api.auth.sendPhoneOtp({ phone: fullPhone.value, userId: registeredUserId.value })
+    await api.auth.sendPhoneOtp({ phone: fullPhone.value })
 
     otpDigits.value = ['', '', '', '', '', '']
     showOtpModal.value = true
@@ -193,7 +198,7 @@ const handleRegister = async () => {
     nextTick(() => otpRefs[0]?.focus())
   } catch (error) {
     const errObj = error.response?.data || error
-    toast.error(errObj.message || '註冊失敗，請稍後再試')
+    toast.error(errObj.message || '發送驗證碼失敗，請稍後再試')
   } finally {
     loading.value = false
   }

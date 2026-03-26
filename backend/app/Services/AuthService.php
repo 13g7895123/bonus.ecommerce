@@ -37,9 +37,9 @@ class AuthService
         ]);
 
         $user = $this->userRepo->find($userId);
+        $token = JwtHelper::generate(['user_id' => $userId, 'role' => $user['role']]);
 
-        // 不在此處發放 JWT，待手機 OTP 驗證通過後再發放
-        return ['success' => true, 'data' => ['id' => $userId, 'user' => $this->sanitize($user)]];
+        return ['success' => true, 'data' => ['token' => $token, 'user' => $this->sanitize($user)]];
     }
 
     public function login(string $email, string $password): array

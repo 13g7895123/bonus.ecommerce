@@ -78,17 +78,6 @@ class AuthController extends BaseApiController
             return $this->error('Phone number is required', 422);
         }
 
-        // 記錄到 phone_verifications（使用 Twilio Verify API，code 值標記為 'VERIFY_API'）
-        $model = new \App\Models\PhoneVerificationModel();
-        $userId = $data['userId'] ?? null;
-        $model->insert([
-            'user_id'    => $userId,
-            'phone'      => $phone,
-            'code'       => 'VERIFY_API',
-            'expires_at' => date('Y-m-d H:i:s', strtotime('+10 minutes')),
-        ]);
-
-        // 呼叫 Twilio Verify API
         $twilio = new \App\Services\TwilioService();
         $result = $twilio->sendOtp($phone);
 
@@ -109,7 +98,6 @@ class AuthController extends BaseApiController
             return $this->error('Phone and code are required', 422);
         }
 
-        // 呼叫 Twilio Verify API 驗證
         $twilio = new \App\Services\TwilioService();
         $result = $twilio->verifyOtp($phone, $code);
 
@@ -117,20 +105,6 @@ class AuthController extends BaseApiController
             return $this->error($result['message'] ?? 'Invalid OTP', 422);
         }
 
-        // 更新 phone_verifications 記錄
-        $model  = new \App\Models\PhoneVerificationModel();
-        $record = $model->findLatestValid($phone);
-        if ($record) {
-            $model->update($record['id'], [
-                'is_used'     => 1,
-                'verified_at' => date('Y-m-d H:i:s'),
-            ]);
-        }
-
-        // 驗證成功，發放 JWT token
-        $authService = new \App\Services\AuthService();
-        $tokenData   = $authService->createTokenForUserId(intval($data['userId'] ?? 0));
-
-        return $this->success($tokenData, 'Phone verified successfully');
+        return $this->success(null, 'Phone verified successfully');
     }
 }
