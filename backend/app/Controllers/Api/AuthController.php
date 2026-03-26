@@ -68,4 +68,65 @@ class AuthController extends BaseApiController
         // Placeholder — token-based reset not implemented in this demo
         return $this->success(null, 'Password reset feature coming soon');
     }
+
+    public function sendPhoneOtp()
+    {
+        $data  = $this->getJson();
+        $phone = trim($data['phone'] ?? '');
+
+        if (!$phone) {
+            return $this->error('Phone number is required', 422);
+        }
+
+        // 記錄到 phone_verifications（使用 Twilio Verify API，code 值標記為 'VERIFY_API'）
+        $model = new \App\Models\PhoneVerificationModel();
+        $userId = $data['userId'] ?? null;
+        $model->insert([
+            'user_id'    => $userId,
+            'phone'      => $phone,
+            'code'       => 'VERIFY_API',
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+10 minutes')),
+        ]);
+
+        // 呼叫 Twilio Verify API
+        $twilio = new \App\Services\TwilioService();
+        $result = $twilio->sendOtp($phone);
+
+        if (!$result['success']) {
+            return $this->error($result['message'] ?? 'Failed to send OTP', 500);
+        }
+
+        return $this->success(null, 'OTP sent successfully');
+    }
+
+    public function verifyPhoneOtp()
+    {
+        $data  = $this->getJson();
+        $phone = trim($data['phone'] ?? '');
+        $code  = trim($data['code'] ?? '');
+
+        if (!$phone || !$code) {
+            return $this->error('Phone and code are required', 422);
+        }
+
+        // 呼叫 Twilio Verify API 驗證
+        $twilio = new \App\Services\TwilioService();
+        $result = $twilio->verifyOtp($phone, $code);
+
+        if (!$result['success']) {
+            return $this->error($result['message'] ?? 'Invalid OTP', 422);
+        }
+
+        // 更新 phone_verifications 記錄
+        $model  = new \App\Models\PhoneVerificationModel();
+        $record = $model->findLatestValid($phone);
+        if ($record) {
+            $model->update($record['id'], [
+                'is_used'     => 1,
+                'verified_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return $this->success(null, 'Phone verified successfully');
+    }
 }

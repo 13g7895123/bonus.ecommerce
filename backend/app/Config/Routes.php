@@ -51,14 +51,18 @@ $routes->group('api/v1', static function ($routes) {
         // KYC Management
         $routes->get('kyc',                 'AdminPanelController::kycList');
         $routes->post('kyc/(:num)/review',  'AdminPanelController::kycReview/$1');
+        // Phone Verifications
+        $routes->get('phone-verifications', 'AdminPanelController::phoneVerifications');
     });
 
     // ── Auth (Public) ──
     $routes->group('auth', static function ($routes) {
-        $routes->post('register',        'Api\AuthController::register');
-        $routes->post('login',           'Api\AuthController::login');
-        $routes->post('forgot-password', 'Api\AuthController::forgotPassword');
-        $routes->post('reset-password',  'Api\AuthController::resetPassword');
+        $routes->post('register',          'Api\AuthController::register');
+        $routes->post('login',             'Api\AuthController::login');
+        $routes->post('forgot-password',   'Api\AuthController::forgotPassword');
+        $routes->post('reset-password',    'Api\AuthController::resetPassword');
+        $routes->post('send-phone-otp',    'Api\AuthController::sendPhoneOtp');
+        $routes->post('verify-phone-otp',  'Api\AuthController::verifyPhoneOtp');
     });
 
     // ── Users (JWT required) ──

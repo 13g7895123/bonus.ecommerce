@@ -442,6 +442,43 @@ class AdminPanelController extends Controller
         return $this->json(['success' => true]);
     }
 
+    public function phoneVerifications(): ResponseInterface
+    {
+        $model  = new \App\Models\PhoneVerificationModel();
+        $phone  = $this->request->getGet('phone');
+        $status = $this->request->getGet('status');
+        $page   = max(1, (int) ($this->request->getGet('page') ?? 1));
+        $limit  = 50;
+
+        $builder = $model->builder();
+
+        if ($phone) {
+            $builder->like('phone', $phone);
+        }
+
+        $now = date('Y-m-d H:i:s');
+        if ($status === 'verified') {
+            $builder->whereNotNull('verified_at');
+        } elseif ($status === 'pending') {
+            $builder->whereNull('verified_at')->where('expires_at >', $now)->where('is_used', 0);
+        } elseif ($status === 'expired') {
+            $builder->whereNull('verified_at')->where('expires_at <=', $now);
+        } elseif ($status === 'used') {
+            $builder->where('is_used', 1)->whereNull('verified_at');
+        }
+
+        $total  = $builder->countAllResults(false);
+        $offset = ($page - 1) * $limit;
+        $rows   = $builder->orderBy('created_at', 'DESC')->get($limit, $offset)->getResultArray();
+
+        return $this->json([
+            'data'  => $rows,
+            'total' => $total,
+            'page'  => $page,
+            'pages' => ceil($total / $limit),
+        ]);
+    }
+
     // ── HTML Panel ────────────────────────────────────────────────────────────
 
     public function index(): ResponseInterface

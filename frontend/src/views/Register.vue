@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import { useToast } from '../composables/useToast'
@@ -30,6 +30,7 @@ const form = reactive({
   password: '',
   dob: '',
   country: '',
+  dialCode: '',
   phone: '',
   inviteCode: '',
   terms: false
@@ -42,6 +43,7 @@ const fillRandomData = () => {
   form.password = 'password'
   form.dob = getRandomDate()
   form.country = 'TW'
+  form.dialCode = '+886'
   form.phone = getRandomPhone()
   form.terms = true
 }
@@ -53,7 +55,9 @@ const countrySearch = ref('')
 
 const selectedCountryName = computed(() => {
   const c = countries.find(c => c.code === form.country)
-  return c ? getCountryName(c, currentLocale.value) : ''
+  if (!c) return ''
+  const name = getCountryName(c, currentLocale.value)
+  return c.dialCode ? `${name}(${c.dialCode})` : name
 })
 
 const filteredCountries = computed(() => {
@@ -76,32 +80,109 @@ const closeCountryPicker = () => {
 
 const selectCountry = (code) => {
   form.country = code
+  const c = countries.find(c => c.code === code)
+  form.dialCode = c ? c.dialCode : ''
   closeCountryPicker()
 }
 
 const toast = useToast()
 
+// ——— OTP Modal 狀態 ———
+const showOtpModal = ref(false)
+const otpDigits = ref(['', '', '', '', '', ''])
+const otpRefs = []
+const otpLoading = ref(false)
+const otpCountdown = ref(0)
+const registeredUserId = ref(null)
+let otpTimer = null
+
+const otpCode = computed(() => otpDigits.value.join(''))
+
+const startOtpCountdown = () => {
+  otpCountdown.value = 60
+  clearInterval(otpTimer)
+  otpTimer = setInterval(() => {
+    otpCountdown.value--
+    if (otpCountdown.value <= 0) clearInterval(otpTimer)
+  }, 1000)
+}
+
+const onOtpInput = (i) => {
+  otpDigits.value[i] = otpDigits.value[i].replace(/\D/g, '').slice(-1)
+  if (otpDigits.value[i] && i < 5) {
+    nextTick(() => otpRefs[i + 1]?.focus())
+  }
+}
+
+const onOtpKeydown = (e, i) => {
+  if (e.key === 'Backspace' && !otpDigits.value[i] && i > 0) {
+    nextTick(() => otpRefs[i - 1]?.focus())
+  }
+}
+
+const onOtpPaste = (e) => {
+  const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6)
+  for (let j = 0; j < 6; j++) {
+    otpDigits.value[j] = text[j] || ''
+  }
+  nextTick(() => otpRefs[Math.min(text.length, 5)]?.focus())
+}
+
+const closeOtpModal = () => {
+  showOtpModal.value = false
+  otpDigits.value = ['', '', '', '', '', '']
+  clearInterval(otpTimer)
+}
+
+const resendOtp = async () => {
+  try {
+    await api.auth.sendPhoneOtp({ phone: form.dialCode + form.phone, userId: registeredUserId.value })
+    startOtpCountdown()
+    toast.success('驗證碼已重新發送')
+  } catch {
+    toast.error('發送失敗，請稍後再試')
+  }
+}
+
+const submitOtp = async () => {
+  if (otpCode.value.length < 6) return
+  otpLoading.value = true
+  try {
+    await api.auth.verifyPhoneOtp({ phone: form.dialCode + form.phone, code: otpCode.value, userId: registeredUserId.value })
+    closeOtpModal()
+    toast.success('驗證成功！')
+    router.push('/')
+  } catch (e) {
+    toast.error(e.response?.data?.message || '驗證碼錯誤，請重試')
+    otpDigits.value = ['', '', '', '', '', '']
+    nextTick(() => otpRefs[0]?.focus())
+  } finally {
+    otpLoading.value = false
+  }
+}
+// ——————————————————
+
 const handleRegister = async () => {
   if (!form.terms) {
-    toast.error('請同意服務時款及隱私政策')
+    toast.error('請同意服務條款及隱私政策')
     return
   }
-
-  // 簡單驗證
   if (!form.email || !form.password || !form.firstName || !form.lastName) {
     toast.error('請填寫必填欄位')
     return
   }
 
   loading.value = true
-
   try {
-    const response = await api.auth.register({
-      ...form
-    })
-    console.log('Register success:', response)
-    // 註冊成功，導向首頁
-    router.push('/')
+    const response = await api.auth.register({ ...form })
+    registeredUserId.value = response?.data?.id || response?.id || null
+
+    await api.auth.sendPhoneOtp({ phone: form.dialCode + form.phone, userId: registeredUserId.value })
+
+    otpDigits.value = ['', '', '', '', '', '']
+    showOtpModal.value = true
+    startOtpCountdown()
+    nextTick(() => otpRefs[0]?.focus())
   } catch (error) {
     const errObj = error.response?.data || error
     toast.error(errObj.message || '註冊失敗，請稍後再試')
@@ -173,7 +254,17 @@ const handleRegister = async () => {
           </div>
         </div>
         <div class="form-field">
-          <AppInput v-model="form.phone" type="tel" placeholder="手機號碼" />
+          <div class="phone-prefix-wrapper">
+            <span v-if="form.dialCode" class="phone-dial-code">{{ form.dialCode }}</span>
+            <span v-if="form.dialCode" class="phone-dial-sep"></span>
+            <input
+              v-model="form.phone"
+              type="tel"
+              class="phone-number-input"
+              placeholder="手機號碼"
+              inputmode="numeric"
+            />
+          </div>
         </div>
         <div class="form-field">
           <AppInput v-model="form.inviteCode" type="text" placeholder="輸入邀請碼(選填)" />
@@ -222,11 +313,43 @@ const handleRegister = async () => {
           :class="{ selected: form.country === country.code }"
           @click="selectCountry(country.code)"
         >
-          <span>{{ getCountryName(country, currentLocale) }}</span>
+          <span>{{ getCountryName(country, currentLocale) }}{{ country.dialCode ? `(${country.dialCode})` : '' }}</span>
           <svg v-if="form.country === country.code" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d71921" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </li>
         <li v-if="filteredCountries.length === 0" class="country-no-result">查無結果</li>
       </ul>
+    </div>
+  </div>
+
+  <!-- OTP 驗證彈窗 -->
+  <div v-if="showOtpModal" class="otp-overlay" @click.self="closeOtpModal">
+    <div class="otp-modal">
+      <h2 class="otp-title">手機號碼驗證</h2>
+      <p class="otp-subtitle">驗證碼已發送至<br /><strong>{{ form.dialCode }} {{ form.phone }}</strong></p>
+      <div class="otp-inputs">
+        <input
+          v-for="(digit, i) in otpDigits"
+          :key="i"
+          :ref="el => { if (el) otpRefs[i] = el }"
+          v-model="otpDigits[i]"
+          class="otp-box"
+          type="text"
+          inputmode="numeric"
+          maxlength="1"
+          autocomplete="one-time-code"
+          @input="onOtpInput(i)"
+          @keydown="onOtpKeydown($event, i)"
+          @paste.prevent="onOtpPaste($event)"
+        />
+      </div>
+      <div class="otp-resend">
+        <span v-if="otpCountdown > 0" class="otp-countdown">{{ otpCountdown }}秒後可重新發送</span>
+        <span v-else class="otp-resend-link" @click="resendOtp">重新發送驗證碼</span>
+      </div>
+      <AppButton class="otp-confirm-btn" :disabled="otpLoading || otpCode.length < 6" @click="submitOtp" block>
+        {{ otpLoading ? '驗證中...' : '確認' }}
+      </AppButton>
+      <button class="otp-cancel-btn" @click="closeOtpModal">取消</button>
     </div>
   </div>
 </template>
@@ -577,5 +700,144 @@ const handleRegister = async () => {
   text-align: center;
   font-size: 0.9rem;
   color: #aaa;
+}
+
+/* ── 手機號碼前綴 ── */
+.phone-prefix-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 1px solid #a8a8a9;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  min-height: 52px;
+}
+
+.phone-dial-code {
+  font-size: 0.95rem;
+  color: #333;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.phone-dial-sep {
+  width: 1px;
+  height: 20px;
+  background: #ccc;
+  margin: 0 0.75rem;
+  flex-shrink: 0;
+}
+
+.phone-number-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  color: #333;
+  background: transparent;
+  padding: 0.875rem 0;
+}
+
+.phone-number-input::placeholder {
+  color: #676767;
+}
+
+/* ── OTP 驗證彈窗 ── */
+.otp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.otp-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.otp-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #d71921;
+  margin: 0 0 0.5rem;
+}
+
+.otp-subtitle {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.otp-box {
+  width: 44px;
+  height: 52px;
+  border: 1.5px solid #ccc;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  outline: none;
+  transition: border-color 0.15s;
+  background: #f9f9f9;
+}
+
+.otp-box:focus {
+  border-color: #d71921;
+  background: #fff;
+}
+
+.otp-resend {
+  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
+  min-height: 1.5rem;
+}
+
+.otp-countdown {
+  color: #999;
+}
+
+.otp-resend-link {
+  color: #d71921;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.otp-confirm-btn {
+  margin-bottom: 0.75rem;
+}
+
+.otp-cancel-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.otp-cancel-btn:hover {
+  color: #555;
 }
 </style>

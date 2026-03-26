@@ -76,6 +76,27 @@ export class AuthService extends BaseService {
     return this._post('/forgot-password', { email: emailOrPhone });
   }
 
+  async sendPhoneOtp(data) {
+    if (this.useMock) {
+      return this._post('/send-phone-otp', data, async () => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return { message: 'OTP 已發送' };
+      });
+    }
+    return this._post('/send-phone-otp', data);
+  }
+
+  async verifyPhoneOtp(data) {
+    if (this.useMock) {
+      return this._post('/verify-phone-otp', data, async () => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // Mock: 任何6位數均通過
+        return { message: '驗證成功' };
+      });
+    }
+    return this._post('/verify-phone-otp', data);
+  }
+
   /* 登出 */
   logout() {
     localStorage.removeItem('token');

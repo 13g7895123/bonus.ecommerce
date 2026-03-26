@@ -67,3 +67,11 @@
 #--------------------------------------------------------------------
 
 # logger.threshold = 4
+
+#--------------------------------------------------------------------
+# TWILIO
+#--------------------------------------------------------------------
+
+TWILIO_ACCOUNT_SID        = ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN         = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_VERIFY_SERVICE_SID = VSxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
