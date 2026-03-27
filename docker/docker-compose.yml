@@ -40,6 +40,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRE: ${JWT_EXPIRE:-86400}
+      SMS_PROVIDER: ${SMS_PROVIDER:-twilio}
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
       TWILIO_VERIFY_SERVICE_SID: ${TWILIO_VERIFY_SERVICE_SID:-}
@@ -56,6 +57,7 @@ services:
         echo 'database.default.port = 3306' >> /var/www/html/.env &&
         echo 'JWT_SECRET = ${JWT_SECRET}' >> /var/www/html/.env &&
         echo 'JWT_EXPIRE = ${JWT_EXPIRE:-86400}' >> /var/www/html/.env &&
+        echo 'SMS_PROVIDER = ${SMS_PROVIDER:-twilio}' >> /var/www/html/.env &&
         echo 'TWILIO_ACCOUNT_SID = ${TWILIO_ACCOUNT_SID}' >> /var/www/html/.env &&
         echo 'TWILIO_AUTH_TOKEN = ${TWILIO_AUTH_TOKEN}' >> /var/www/html/.env &&
         echo 'TWILIO_VERIFY_SERVICE_SID = ${TWILIO_VERIFY_SERVICE_SID}' >> /var/www/html/.env &&

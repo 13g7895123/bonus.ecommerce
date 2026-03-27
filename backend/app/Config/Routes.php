@@ -19,6 +19,10 @@ $routes->group('api/v1', static function ($routes) {
         $routes->get('api-logs/(:num)',              'SadminController::apiLogDetail/$1');
         $routes->get('third-party-logs',             'SadminController::thirdPartyLogs');
         $routes->get('third-party-logs/(:num)',      'SadminController::thirdPartyLogDetail/$1');
+        // SMS Provider
+        $routes->get('sms-provider',                 'SadminController::smsProviderInfo');
+        $routes->post('sms-provider',                'SadminController::setSmsProvider');
+        $routes->delete('sms-provider',              'SadminController::resetSmsProvider');
     });
 
     // ── Admin Panel (免登入後台) ──

@@ -1,15 +1,41 @@
-<!-- 已移至 /sadmin/sms-provider -->
-<template><div></div></template>
+<template>
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">SMS / OTP 提供者設定</span>
+    </div>
+
+    <!-- 來源狀態 -->
+    <div class="source-banner" :class="info.source === 'db' ? 'source-db' : 'source-env'">
+      <div class="source-info">
+        <span class="source-dot"></span>
+        <span v-if="info.source === 'db'">
+          目前使用 <strong>DB Override</strong>：{{ label(info.active) }}
+          <span class="source-hint">（.env 預設為 {{ label(info.env_value) }}）</span>
+        </span>
+        <span v-else>
+          目前使用 <strong>.env 預設</strong>：{{ label(info.active) }}
+          <span class="source-hint">（尚未設定 DB override）</span>
+        </span>
+      </div>
+      <button
+        v-if="info.source === 'db'"
+        class="btn btn-outline btn-sm"
+        :disabled="resetting"
+        @click="resetToEnv"
+      >
+        <RotateCcw :size="13" />{{ resetting ? '重設中...' : '清除 Override，回復 .env' }}
+      </button>
+    </div>
 
     <!-- 提供者選擇 -->
     <div class="content-block">
       <div class="content-block-header">
         <div>
-          <div class="cb-title">目前使用的簡訊提供者</div>
-          <div class="cb-desc">切換後，所有新的 OTP 發送請求都會使用選定的提供者</div>
+          <div class="cb-title">選擇要套用的提供者</div>
+          <div class="cb-desc">儲存後會寫入 DB override，優先於 .env 設定</div>
         </div>
         <button class="btn btn-primary" :disabled="savingProvider" @click="saveProvider">
-          <Save :size="14" /> {{ savingProvider ? '儲存中...' : '儲存設定' }}
+          <Save :size="14" /> {{ savingProvider ? '儲存中...' : '套用為 DB Override' }}
         </button>
       </div>
 
@@ -26,7 +52,7 @@
             <div class="provider-name">Twilio Verify</div>
             <div class="provider-desc">全球主流電信簡訊服務，由 Twilio 管理驗證碼，支援短信與語音通話</div>
           </div>
-          <span v-if="currentProvider === 'twilio'" class="badge-active">使用中</span>
+          <span v-if="info.active === 'twilio'" class="badge-active">使用中</span>
         </div>
 
         <div
@@ -41,7 +67,7 @@
             <div class="provider-name">Firebase Authentication</div>
             <div class="provider-desc">Google Firebase 電話驗證，由前端 SDK 處理 reCAPTCHA，後端負責最終驗證</div>
           </div>
-          <span v-if="currentProvider === 'firebase'" class="badge-active">使用中</span>
+          <span v-if="info.active === 'firebase'" class="badge-active">使用中</span>
         </div>
       </div>
     </div>
@@ -152,22 +178,19 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Save } from 'lucide-vue-next'
-import axios from 'axios'
-import config from '../../services/config'
+import { Save, RotateCcw } from 'lucide-vue-next'
 
 const selectedProvider = ref('twilio')
-const currentProvider  = ref('twilio')
+const info             = ref({ env_value: 'twilio', db_override: null, active: 'twilio', source: 'env' })
 const savingProvider   = ref(false)
-
-const api = axios.create({ baseURL: config.apiUrl })
+const resetting        = ref(false)
 
 onMounted(async () => {
   try {
-    const res = await api.get('/admin-panel/config/sms_provider')
-    const val = res.data?.value ?? res.data?.data?.value ?? 'twilio'
-    selectedProvider.value = val
-    currentProvider.value  = val
+    const res = await fetch('/api/v1/sadmin/sms-provider')
+    const data = await res.json()
+    info.value = data
+    selectedProvider.value = data.active
   } catch {
     // 保持預設值
   }
@@ -176,18 +199,57 @@ onMounted(async () => {
 const saveProvider = async () => {
   savingProvider.value = true
   try {
-    await api.post('/admin-panel/config/sms_provider', { value: selectedProvider.value })
-    currentProvider.value = selectedProvider.value
-    alert(`已切換為 ${selectedProvider.value === 'firebase' ? 'Firebase Authentication' : 'Twilio Verify'}`)
-  } catch {
-    alert('儲存失敗，請稍後再試')
-  } finally {
-    savingProvider.value = false
-  }
+    const res  = await fetch('/api/v1/sadmin/sms-provider', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: selectedProvider.value }),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.message || '儲存失敗'); return }
+    info.value = { ...info.value, db_override: selectedProvider.value, active: selectedProvider.value, source: 'db' }
+    alert(`已套用 DB override：${label(selectedProvider.value)}`)
+  } catch { alert('儲存失敗，請稍後再試') }
+  finally { savingProvider.value = false }
 }
+
+const resetToEnv = async () => {
+  if (!confirm(`確定要清除 DB override，回復使用 .env 預設（${label(info.value.env_value)}）嗎？`)) return
+  resetting.value = true
+  try {
+    const res  = await fetch('/api/v1/sadmin/sms-provider', { method: 'DELETE' })
+    const data = await res.json()
+    if (!res.ok) { alert(data.message || '重設失敗'); return }
+    info.value = { ...info.value, db_override: null, active: info.value.env_value, source: 'env' }
+    selectedProvider.value = info.value.env_value
+    alert(`已重設為 .env 預設：${label(info.value.env_value)}`)
+  } catch { alert('重設失敗，請稍後再試') }
+  finally { resetting.value = false }
+}
+
+const label = (p) => p === 'firebase' ? 'Firebase Authentication' : 'Twilio Verify'
 </script>
 
 <style scoped>
+.source-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+}
+.source-env { background: #f0fdf4; border-bottom: 1px solid #bbf7d0; color: #166534; }
+.source-db  { background: #fefce8; border-bottom: 1px solid #fde68a; color: #92400e; }
+.source-info { display: flex; align-items: center; gap: 0.5rem; }
+.source-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.source-hint { opacity: 0.7; font-size: 0.8rem; }
 .provider-cards {
   display: flex;
   gap: 1rem;

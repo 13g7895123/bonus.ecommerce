@@ -45,7 +45,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Activity, Globe, BarChart2, Home, ChevronLeft, ChevronRight, Shield } from 'lucide-vue-next'
+import { Activity, Globe, BarChart2, Home, ChevronLeft, ChevronRight, Shield, MessageSquare } from 'lucide-vue-next'
 
 const router = useRouter()
 const route  = useRoute()
@@ -53,9 +53,10 @@ const route  = useRoute()
 const sidebarCollapsed = ref(false)
 
 const navItems = [
-  { key: 'overview',         label: '總覽統計',       icon: BarChart2 },
-  { key: 'api-logs',         label: '所有 API 紀錄',  icon: Activity },
-  { key: 'third-party-logs', label: '第三方 API 紀錄', icon: Globe },
+  { key: 'overview',         label: '總覽統計',        icon: BarChart2 },
+  { key: 'api-logs',         label: '所有 API 紀錄',   icon: Activity },
+  { key: 'third-party-logs', label: '第三方 API 紀錄',  icon: Globe },
+  { key: 'sms-provider',     label: 'SMS 提供者設定',   icon: MessageSquare },
 ]
 
 const isActive       = (key) => route.path === `/sadmin/${key}`

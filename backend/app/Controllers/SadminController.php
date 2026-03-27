@@ -2,8 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Models\AppConfigModel;
 use App\Repositories\ApiLogRepository;
 use App\Repositories\ThirdPartyLogRepository;
+use App\Services\OtpProviderFactory;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -107,4 +109,49 @@ class SadminController extends Controller
         }
         return $this->json($log);
     }
-}
+
+    // ── SMS Provider ──────────────────────────────────────────────────────────
+
+    public function smsProviderInfo(): ResponseInterface
+    {
+        $dbOverride  = OtpProviderFactory::dbOverride();
+        $envProvider = OtpProviderFactory::envProvider();
+        $active      = OtpProviderFactory::activeProvider();
+
+        return $this->json([
+            'env_value'   => $envProvider,
+            'db_override' => $dbOverride,
+            'active'      => $active,
+            'source'      => $dbOverride !== null ? 'db' : 'env',
+        ]);
+    }
+
+    public function setSmsProvider(): ResponseInterface
+    {
+        $data     = $this->request->getJSON(true) ?? [];
+        $provider = trim($data['provider'] ?? '');
+
+        if (!in_array($provider, ['twilio', 'firebase'], true)) {
+            return $this->json(['message' => 'Invalid provider. Must be twilio or firebase.'], 400);
+        }
+
+        model(AppConfigModel::class)->setByKey('sms_provider', $provider);
+
+        return $this->json([
+            'success'  => true,
+            'active'   => $provider,
+            'source'   => 'db',
+        ]);
+    }
+
+    public function resetSmsProvider(): ResponseInterface
+    {
+        OtpProviderFactory::clearDbOverride();
+        $envProvider = OtpProviderFactory::envProvider();
+
+        return $this->json([
+            'success'  => true,
+            'active'   => $envProvider,
+            'source'   => 'env',
+        ]);
+    }
