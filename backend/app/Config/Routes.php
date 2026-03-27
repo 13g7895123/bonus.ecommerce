@@ -28,6 +28,12 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('topmessage-config',           'SadminController::saveTopmessageConfig');
         // SMS Logs
         $routes->get('sms-logs',                     'SadminController::smsLogs');
+        // SMS Security Settings
+        $routes->get('sms-security',                 'SadminController::smsSecurityConfig');
+        $routes->post('sms-security',                'SadminController::saveSmsSecurityConfig');
+        $routes->get('sms-security/blocked-ips',     'SadminController::smsBlockedIps');
+        $routes->post('sms-security/unblock',        'SadminController::smsUnblockIp');
+        $routes->delete('sms-security/rate-limits',  'SadminController::smsClearRateLimits');
     });
 
     // ── Admin Panel (免登入後台) ──

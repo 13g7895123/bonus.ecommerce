@@ -39,6 +39,7 @@ import SadminApiLogs from '../views/sadmin/SadminApiLogs.vue'
 import SadminThirdPartyLogs from '../views/sadmin/SadminThirdPartyLogs.vue'
 import SadminSmsProvider from '../views/sadmin/SadminSmsProvider.vue'
 import SadminSmsLogs from '../views/sadmin/SadminSmsLogs.vue'
+import SadminSmsSettings from '../views/sadmin/SadminSmsSettings.vue'
 import CountryLanguageSettings from '../views/CountryLanguageSettings.vue'
 
 const routes = [
@@ -77,6 +78,7 @@ const routes = [
       { path: 'api-logs',         name: 'SadminApiLogs',          component: SadminApiLogs },
       { path: 'third-party-logs', name: 'SadminThirdPartyLogs',   component: SadminThirdPartyLogs },
       { path: 'sms-logs',         name: 'SadminSmsLogs',          component: SadminSmsLogs },
+      { path: 'sms-settings',     name: 'SadminSmsSettings',      component: SadminSmsSettings },
       { path: 'sms-provider',     name: 'SadminSmsProvider',      component: SadminSmsProvider },
     ],
   },

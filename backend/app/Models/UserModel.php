@@ -20,4 +20,9 @@ class UserModel extends Model
     {
         return $this->where('email', $email)->first();
     }
+
+    public function findByPhone(string $phone): ?array
+    {
+        return $this->where('phone', $phone)->first();
+    }
 }

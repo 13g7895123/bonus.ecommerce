@@ -19,6 +19,14 @@ class AuthService
             return ['success' => false, 'message' => 'Email already registered'];
         }
 
+        // 有填入手機號碼時，確認該號碼尚未被其他帳號使用
+        if (!empty($data['phone'])) {
+            $existing = (new \App\Models\UserModel())->findByPhone($data['phone']);
+            if ($existing) {
+                return ['success' => false, 'message' => '此手機號碼已被其他帳號使用'];
+            }
+        }
+
         $userId = $this->userRepo->create([
             'email'         => $data['email'],
             'password_hash' => password_hash($data['password'], PASSWORD_BCRYPT),

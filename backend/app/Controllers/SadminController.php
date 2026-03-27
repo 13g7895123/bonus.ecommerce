@@ -6,6 +6,7 @@ use App\Models\AppConfigModel;
 use App\Repositories\ApiLogRepository;
 use App\Repositories\ThirdPartyLogRepository;
 use App\Services\OtpProviderFactory;
+use App\Services\SmsRateLimiter;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -234,6 +235,85 @@ class SadminController extends Controller
         $result = (new ThirdPartyLogRepository())->paginate($page, $limit, $filters);
 
         return $this->json(['page' => $page, 'limit' => $limit, ...$result]);
+    }
+
+    // ── SMS Security Settings ─────────────────────────────────────────────────
+
+    public function smsSecurityConfig(): ResponseInterface
+    {
+        $rl     = new SmsRateLimiter();
+        $config = $rl->getConfig();
+
+        return $this->json([
+            'enabled' => $config['enabled'],
+            'window'  => $config['window'],
+            'max'     => $config['max'],
+            'block'   => $config['block'],
+        ]);
+    }
+
+    public function saveSmsSecurityConfig(): ResponseInterface
+    {
+        $data    = $this->request->getJSON(true) ?? [];
+        $model   = model(AppConfigModel::class);
+
+        $enabled = isset($data['enabled']) ? ($data['enabled'] ? '1' : '0') : null;
+        $window  = isset($data['window'])  ? (int) $data['window']  : null;
+        $max     = isset($data['max'])     ? (int) $data['max']     : null;
+        $block   = isset($data['block'])   ? (int) $data['block']   : null;
+
+        if ($enabled !== null) {
+            $model->setByKey('sms_rate_limit_enabled', $enabled);
+        }
+        if ($window !== null) {
+            if ($window < 1 || $window > 1440) {
+                return $this->json(['message' => '時間窗口需介於 1～1440 分鐘'], 400);
+            }
+            $model->setByKey('sms_rate_limit_window', (string) $window);
+        }
+        if ($max !== null) {
+            if ($max < 1 || $max > 100) {
+                return $this->json(['message' => '最大發送次數需介於 1～100'], 400);
+            }
+            $model->setByKey('sms_rate_limit_max', (string) $max);
+        }
+        if ($block !== null) {
+            if ($block < 1 || $block > 10080) {
+                return $this->json(['message' => '封鎖時間需介於 1～10080 分鐘'], 400);
+            }
+            $model->setByKey('sms_rate_limit_block', (string) $block);
+        }
+
+        return $this->json(['success' => true, 'message' => 'SMS 安全設定已儲存']);
+    }
+
+    public function smsBlockedIps(): ResponseInterface
+    {
+        $blocked = SmsRateLimiter::blockedIps();
+        return $this->json(['items' => $blocked, 'total' => count($blocked)]);
+    }
+
+    public function smsUnblockIp(): ResponseInterface
+    {
+        $data = $this->request->getJSON(true) ?? [];
+        $ip   = trim($data['ip'] ?? '');
+
+        if (!$ip) {
+            return $this->json(['message' => 'IP 不可為空'], 400);
+        }
+
+        $ok = SmsRateLimiter::unblockIp($ip);
+        if (!$ok) {
+            return $this->json(['message' => '查無此 IP 紀錄'], 404);
+        }
+
+        return $this->json(['success' => true, 'message' => "已解封 {$ip}"]);
+    }
+
+    public function smsClearRateLimits(): ResponseInterface
+    {
+        $count = SmsRateLimiter::clearAll();
+        return $this->json(['success' => true, 'cleared' => $count, 'message' => "已清除 {$count} 筆速率限制紀錄"]);
     }
 
 }

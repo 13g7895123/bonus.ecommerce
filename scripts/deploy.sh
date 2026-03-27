@@ -150,4 +150,49 @@ fi
 echo "Starting [$ENV] environment ..."
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build
 
-echo "Done. Containers are running."
+echo ""
+
+# ─── 偵測 Migration 變更並執行 ──────────────────────────────────────────────
+echo "Checking for migration changes ..."
+
+MIGRATION_CHANGED=false
+
+# 利用 git diff 偵測 Migrations 目錄是否在本次部署中有異動
+# HEAD@{1} 為 git pull 前的版本，HEAD 為目前最新版本
+if git -C "$PROJECT_DIR" rev-parse HEAD@{1} &>/dev/null 2>&1; then
+  CHANGED_FILES=$(git -C "$PROJECT_DIR" diff --name-only HEAD@{1} HEAD -- backend/app/Database/Migrations/ 2>/dev/null)
+  if [ -n "$CHANGED_FILES" ]; then
+    MIGRATION_CHANGED=true
+    FILE_COUNT=$(echo "$CHANGED_FILES" | wc -l | tr -d ' ')
+    echo "  [DETECT] ${FILE_COUNT} migration file(s) changed:"
+    echo "$CHANGED_FILES" | sed 's/^/           - /'
+  else
+    echo "  [OK] No migration changes detected, skipping."
+  fi
+else
+  # 無法取得前一版本（首次部署或 shallow clone），保守地執行 migration
+  MIGRATION_CHANGED=true
+  echo "  [INFO] Cannot determine previous commit state — will run migration to ensure up-to-date."
+fi
+
+if [ "$MIGRATION_CHANGED" = true ]; then
+  echo "Running database migrations ..."
+
+  # 等待 backend 容器就緒（最多 60 秒）
+  BACKEND_CONTAINER=""
+  for i in $(seq 1 60); do
+    BACKEND_CONTAINER=$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps -q backend 2>/dev/null | head -1)
+    [ -n "$BACKEND_CONTAINER" ] && break
+    sleep 1
+  done
+
+  if [ -n "$BACKEND_CONTAINER" ]; then
+    docker exec "$BACKEND_CONTAINER" php spark migrate --all
+    echo "  [OK] Migration completed."
+  else
+    echo "  [WARN] Backend container not found — migrations will be applied on next container startup."
+  fi
+fi
+echo ""
+
+echo "Deploy completed. Containers are running."

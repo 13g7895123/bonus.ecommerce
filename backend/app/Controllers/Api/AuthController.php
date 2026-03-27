@@ -71,16 +71,34 @@ class AuthController extends BaseApiController
 
     public function otpProvider()
     {
-        $provider = \App\Services\OtpProviderFactory::currentProvider();
+        $provider = \App\Services\OtpProviderFactory::activeProvider();
         return $this->success(['provider' => $provider]);
     }
 
+    public function sendPhoneOtp()
     {
         $data  = $this->getJson();
         $phone = trim($data['phone'] ?? '');
 
         if (!$phone) {
             return $this->error('Phone number is required', 422);
+        }
+
+        // 防濫用 1：手機號碼是否已被他人註冊
+        if ((new \App\Models\UserModel())->findByPhone($phone)) {
+            return $this->error('此手機號碼已被註冊，請使用其他號碼', 422);
+        }
+
+        // 防濫用 2：IP 速率限制
+        $ip    = $this->request->getIPAddress();
+        $rl    = new \App\Services\SmsRateLimiter();
+        $check = $rl->checkAndRecord($ip);
+        if (!$check['allowed']) {
+            $headers = ['Retry-After' => (string) ($check['retry_after'] ?? 1800)];
+            foreach ($headers as $k => $v) {
+                $this->response->setHeader($k, $v);
+            }
+            return $this->error($check['message'], 429);
         }
 
         $provider = \App\Services\OtpProviderFactory::make();
@@ -98,7 +116,7 @@ class AuthController extends BaseApiController
         }
 
         return $this->success(
-            ['provider' => \App\Services\OtpProviderFactory::currentProvider()],
+            ['provider' => \App\Services\OtpProviderFactory::activeProvider()],
             'OTP sent successfully'
         );
     }
