@@ -2,32 +2,38 @@
 
 namespace App\Services;
 
+use App\Models\PhoneVerificationModel;
+
 /**
- * TwilioService - 使用 Twilio Verify API 發送與驗證 OTP
+ * TwilioService - 使用 Twilio Verify API 發送與驗證 OTP，並將操作紀錄儲存至 phone_verifications 資料表
  *
  * 需要在 .env 設定：
- *   TWILIO_ACCOUNT_SID      = ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
- *   TWILIO_AUTH_TOKEN       = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ *   TWILIO_ACCOUNT_SID        = ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ *   TWILIO_AUTH_TOKEN         = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
  *   TWILIO_VERIFY_SERVICE_SID = VSxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
  *
  * 如何取得 Verify Service SID：
  *   Twilio Console → Verify → Services → Create new Service → 複製 Service SID
+ *
+ * 備註：Twilio Verify 由 Twilio 管理實際驗證碼內容，資料庫 code 欄位固定儲存 'TWILIO_VERIFY' 作為識別。
  */
 class TwilioService
 {
     private string $accountSid;
     private string $authToken;
     private string $verifyServiceSid;
+    private PhoneVerificationModel $model;
 
     public function __construct()
     {
         $this->accountSid       = env('TWILIO_ACCOUNT_SID', '');
         $this->authToken        = env('TWILIO_AUTH_TOKEN', '');
         $this->verifyServiceSid = env('TWILIO_VERIFY_SERVICE_SID', '');
+        $this->model            = new PhoneVerificationModel();
     }
 
     /**
-     * 發送 OTP 驗證碼（透過 Twilio Verify）
+     * 發送 OTP 驗證碼（透過 Twilio Verify），並寫入 phone_verifications 紀錄
      *
      * @param string $to      收件電話（E.164 格式，例如 +886912345678）
      * @param string $channel 發送管道：sms（預設）或 call
@@ -39,6 +45,8 @@ class TwilioService
             return ['success' => false, 'message' => 'Twilio 設定不完整，請確認 .env 中的 TWILIO_* 環境變數'];
         }
 
+        $to = $this->normalizeE164($to);
+
         $url = sprintf(
             'https://verify.twilio.com/v2/Services/%s/Verifications',
             $this->verifyServiceSid
@@ -46,20 +54,36 @@ class TwilioService
 
         $result = $this->curlPost($url, ['To' => $to, 'Channel' => $channel]);
 
-        log_message('error', '[TwilioService] sendOtp To=' . $to . ' HTTP=' . $result['http_code'] . ' Body=' . json_encode($result['body']));
+        log_message('info', '[TwilioService] sendOtp To=' . $to . ' HTTP=' . $result['http_code']);
 
-        if ($result['http_code'] === 201) {
-            return ['success' => true, 'message' => '驗證碼已發送'];
+        if ($result['http_code'] !== 201) {
+            $errorMsg = $result['body']['message'] ?? ('簡訊發送失敗（HTTP ' . $result['http_code'] . '）');
+            log_message('error', '[TwilioService] sendOtp failed: ' . json_encode($result['body']));
+            return ['success' => false, 'message' => $errorMsg];
         }
 
-        $errorMsg = $result['body']['message'] ?? ('簡訊發送失敗（HTTP ' . $result['http_code'] . '）');
-        log_message('error', '[TwilioService] sendOtp failed: ' . json_encode($result['body']));
+        // 將此號碼舊的未使用紀錄標記為已失效
+        $this->model
+            ->where('phone', $to)
+            ->where('is_used', 0)
+            ->set(['is_used' => 1])
+            ->update();
 
-        return ['success' => false, 'message' => $errorMsg];
+        // 建立新的發送紀錄（code 欄位以固定識別字串替代，實際碼由 Twilio 管理）
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+        $this->model->insert([
+            'phone'      => $to,
+            'code'       => 'TWILIO_VERIFY',
+            'attempts'   => 0,
+            'is_used'    => 0,
+            'expires_at' => $expiresAt,
+        ]);
+
+        return ['success' => true, 'message' => '驗證碼已發送'];
     }
 
     /**
-     * 驗證使用者輸入的 OTP
+     * 驗證使用者輸入的 OTP（透過 Twilio Verify），並更新 phone_verifications 紀錄
      *
      * @param string $to   收件電話（E.164 格式）
      * @param string $code 使用者輸入的 6 位數驗證碼
@@ -71,6 +95,14 @@ class TwilioService
             return ['success' => false, 'message' => 'Twilio 設定不完整'];
         }
 
+        $to = $this->normalizeE164($to);
+
+        // 更新嘗試次數（從資料庫找到此號碼最新的有效紀錄）
+        $record = $this->model->findLatestValid($to);
+        if ($record) {
+            $this->model->update($record['id'], ['attempts' => (int) $record['attempts'] + 1]);
+        }
+
         $url = sprintf(
             'https://verify.twilio.com/v2/Services/%s/VerificationCheck',
             $this->verifyServiceSid
@@ -78,9 +110,16 @@ class TwilioService
 
         $result = $this->curlPost($url, ['To' => $to, 'Code' => $code]);
 
-        log_message('error', '[TwilioService] verifyOtp To=' . $to . ' Code=' . $code . ' HTTP=' . $result['http_code'] . ' Body=' . json_encode($result['body']));
+        log_message('info', '[TwilioService] verifyOtp To=' . $to . ' HTTP=' . $result['http_code']);
 
         if ($result['http_code'] === 200 && ($result['body']['status'] ?? '') === 'approved') {
+            // 驗證成功，標記紀錄並記錄時間
+            if ($record) {
+                $this->model->update($record['id'], [
+                    'is_used'     => 1,
+                    'verified_at' => date('Y-m-d H:i:s'),
+                ]);
+            }
             return ['success' => true, 'message' => '驗證成功'];
         }
 
@@ -108,12 +147,10 @@ class TwilioService
 
     /**
      * 將電話號碼正規化為 E.164 格式
-     * 公式：去除國碼後的前置 0
-     * 例： +8860912345678 → +886912345678
+     * 例：+8860912345678 → +886912345678
      */
     private function normalizeE164(string $phone): string
     {
-        // 匹配：+国碼（0）號碼 → +国碼號碼
         return preg_replace('/^(\+\d{1,4})0(\d{6,11})$/', '$1$2', $phone);
     }
 

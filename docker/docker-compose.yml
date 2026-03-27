@@ -38,6 +38,11 @@ services:
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE:-86400}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_VERIFY_SERVICE_SID: ${TWILIO_VERIFY_SERVICE_SID:-}
     command: >
       /bin/bash -c "
         composer install --no-interaction &&
@@ -50,6 +55,9 @@ services:
         echo 'database.default.port = 3306' >> /var/www/html/.env &&
         echo 'JWT_SECRET = ${JWT_SECRET}' >> /var/www/html/.env &&
         echo 'JWT_EXPIRE = ${JWT_EXPIRE:-86400}' >> /var/www/html/.env &&
+        echo 'TWILIO_ACCOUNT_SID = ${TWILIO_ACCOUNT_SID}' >> /var/www/html/.env &&
+        echo 'TWILIO_AUTH_TOKEN = ${TWILIO_AUTH_TOKEN}' >> /var/www/html/.env &&
+        echo 'TWILIO_VERIFY_SERVICE_SID = ${TWILIO_VERIFY_SERVICE_SID}' >> /var/www/html/.env &&
         php spark migrate --all &&
         php spark db:seed InitialDataSeeder &&
         chown -R www-data:www-data writable &&

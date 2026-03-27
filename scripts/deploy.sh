@@ -15,9 +15,38 @@ if [ ! -f "$ENV_TEMPLATE" ]; then
   exit 1
 fi
 
-# 每次都從對應環境的範本更新 docker/.env
+# 從範本同步 docker/.env，但保留後端 .env 中已填寫的 SMS API 憑證
 echo "Syncing .env from $ENV_TEMPLATE ..."
+
+# 定義需要智慧保留的 SMS API 金鑰清單（存在且非空則不覆蓋）
+SMS_KEYS=(TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_VERIFY_SERVICE_SID)
+
+# 備份舊的 .env（已有值）
+OLD_ENV_TMP="${ENV_FILE}.pre_deploy.$$"
+[ -f "$ENV_FILE" ] && cp "$ENV_FILE" "$OLD_ENV_TMP"
+
+# 以範本為基礎覆蓋 .env
 cp "$ENV_TEMPLATE" "$ENV_FILE"
+
+# 對 SMS API 金鑰執行智慧合併：舊值非空則保留，否則使用範本值
+if [ -f "$OLD_ENV_TMP" ]; then
+  for key in "${SMS_KEYS[@]}"; do
+    old_val=$(grep "^${key}=" "$OLD_ENV_TMP" | head -1 | cut -d'=' -f2-)
+    if [ -n "$old_val" ]; then
+      # 舊值存在且非空 → 保留
+      if grep -q "^${key}=" "$ENV_FILE"; then
+        sed -i "s|^${key}=.*|${key}=${old_val}|" "$ENV_FILE"
+      else
+        echo "${key}=${old_val}" >> "$ENV_FILE"
+      fi
+      echo "  [preserve] ${key} (existing value kept)"
+    else
+      # 舊值不存在或為空 → 使用範本值（已由 cp 寫入）
+      echo "  [template] ${key} (using template value)"
+    fi
+  done
+  rm -f "$OLD_ENV_TMP"
+fi
 
 echo "Starting [$ENV] environment ..."
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build
