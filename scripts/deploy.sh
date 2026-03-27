@@ -15,14 +15,11 @@ if [ ! -f "$ENV_TEMPLATE" ]; then
   exit 1
 fi
 
-# ─── 檢查專案是否正在運行，若是則完整停止（含網路移除）─────────────────────
-RUNNING=$(docker compose --env-file "${ENV_FILE:-$ENV_TEMPLATE}" -f "$COMPOSE_FILE" ps -q 2>/dev/null | wc -l)
-if [ "$RUNNING" -gt 0 ]; then
-  echo "Project is currently running. Stopping all containers and removing networks ..."
-  docker compose --env-file "${ENV_FILE:-$ENV_TEMPLATE}" -f "$COMPOSE_FILE" down --remove-orphans
-  echo "Project stopped and networks removed."
-  echo ""
-fi
+# ─── 無條件完整停止本專案（含 stopped 狀態的容器與網路）────────────────────
+echo "Stopping and removing all project containers and networks ..."
+docker compose --env-file "${ENV_FILE:-$ENV_TEMPLATE}" -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+echo "Cleanup done."
+echo ""
 
 # ─── 從範本同步 docker/.env，但保留後端 .env 中已填寫的 SMS API 憑證 ─────────
 echo "Syncing .env from $ENV_TEMPLATE ..."
