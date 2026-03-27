@@ -43,6 +43,7 @@ services:
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
       TWILIO_VERIFY_SERVICE_SID: ${TWILIO_VERIFY_SERVICE_SID:-}
+      FIREBASE_WEB_API_KEY: ${FIREBASE_WEB_API_KEY:-}
     command: >
       /bin/bash -c "
         composer install --no-interaction &&
@@ -58,6 +59,7 @@ services:
         echo 'TWILIO_ACCOUNT_SID = ${TWILIO_ACCOUNT_SID}' >> /var/www/html/.env &&
         echo 'TWILIO_AUTH_TOKEN = ${TWILIO_AUTH_TOKEN}' >> /var/www/html/.env &&
         echo 'TWILIO_VERIFY_SERVICE_SID = ${TWILIO_VERIFY_SERVICE_SID}' >> /var/www/html/.env &&
+        echo 'FIREBASE_WEB_API_KEY = ${FIREBASE_WEB_API_KEY}' >> /var/www/html/.env &&
         php spark migrate --all &&
         php spark db:seed InitialDataSeeder &&
         chown -R www-data:www-data writable &&
@@ -94,3 +96,10 @@ services:
 
 volumes:
   db_data:
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.99.0.0/24

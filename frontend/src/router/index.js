@@ -31,6 +31,7 @@ import AdminRewardOrders from '../views/admin/AdminRewardOrders.vue'
 import AdminMileageCodes from '../views/admin/AdminMileageCodes.vue'
 import AdminContent from '../views/admin/AdminContent.vue'
 import AdminPhoneVerifications from '../views/admin/AdminPhoneVerifications.vue'
+import AdminSmsProvider from '../views/admin/AdminSmsProvider.vue'
 import CountryLanguageSettings from '../views/CountryLanguageSettings.vue'
 
 const routes = [
@@ -57,6 +58,7 @@ const routes = [
       { path: 'mileage-codes',   name: 'AdminMileageCodes',   component: AdminMileageCodes },
       { path: 'content',              name: 'AdminContent',             component: AdminContent },
       { path: 'phone-verifications',  name: 'AdminPhoneVerifications',  component: AdminPhoneVerifications },
+      { path: 'sms-provider',         name: 'AdminSmsProvider',         component: AdminSmsProvider },
     ],
   },
   {

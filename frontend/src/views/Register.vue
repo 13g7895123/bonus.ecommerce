@@ -16,6 +16,7 @@ import {
 } from '../utils/random'
 import { countries, getCountryName } from '../utils/countries'
 import { useI18n } from 'vue-i18n'
+import { firebaseSendOtp } from '../services/FirebaseService'
 
 const { locale } = useI18n()
 const currentLocale = computed(() => locale.value)
@@ -140,13 +141,52 @@ const closeOtpModal = () => {
 
 const resendOtp = async () => {
   try {
-    await api.auth.sendPhoneOtp({ phone: fullPhone.value })
+    await sendPhoneOtpByProvider()
     startOtpCountdown()
     toast.success('驗證碼已重新發送')
   } catch {
     toast.error('發送失敗，請稍後再試')
   }
 }
+
+/**
+ * 依目前 SMS 提供者發送 OTP
+ *  - Twilio：直接呼叫後端 sendPhoneOtp，後端負責發送
+ *  - Firebase：先用 Firebase SDK 觸發簡訊，再將 verificationId 回傳後端儲存
+ */
+const sendPhoneOtpByProvider = async () => {
+  // 取得目前提供者（後端 config，結果快取於 localStorage 5 分鐘）
+  const provider = await getOtpProvider()
+
+  if (provider === 'firebase') {
+    // Firebase：前端觸發簡訊，回傳 verificationId 給後端
+    const verificationId = await firebaseSendOtp(fullPhone.value, 'firebase-recaptcha')
+    await api.auth.sendPhoneOtp({ phone: fullPhone.value, session_info: verificationId })
+  } else {
+    // Twilio（或其他預設）：後端直接發送
+    await api.auth.sendPhoneOtp({ phone: fullPhone.value })
+  }
+}
+
+/** 取得 OTP 提供者（帶 5 分鐘 localStorage 快取） */
+const getOtpProvider = async () => {
+  const CACHE_KEY = 'otp_provider_cache'
+  const TTL       = 5 * 60 * 1000 // 5 分鐘
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
+    if (cached && Date.now() - cached.ts < TTL) return cached.value
+  } catch (_) {}
+
+  try {
+    const res      = await api.auth.otpProvider()
+    const provider = res?.provider ?? 'twilio'
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ value: provider, ts: Date.now() }))
+    return provider
+  } catch (_) {
+    return 'twilio'
+  }
+}
+
 
 const submitOtp = async () => {
   if (otpCode.value.length < 6) return
@@ -187,7 +227,7 @@ const handleRegister = async () => {
 
   loading.value = true
   try {
-    await api.auth.sendPhoneOtp({ phone: fullPhone.value })
+    await sendPhoneOtpByProvider()
 
     otpDigits.value = ['', '', '', '', '', '']
     showOtpModal.value = true
@@ -363,6 +403,8 @@ const handleRegister = async () => {
       <button class="otp-cancel-btn" @click="closeOtpModal">取消</button>
     </div>
   </div>
+  <!-- Firebase reCAPTCHA invisible container -->
+  <div id="firebase-recaptcha-container"></div>
 </template>
 
 <style scoped>

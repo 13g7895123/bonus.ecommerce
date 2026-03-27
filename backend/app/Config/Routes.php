@@ -61,6 +61,7 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('login',             'Api\AuthController::login');
         $routes->post('forgot-password',   'Api\AuthController::forgotPassword');
         $routes->post('reset-password',    'Api\AuthController::resetPassword');
+        $routes->get('otp-provider',       'Api\AuthController::otpProvider');
         $routes->post('send-phone-otp',    'Api\AuthController::sendPhoneOtp');
         $routes->post('verify-phone-otp',  'Api\AuthController::verifyPhoneOtp');
     });

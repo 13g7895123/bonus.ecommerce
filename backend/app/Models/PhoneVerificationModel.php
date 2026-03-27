@@ -10,8 +10,8 @@ class PhoneVerificationModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
     protected $allowedFields = [
-        'user_id', 'phone', 'code', 'attempts',
-        'is_used', 'expires_at', 'verified_at',
+        'user_id', 'phone', 'code', 'provider', 'session_info',
+        'attempts', 'is_used', 'expires_at', 'verified_at',
     ];
 
     /**

@@ -17,7 +17,7 @@ use App\Models\PhoneVerificationModel;
  *
  * 備註：Twilio Verify 由 Twilio 管理實際驗證碼內容，資料庫 code 欄位固定儲存 'TWILIO_VERIFY' 作為識別。
  */
-class TwilioService
+class TwilioService implements OtpProviderInterface
 {
     private string $accountSid;
     private string $authToken;
@@ -39,7 +39,7 @@ class TwilioService
      * @param string $channel 發送管道：sms（預設）或 call
      * @return array ['success' => bool, 'message' => string]
      */
-    public function sendOtp(string $to, string $channel = 'sms'): array
+    public function sendOtp(string $to, array $options = []): array
     {
         if (!$this->isConfigured()) {
             return ['success' => false, 'message' => 'Twilio 設定不完整，請確認 .env 中的 TWILIO_* 環境變數'];
@@ -52,7 +52,7 @@ class TwilioService
             $this->verifyServiceSid
         );
 
-        $result = $this->curlPost($url, ['To' => $to, 'Channel' => $channel]);
+        $result = $this->curlPost($url, ['To' => $to, 'Channel' => $options['channel'] ?? 'sms']);
 
         log_message('info', '[TwilioService] sendOtp To=' . $to . ' HTTP=' . $result['http_code']);
 
@@ -74,6 +74,7 @@ class TwilioService
         $this->model->insert([
             'phone'      => $to,
             'code'       => 'TWILIO_VERIFY',
+            'provider'   => 'twilio',
             'attempts'   => 0,
             'is_used'    => 0,
             'expires_at' => $expiresAt,

@@ -42,7 +42,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Users, ShieldCheck, Coins, FileEdit, Gift, ShoppingBag, TicketPercent, Home, ChevronLeft, ChevronRight, Smartphone } from 'lucide-vue-next'
+import { Users, ShieldCheck, Coins, FileEdit, Gift, ShoppingBag, TicketPercent, Home, ChevronLeft, ChevronRight, Smartphone, MessageSquare } from 'lucide-vue-next'
 
 const router = useRouter()
 const route  = useRoute()
@@ -58,6 +58,7 @@ const navItems = [
   { key: 'mileage-codes',   label: '里程代碼管理', icon: TicketPercent },
   { key: 'content',              label: '內容管理',      icon: FileEdit },
   { key: 'phone-verifications', label: '手機驗證管理', icon: Smartphone },
+  { key: 'sms-provider',        label: 'SMS 提供者設定', icon: MessageSquare },
 ]
 
 const isActive = (key) => route.path === `/admin/${key}`

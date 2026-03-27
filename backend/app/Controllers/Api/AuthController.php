@@ -69,7 +69,12 @@ class AuthController extends BaseApiController
         return $this->success(null, 'Password reset feature coming soon');
     }
 
-    public function sendPhoneOtp()
+    public function otpProvider()
+    {
+        $provider = \App\Services\OtpProviderFactory::currentProvider();
+        return $this->success(['provider' => $provider]);
+    }
+
     {
         $data  = $this->getJson();
         $phone = trim($data['phone'] ?? '');
@@ -78,14 +83,24 @@ class AuthController extends BaseApiController
             return $this->error('Phone number is required', 422);
         }
 
-        $twilio = new \App\Services\TwilioService();
-        $result = $twilio->sendOtp($phone);
+        $provider = \App\Services\OtpProviderFactory::make();
+
+        // Firebase 提供者需要前端 SDK 回傳的 session_info（verificationId）
+        $options = [];
+        if (isset($data['session_info'])) {
+            $options['session_info'] = $data['session_info'];
+        }
+
+        $result = $provider->sendOtp($phone, $options);
 
         if (!$result['success']) {
             return $this->error($result['message'] ?? 'Failed to send OTP', 500);
         }
 
-        return $this->success(null, 'OTP sent successfully');
+        return $this->success(
+            ['provider' => \App\Services\OtpProviderFactory::currentProvider()],
+            'OTP sent successfully'
+        );
     }
 
     public function verifyPhoneOtp()
@@ -98,8 +113,8 @@ class AuthController extends BaseApiController
             return $this->error('Phone and code are required', 422);
         }
 
-        $twilio = new \App\Services\TwilioService();
-        $result = $twilio->verifyOtp($phone, $code);
+        $provider = \App\Services\OtpProviderFactory::make();
+        $result   = $provider->verifyOtp($phone, $code);
 
         if (!$result['success']) {
             return $this->error($result['message'] ?? 'Invalid OTP', 422);
