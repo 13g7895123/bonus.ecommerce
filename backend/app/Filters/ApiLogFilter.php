@@ -20,6 +20,7 @@ class ApiLogFilter implements FilterInterface
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null): mixed
     {
+        try {
         // Skip logging for admin panel and sadmin to avoid infinite loops
         $uri = (string) $request->getUri()->getPath();
         if (str_starts_with($uri, '/admin-panel') || str_starts_with($uri, '/sadmin')) {
@@ -39,7 +40,7 @@ class ApiLogFilter implements FilterInterface
         }
 
         // Capture request body (JSON or form)
-        $body = $request->getBody();
+        $body = $request->getBody() ?? '';
         // Mask sensitive fields
         $bodyDecoded = json_decode($body, true);
         if (is_array($bodyDecoded)) {
@@ -72,6 +73,9 @@ class ApiLogFilter implements FilterInterface
             ]);
         } catch (\Throwable) {
             // Never let logging break the response
+        }
+        } catch (\Throwable) {
+            // Never let the entire after() filter break the HTTP response
         }
 
         return null;

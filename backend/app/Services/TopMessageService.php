@@ -54,7 +54,7 @@ class TopMessageService implements OtpProviderInterface
         // 生成 6 位數 OTP
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        $text   = "您的驗證碼是：{$code}，10 分鐘內有效，請勿將驗證碼告知他人。";
+        $text   = "您的驗證碼為 {$code}，10 分鐘內有效，請勿告知他人。";
         $result = $this->callApi($phone, $text, 'sendOtp');
 
         log_message('info', '[TopMessageService] sendOtp To=' . $phone . ' HTTP=' . $result['http_code']);
@@ -140,6 +140,26 @@ class TopMessageService implements OtpProviderInterface
     }
 
     /**
+     * 遮蔽 TopMessage response body 中的 text 欄位，避免 OTP 明碼儲存進 DB
+     */
+    private function sanitizeResponse(string $raw): string
+    {
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded) || empty($decoded['data'])) {
+            return $raw;
+        }
+        foreach ($decoded['data'] as &$item) {
+            if (isset($item['text'])) {
+                $item['text'] = '[REDACTED]';
+            }
+            if (isset($item['to'])) {
+                $item['to'] = '[MASKED]';
+            }
+        }
+        return json_encode($decoded, JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
      * 呼叫 TopMessage REST API 發送訊息，並記錄至 third_party_logs
      */
     private function callApi(string $phone, string $text, string $action = 'request'): array
@@ -191,7 +211,7 @@ class TopMessageService implements OtpProviderInterface
                 'url'           => self::API_ENDPOINT,
                 'request_body'  => $safePayload,
                 'response_code' => $curlError ? 0 : $httpCode,
-                'response_body' => $curlError ? $curlError : (string) $response,
+                'response_body' => $curlError ? $curlError : $this->sanitizeResponse((string) $response),
                 'duration_ms'   => $durationMs,
                 'success'       => (!$curlError && $httpCode === 200) ? 1 : 0,
                 'error_message' => $curlError ?: null,
