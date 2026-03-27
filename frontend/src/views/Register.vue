@@ -49,6 +49,7 @@ const fillRandomData = () => {
 }
 
 const loading = ref(false)
+const dobInput = ref(null)
 const dobFocused = ref(false)
 const showCountryPicker = ref(false)
 const countrySearch = ref('')
@@ -229,7 +230,7 @@ const handleRegister = async () => {
           <AppInput v-model="form.password" type="password" placeholder="密碼" />
         </div>
         <div class="form-field">
-          <div class="dob-wrapper">
+          <div class="dob-wrapper" @click="dobInput?.showPicker?.()">
             <div class="dob-display" :class="{ 'dob-focused': dobFocused }">
               <span :class="form.dob ? 'dob-value' : 'dob-placeholder'">
                 {{ form.dob ? form.dob : '出生日期' }}
@@ -244,6 +245,7 @@ const handleRegister = async () => {
               </span>
             </div>
             <input
+              ref="dobInput"
               v-model="form.dob"
               type="date"
               class="dob-real-input"
