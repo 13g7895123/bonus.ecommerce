@@ -32,6 +32,10 @@ import AdminMileageCodes from '../views/admin/AdminMileageCodes.vue'
 import AdminContent from '../views/admin/AdminContent.vue'
 import AdminPhoneVerifications from '../views/admin/AdminPhoneVerifications.vue'
 import AdminSmsProvider from '../views/admin/AdminSmsProvider.vue'
+import Sadmin from '../views/Sadmin.vue'
+import SadminOverview from '../views/sadmin/SadminOverview.vue'
+import SadminApiLogs from '../views/sadmin/SadminApiLogs.vue'
+import SadminThirdPartyLogs from '../views/sadmin/SadminThirdPartyLogs.vue'
 import CountryLanguageSettings from '../views/CountryLanguageSettings.vue'
 
 const routes = [
@@ -59,6 +63,16 @@ const routes = [
       { path: 'content',              name: 'AdminContent',             component: AdminContent },
       { path: 'phone-verifications',  name: 'AdminPhoneVerifications',  component: AdminPhoneVerifications },
       { path: 'sms-provider',         name: 'AdminSmsProvider',         component: AdminSmsProvider },
+    ],
+  },
+  {
+    path: '/sadmin',
+    component: Sadmin,
+    children: [
+      { path: '', redirect: '/sadmin/overview' },
+      { path: 'overview',         name: 'SadminOverview',         component: SadminOverview },
+      { path: 'api-logs',         name: 'SadminApiLogs',          component: SadminApiLogs },
+      { path: 'third-party-logs', name: 'SadminThirdPartyLogs',   component: SadminThirdPartyLogs },
     ],
   },
   {

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\PhoneVerificationModel;
+use App\Repositories\ThirdPartyLogRepository;
 
 /**
  * FirebaseOtpService — 使用 Firebase Authentication Phone Auth 驗證 OTP
@@ -129,7 +130,7 @@ class FirebaseOtpService implements OtpProviderInterface
         $result = $this->curlPost($url, [
             'sessionInfo' => $sessionInfo,
             'code'        => $code,
-        ]);
+        ], 'verifyOtp');
 
         log_message('info', '[FirebaseOtpService] verifyOtp phone=' . $phone . ' HTTP=' . $result['http_code']);
 
@@ -166,8 +167,10 @@ class FirebaseOtpService implements OtpProviderInterface
         return preg_replace('/^(\+\d{1,4})0(\d{6,11})$/', '$1$2', $phone);
     }
 
-    private function curlPost(string $url, array $payload): array
+    private function curlPost(string $url, array $payload, string $action = 'request'): array
     {
+        $startTime = microtime(true);
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
@@ -182,6 +185,40 @@ class FirebaseOtpService implements OtpProviderInterface
         $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
         curl_close($ch);
+
+        $durationMs = (int) round((microtime(true) - $startTime) * 1000);
+
+        // Strip API key from logged URL
+        $logUrl = preg_replace('/[?&]key=[^&]*/', '?key=[REDACTED]', $url);
+        // Mask sensitive fields
+        $safePayload = $payload;
+        unset($safePayload['sessionInfo'], $safePayload['code']);
+
+        // Mask response (remove idToken)
+        $responseBody = $response;
+        $responseDecoded = json_decode((string) $response, true);
+        if (is_array($responseDecoded)) {
+            unset($responseDecoded['idToken'], $responseDecoded['refreshToken']);
+            $responseBody = json_encode($responseDecoded, JSON_UNESCAPED_UNICODE);
+        }
+
+        try {
+            (new ThirdPartyLogRepository())->create([
+                'service'       => 'firebase',
+                'action'        => $action,
+                'method'        => 'POST',
+                'url'           => $logUrl,
+                'request_body'  => json_encode($safePayload, JSON_UNESCAPED_UNICODE),
+                'response_code' => $curlError ? 0 : $httpCode,
+                'response_body' => $curlError ? $curlError : $responseBody,
+                'duration_ms'   => $durationMs,
+                'success'       => (!$curlError && $httpCode === 200) ? 1 : 0,
+                'error_message' => $curlError ?: null,
+                'created_at'    => date('Y-m-d H:i:s'),
+            ]);
+        } catch (\Throwable) {
+            // Never let logging break the service
+        }
 
         if ($curlError) {
             log_message('error', '[FirebaseOtpService] cURL error: ' . $curlError);

@@ -12,6 +12,15 @@ $routes->get('/', 'Home::index');
 // ─────────────────────────────────────────
 $routes->group('api/v1', static function ($routes) {
 
+    // ── Sadmin (Super Admin — All API Logs) ──
+    $routes->group('sadmin', static function ($routes) {
+        $routes->get('stats',                        'SadminController::stats');
+        $routes->get('api-logs',                     'SadminController::apiLogs');
+        $routes->get('api-logs/(:num)',              'SadminController::apiLogDetail/$1');
+        $routes->get('third-party-logs',             'SadminController::thirdPartyLogs');
+        $routes->get('third-party-logs/(:num)',      'SadminController::thirdPartyLogDetail/$1');
+    });
+
     // ── Admin Panel (免登入後台) ──
     $routes->group('admin-panel', static function ($routes) {
         $routes->get('stats',                 'AdminPanelController::stats');

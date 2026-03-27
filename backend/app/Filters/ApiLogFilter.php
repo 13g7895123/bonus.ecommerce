@@ -20,9 +20,9 @@ class ApiLogFilter implements FilterInterface
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null): mixed
     {
-        // Skip logging for the admin panel itself to avoid infinite loop
+        // Skip logging for admin panel and sadmin to avoid infinite loops
         $uri = (string) $request->getUri()->getPath();
-        if (str_starts_with($uri, '/admin-panel')) {
+        if (str_starts_with($uri, '/admin-panel') || str_starts_with($uri, '/sadmin')) {
             return null;
         }
 

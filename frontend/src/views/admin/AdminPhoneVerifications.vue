@@ -1,7 +1,7 @@
 <template>
   <div class="panel">
     <div class="panel-header">
-      <span class="panel-title">手機驗證紀錄</span>
+      <span class="panel-title">/</span>
       <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
         <input
           v-model="filterPhone"

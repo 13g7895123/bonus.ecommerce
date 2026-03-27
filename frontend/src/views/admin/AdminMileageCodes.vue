@@ -49,7 +49,7 @@
 
   <div class="panel" style="margin-top:1rem">
     <div class="panel-header">
-      <span class="panel-title">使用紀錄</span>
+      <span class="panel-title"></span>
       <div style="display:flex;gap:0.5rem;align-items:center">
         <input v-model="recordFilters.code" class="f-input" style="width:180px" placeholder="搜尋代碼" @keyup.enter="loadRecords" />
         <input v-model="recordFilters.user_id" class="f-input" style="width:140px" placeholder="用戶 ID" @keyup.enter="loadRecords" />

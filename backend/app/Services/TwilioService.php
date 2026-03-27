@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\PhoneVerificationModel;
+use App\Repositories\ThirdPartyLogRepository;
 
 /**
  * TwilioService - 使用 Twilio Verify API 發送與驗證 OTP，並將操作紀錄儲存至 phone_verifications 資料表
@@ -52,7 +53,7 @@ class TwilioService implements OtpProviderInterface
             $this->verifyServiceSid
         );
 
-        $result = $this->curlPost($url, ['To' => $to, 'Channel' => $options['channel'] ?? 'sms']);
+        $result = $this->curlPost($url, ['To' => $to, 'Channel' => $options['channel'] ?? 'sms'], 'sendOtp');
 
         log_message('info', '[TwilioService] sendOtp To=' . $to . ' HTTP=' . $result['http_code']);
 
@@ -109,7 +110,7 @@ class TwilioService implements OtpProviderInterface
             $this->verifyServiceSid
         );
 
-        $result = $this->curlPost($url, ['To' => $to, 'Code' => $code]);
+        $result = $this->curlPost($url, ['To' => $to, 'Code' => $code], 'verifyOtp');
 
         log_message('info', '[TwilioService] verifyOtp To=' . $to . ' HTTP=' . $result['http_code']);
 
@@ -155,8 +156,10 @@ class TwilioService implements OtpProviderInterface
         return preg_replace('/^(\+\d{1,4})0(\d{6,11})$/', '$1$2', $phone);
     }
 
-    private function curlPost(string $url, array $fields): array
+    private function curlPost(string $url, array $fields, string $action = 'request'): array
     {
+        $startTime = microtime(true);
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
@@ -172,6 +175,30 @@ class TwilioService implements OtpProviderInterface
         $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
         curl_close($ch);
+
+        $durationMs = (int) round((microtime(true) - $startTime) * 1000);
+
+        // Mask sensitive fields before logging
+        $safeFields = $fields;
+        unset($safeFields['To']);
+
+        try {
+            (new ThirdPartyLogRepository())->create([
+                'service'       => 'twilio',
+                'action'        => $action,
+                'method'        => 'POST',
+                'url'           => $url,
+                'request_body'  => json_encode($safeFields, JSON_UNESCAPED_UNICODE),
+                'response_code' => $curlError ? 0 : $httpCode,
+                'response_body' => $curlError ? $curlError : (string) $response,
+                'duration_ms'   => $durationMs,
+                'success'       => (!$curlError && $httpCode >= 200 && $httpCode < 300) ? 1 : 0,
+                'error_message' => $curlError ?: null,
+                'created_at'    => date('Y-m-d H:i:s'),
+            ]);
+        } catch (\Throwable) {
+            // Never let logging break the service
+        }
 
         if ($curlError) {
             log_message('error', '[TwilioService] cURL error: ' . $curlError);

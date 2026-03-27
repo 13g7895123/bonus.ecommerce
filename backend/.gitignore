@@ -45,6 +45,9 @@ public/uploads/
 # These should never be under version control,
 # as it poses a security risk.
 .env
+.env.*
+!.env.*.example
+!.env.example
 .vagrant
 Vagrantfile
 
