@@ -1,6 +1,6 @@
 <!-- 已移至 /sadmin/sms-provider -->
-<template><div></div></template>
-
+<template>
+  <div>
     <!-- 提供者選擇 -->
     <div class="content-block">
       <div class="content-block-header">
