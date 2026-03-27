@@ -17,8 +17,9 @@ class OtpProviderFactory
     public static function make(): OtpProviderInterface
     {
         return match (self::activeProvider()) {
-            'firebase' => new FirebaseOtpService(),
-            default    => new TwilioService(),
+            'firebase'    => new FirebaseOtpService(),
+            'topmessage'  => new TopMessageService(),
+            default       => new TwilioService(),
         };
     }
 

@@ -131,8 +131,8 @@ class SadminController extends Controller
         $data     = $this->request->getJSON(true) ?? [];
         $provider = trim($data['provider'] ?? '');
 
-        if (!in_array($provider, ['twilio', 'firebase'], true)) {
-            return $this->json(['message' => 'Invalid provider. Must be twilio or firebase.'], 400);
+        if (!in_array($provider, ['twilio', 'firebase', 'topmessage'], true)) {
+            return $this->json(['message' => 'Invalid provider. Must be twilio, firebase or topmessage.'], 400);
         }
 
         model(AppConfigModel::class)->setByKey('sms_provider', $provider);
@@ -155,3 +155,85 @@ class SadminController extends Controller
             'source'   => 'env',
         ]);
     }
+
+    // ── TopMessage Config ─────────────────────────────────────────────────────
+
+    public function topmessageConfig(): ResponseInterface
+    {
+        $configModel = model(AppConfigModel::class);
+        $apiKeyRow   = $configModel->getByKey('topmessage_api_key');
+        $senderRow   = $configModel->getByKey('topmessage_sender');
+
+        $apiKey = $apiKeyRow['value'] ?? '';
+        $sender = $senderRow['value'] ?? '';
+
+        // 回傳時遮罩 API Key（只顯示後 4 碼）
+        $maskedKey = '';
+        if (!empty($apiKey)) {
+            $len = strlen($apiKey);
+            $maskedKey = str_repeat('*', max(0, $len - 4)) . substr($apiKey, -4);
+        }
+
+        return $this->json([
+            'api_key_set'  => !empty($apiKey),
+            'api_key_mask' => $maskedKey,
+            'sender'       => $sender,
+        ]);
+    }
+
+    public function saveTopmessageConfig(): ResponseInterface
+    {
+        $data   = $this->request->getJSON(true) ?? [];
+        $apiKey = trim($data['api_key'] ?? '');
+        $sender = trim($data['sender'] ?? '');
+
+        if (empty($sender)) {
+            return $this->json(['message' => '寄件者名稱不可為空'], 400);
+        }
+        if (mb_strlen($sender) > 11) {
+            return $this->json(['message' => '寄件者名稱最多 11 個字元'], 400);
+        }
+
+        $configModel = model(AppConfigModel::class);
+
+        if (!empty($apiKey)) {
+            $configModel->setByKey('topmessage_api_key', $apiKey);
+        } else {
+            // 未提供新 key 時，確認 DB 中已存在舊 key
+            $existing = $configModel->getByKey('topmessage_api_key');
+            if (empty($existing['value'])) {
+                return $this->json(['message' => '首次設定時必須提供 API Key'], 400);
+            }
+        }
+
+        $configModel->setByKey('topmessage_sender', $sender);
+
+        return $this->json(['success' => true, 'message' => 'TopMessage 設定已儲存']);
+    }
+
+    // ── SMS Logs ──────────────────────────────────────────────────────────────
+
+    public function smsLogs(): ResponseInterface
+    {
+        $page    = (int) ($this->request->getGet('page') ?? 1);
+        $limit   = min((int) ($this->request->getGet('limit') ?? 20), 100);
+        $filters = ['service_in' => ['twilio', 'firebase', 'topmessage']];
+
+        if ($s = $this->request->getGet('service'))       $filters['service']       = $s;
+        if ($a = $this->request->getGet('action'))        $filters['action']        = $a;
+        if ($c = $this->request->getGet('response_code')) $filters['response_code'] = $c;
+        if (($ok = $this->request->getGet('success')) !== null && $ok !== '') $filters['success'] = $ok;
+        if ($df = $this->request->getGet('date_from'))    $filters['date_from']     = $df;
+        if ($dt = $this->request->getGet('date_to'))      $filters['date_to']       = $dt;
+
+        // 如果有指定 service，移除 service_in 改用精確 where
+        if (!empty($filters['service'])) {
+            unset($filters['service_in']);
+        }
+
+        $result = (new ThirdPartyLogRepository())->paginate($page, $limit, $filters);
+
+        return $this->json(['page' => $page, 'limit' => $limit, ...$result]);
+    }
+
+}

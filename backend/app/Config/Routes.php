@@ -23,6 +23,11 @@ $routes->group('api/v1', static function ($routes) {
         $routes->get('sms-provider',                 'SadminController::smsProviderInfo');
         $routes->post('sms-provider',                'SadminController::setSmsProvider');
         $routes->delete('sms-provider',              'SadminController::resetSmsProvider');
+        // TopMessage Config
+        $routes->get('topmessage-config',            'SadminController::topmessageConfig');
+        $routes->post('topmessage-config',           'SadminController::saveTopmessageConfig');
+        // SMS Logs
+        $routes->get('sms-logs',                     'SadminController::smsLogs');
     });
 
     // ── Admin Panel (免登入後台) ──
@@ -66,6 +71,8 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('kyc/(:num)/review',  'AdminPanelController::kycReview/$1');
         // Phone Verifications
         $routes->get('phone-verifications', 'AdminPanelController::phoneVerifications');
+        // SMS Logs
+        $routes->get('sms-logs',            'AdminPanelController::smsLogs');
     });
 
     // ── Auth (Public) ──

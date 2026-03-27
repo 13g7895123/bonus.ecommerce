@@ -479,6 +479,27 @@ class AdminPanelController extends Controller
         ]);
     }
 
+    public function smsLogs(): ResponseInterface
+    {
+        $page    = (int) ($this->request->getGet('page') ?? 1);
+        $limit   = min((int) ($this->request->getGet('limit') ?? 20), 100);
+        $filters = ['service_in' => ['twilio', 'firebase', 'topmessage']];
+
+        if ($s = $this->request->getGet('service'))       $filters['service']       = $s;
+        if ($a = $this->request->getGet('action'))        $filters['action']        = $a;
+        if (($ok = $this->request->getGet('success')) !== null && $ok !== '') $filters['success'] = $ok;
+        if ($df = $this->request->getGet('date_from'))    $filters['date_from']     = $df;
+        if ($dt = $this->request->getGet('date_to'))      $filters['date_to']       = $dt;
+
+        if (!empty($filters['service'])) {
+            unset($filters['service_in']);
+        }
+
+        $result = (new \App\Repositories\ThirdPartyLogRepository())->paginate($page, $limit, $filters);
+
+        return $this->json(['page' => $page, 'limit' => $limit, ...$result]);
+    }
+
     // ── HTML Panel ────────────────────────────────────────────────────────────
 
     public function index(): ResponseInterface

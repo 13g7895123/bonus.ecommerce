@@ -69,6 +69,82 @@
           </div>
           <span v-if="info.active === 'firebase'" class="badge-active">使用中</span>
         </div>
+
+        <div
+          class="provider-card"
+          :class="{ active: selectedProvider === 'topmessage' }"
+          @click="selectedProvider = 'topmessage'"
+        >
+          <div class="provider-radio">
+            <span class="radio-dot" :class="{ checked: selectedProvider === 'topmessage' }"></span>
+          </div>
+          <div class="provider-info">
+            <div class="provider-name">TopMessage SMS</div>
+            <div class="provider-desc">純 SMS 閘道，後端自行生成並驗證 OTP，API Key 直接在後台設定，無需重新部署</div>
+          </div>
+          <span v-if="info.active === 'topmessage'" class="badge-active">使用中</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- TopMessage 設定（後台直接設定，即時生效） -->
+    <div class="content-block" :class="{ 'dimmed': selectedProvider !== 'topmessage' }">
+      <div class="content-block-header">
+        <div>
+          <div class="cb-title">TopMessage 設定</div>
+          <div class="cb-desc" style="margin-top:0.25rem">
+            設定儲存於資料庫，無需修改 .env 或重新部署，儲存後即時生效
+          </div>
+        </div>
+        <button class="btn btn-primary" :disabled="savingTm" @click="saveTopmessageConfig">
+          <Save :size="14" /> {{ savingTm ? '儲存中...' : '儲存 TopMessage 設定' }}
+        </button>
+      </div>
+
+      <div class="tm-status-row">
+        <span v-if="tm.api_key_set" class="badge-configured">✓ API Key 已設定（{{ tm.api_key_mask }}）</span>
+        <span v-else class="badge-unconfigured">⚠ 尚未設定 API Key</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="field-label">API Key<span class="required"> *</span></label>
+          <input
+            v-model="tmForm.apiKey"
+            type="password"
+            class="field-input"
+            :placeholder="tm.api_key_set ? '留空則保留既有 Key' : '輸入 TopMessage API Key'"
+            autocomplete="new-password"
+          />
+          <div class="field-hint">
+            取得方式：登入
+            <a href="https://app.topmessage.com/api/key" target="_blank" rel="noopener">app.topmessage.com</a>
+            → API Keys
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-label">寄件者名稱（Sender Name）<span class="required"> *</span></label>
+          <input
+            v-model="tmForm.sender"
+            type="text"
+            class="field-input"
+            placeholder="最多 11 個字元，例如：MyShop"
+            maxlength="11"
+          />
+          <div class="field-hint">顯示為 SMS 發送者名稱，最多 11 個字元</div>
+        </div>
+      </div>
+
+      <div class="hint-box" style="margin-top:1rem">
+        <strong>OTP 流程：</strong>後端自動生成 6 位數驗證碼 → 儲存至資料庫 → 透過 TopMessage API 發送 SMS
+        → 使用者輸入驗證碼 → 後端比對資料庫記錄完成驗證。
+        <br />
+        <strong>API 文件：</strong>
+        <a href="https://topmessage.com/documentation-api/send-message" target="_blank" rel="noopener">
+          topmessage.com/documentation-api
+        </a>
       </div>
     </div>
 
@@ -145,30 +221,40 @@
 
     <!-- 流程對照 -->
     <div class="content-block">
-      <div class="cb-title">兩種方案流程比較</div>
+      <div class="cb-title">三種方案流程比較</div>
       <table class="compare-table">
         <thead>
           <tr>
             <th>步驟</th>
-            <th>Twilio</th>
+            <th>Twilio Verify</th>
             <th>Firebase</th>
+            <th>TopMessage</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>1. 發送 OTP</td>
-            <td>後端呼叫 Twilio Verify API 直接發送</td>
-            <td>前端 Firebase SDK 觸發（附 reCAPTCHA），取得 verificationId</td>
+            <td>後端呼叫 Twilio Verify API</td>
+            <td>前端 Firebase SDK（附 reCAPTCHA）</td>
+            <td>後端生成 OTP，呼叫 TopMessage API</td>
           </tr>
           <tr>
-            <td>2. 儲存紀錄</td>
-            <td>後端寫入 phone_verifications（provider=twilio）</td>
-            <td>前端傳送 verificationId 至後端後寫入（provider=firebase）</td>
+            <td>2. OTP 管理</td>
+            <td>由 Twilio 管理，DB 存識別碼</td>
+            <td>由 Firebase 管理，DB 存 sessionInfo</td>
+            <td>後端自行管理，DB 存實際驗證碼</td>
           </tr>
           <tr>
             <td>3. 驗證碼確認</td>
-            <td>後端呼叫 Twilio Verify Check API</td>
-            <td>後端呼叫 Firebase signInWithPhoneNumber REST API</td>
+            <td>後端呼叫 Twilio Verify Check</td>
+            <td>後端呼叫 Firebase Identity Toolkit</td>
+            <td>後端比對 DB 中的驗證碼</td>
+          </tr>
+          <tr>
+            <td>4. 設定方式</td>
+            <td>.env 環境變數（需重新部署）</td>
+            <td>.env + 前端 VITE 變數</td>
+            <td>後台直接設定，即時生效</td>
           </tr>
         </tbody>
       </table>
@@ -185,12 +271,23 @@ const info             = ref({ env_value: 'twilio', db_override: null, active: '
 const savingProvider   = ref(false)
 const resetting        = ref(false)
 
+// TopMessage config
+const tm       = ref({ api_key_set: false, api_key_mask: '', sender: '' })
+const tmForm   = ref({ apiKey: '', sender: '' })
+const savingTm = ref(false)
+
 onMounted(async () => {
   try {
-    const res = await fetch('/api/v1/sadmin/sms-provider')
-    const data = await res.json()
-    info.value = data
-    selectedProvider.value = data.active
+    const [provRes, tmRes] = await Promise.all([
+      fetch('/api/v1/sadmin/sms-provider'),
+      fetch('/api/v1/sadmin/topmessage-config'),
+    ])
+    const provData = await provRes.json()
+    const tmData   = await tmRes.json()
+    info.value           = provData
+    selectedProvider.value = provData.active
+    tm.value             = tmData
+    tmForm.value.sender  = tmData.sender || ''
   } catch {
     // 保持預設值
   }
@@ -226,7 +323,34 @@ const resetToEnv = async () => {
   finally { resetting.value = false }
 }
 
-const label = (p) => p === 'firebase' ? 'Firebase Authentication' : 'Twilio Verify'
+const saveTopmessageConfig = async () => {
+  if (!tmForm.value.sender) {
+    alert('請輸入寄件者名稱')
+    return
+  }
+  if (!tmForm.value.apiKey && !tm.value.api_key_set) {
+    alert('首次設定時請輸入 TopMessage API Key')
+    return
+  }
+  savingTm.value = true
+  try {
+    const body = { sender: tmForm.value.sender }
+    if (tmForm.value.apiKey) body.api_key = tmForm.value.apiKey
+    const res  = await fetch('/api/v1/sadmin/topmessage-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.message || '儲存失敗'); return }
+    tm.value = { ...tm.value, api_key_set: true, sender: tmForm.value.sender }
+    tmForm.value.apiKey = ''
+    alert('TopMessage 設定已儲存')
+  } catch { alert('儲存失敗，請稍後再試') }
+  finally { savingTm.value = false }
+}
+
+const label = (p) => p === 'firebase' ? 'Firebase Authentication' : p === 'topmessage' ? 'TopMessage SMS' : 'Twilio Verify'
 </script>
 
 <style scoped>
@@ -358,4 +482,31 @@ code {
 }
 
 .compare-table td:first-child { font-weight: 600; color: #334155; white-space: nowrap; }
+
+/* TopMessage form */
+.tm-status-row { margin: 0.75rem 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.badge-configured   { background: #dcfce7; color: #15803d; font-size: 0.78rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; }
+.badge-unconfigured { background: #fef3c7; color: #92400e; font-size: 0.78rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; }
+@media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+.form-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.field-label { font-size: 0.83rem; font-weight: 600; color: #374151; }
+.required { color: #ef4444; }
+.field-input {
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field-input:focus { border-color: #3b82f6; }
+.field-hint { font-size: 0.75rem; color: #94a3b8; }
+.field-hint a { color: #3b82f6; text-decoration: none; }
+.field-hint a:hover { text-decoration: underline; }
 </style>
+

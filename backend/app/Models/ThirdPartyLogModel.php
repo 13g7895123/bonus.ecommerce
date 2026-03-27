@@ -19,7 +19,9 @@ class ThirdPartyLogModel extends Model
     {
         $builder = $this->orderBy('created_at', 'DESC');
 
-        if (!empty($filters['service'])) {
+        if (!empty($filters['service_in']) && is_array($filters['service_in'])) {
+            $builder->whereIn('service', $filters['service_in']);
+        } elseif (!empty($filters['service'])) {
             $builder->where('service', $filters['service']);
         }
         if (!empty($filters['action'])) {
