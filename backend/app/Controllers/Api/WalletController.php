@@ -23,10 +23,10 @@ class WalletController extends BaseApiController
         $oldPassword = $data['old_password'] ?? null;
 
         if (!$password) {
-            return $this->error('Password is required');
+            return $this->error('請輸入密碼');
         }
         if (strlen($password) < 4) {
-            return $this->error('Password must be at least 4 characters');
+            return $this->error('密碼長度至少需要 4 個字元');
         }
 
         $result = (new WalletService())->setWithdrawalPassword(Auth::id(), $password, $oldPassword);
@@ -42,10 +42,10 @@ class WalletController extends BaseApiController
         $password = $data['withdrawal_password'] ?? '';
 
         if (empty($data['bank_name']) || empty($data['bank_account']) || empty($data['bank_account_name'])) {
-            return $this->error('bank_name, bank_account, bank_account_name are required');
+            return $this->error('請填寫銀行名稱、帳號及戶名');
         }
         if (!$password) {
-            return $this->error('withdrawal_password is required');
+            return $this->error('請輸入提款密碼');
         }
 
         $result = (new WalletService())->bindBankAccount(Auth::id(), $data, $password);
@@ -62,10 +62,10 @@ class WalletController extends BaseApiController
         $password = $data['withdrawal_password'] ?? '';
 
         if ($amount <= 0) {
-            return $this->error('Invalid amount');
+            return $this->error('金額無效');
         }
         if (!$password) {
-            return $this->error('withdrawal_password is required');
+            return $this->error('請輸入提款密碼');
         }
 
         $result = (new WalletService())->withdraw(Auth::id(), $amount, $password);

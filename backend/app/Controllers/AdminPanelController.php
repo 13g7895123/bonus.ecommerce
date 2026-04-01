@@ -180,6 +180,27 @@ class AdminPanelController extends Controller
         return $this->json(['success' => true, 'message' => '密碼已成功更新']);
     }
 
+    public function changeWithdrawalPassword(int $userId): ResponseInterface
+    {
+        $data        = $this->request->getJSON(true) ?? [];
+        $newPassword = $data['new_password'] ?? '';
+
+        if (strlen($newPassword) < 4) {
+            return $this->json(['message' => '提款密碼至少需要 4 個字元'], 400);
+        }
+
+        $walletRepo = new UserWalletRepository();
+        $wallet     = $walletRepo->findByUserId($userId);
+        if (!$wallet) {
+            return $this->json(['message' => '該使用者尚未建立錢包'], 404);
+        }
+
+        $walletRepo->updateByUserId($userId, [
+            'withdrawal_password_hash' => password_hash($newPassword, PASSWORD_BCRYPT),
+        ]);
+        return $this->json(['success' => true, 'message' => '提款密碼已成功更新']);
+    }
+
     public function createUser(): ResponseInterface
     {
         $data     = $this->request->getJSON(true) ?? [];
@@ -540,6 +561,70 @@ class AdminPanelController extends Controller
             'page'  => $page,
             'pages' => ceil($total / $limit),
         ]);
+    }
+
+    // ── Customer Service ──────────────────────────────────────────────────────
+
+    public function csConversations(): ResponseInterface
+    {
+        $db = \Config\Database::connect();
+
+        // Get last message per ticket (distinct tickets with user info)
+        $rows = $db->query("
+            SELECT m.ticket_id, m.sender_id AS user_id,
+                   u.email, u.full_name,
+                   (SELECT content FROM customer_service_messages
+                    WHERE ticket_id = m.ticket_id ORDER BY created_at DESC LIMIT 1) AS last_message,
+                   (SELECT created_at FROM customer_service_messages
+                    WHERE ticket_id = m.ticket_id ORDER BY created_at DESC LIMIT 1) AS last_at,
+                   COUNT(m2.id) AS total_messages
+            FROM customer_service_messages m
+            INNER JOIN users u ON u.id = m.sender_id
+            INNER JOIN customer_service_messages m2 ON m2.ticket_id = m.ticket_id
+            WHERE m.sender_type = 'user'
+            GROUP BY m.ticket_id, m.sender_id, u.email, u.full_name
+            ORDER BY last_at DESC
+        ")->getResultArray();
+
+        return $this->json(['items' => $rows]);
+    }
+
+    public function csMessages(string $ticketId): ResponseInterface
+    {
+        $db    = \Config\Database::connect();
+        $rows  = $db->table('customer_service_messages')
+            ->where('ticket_id', $ticketId)
+            ->orderBy('created_at', 'ASC')
+            ->get()->getResultArray();
+
+        return $this->json(['items' => $rows, 'ticket_id' => $ticketId]);
+    }
+
+    public function csSendMessage(string $ticketId): ResponseInterface
+    {
+        $data    = $this->request->getJSON(true) ?? [];
+        $content = trim($data['content'] ?? '');
+
+        if (!$content) {
+            return $this->json(['message' => '訊息內容不得為空'], 400);
+        }
+
+        // Verify ticket exists
+        $db  = \Config\Database::connect();
+        $row = $db->table('customer_service_messages')->where('ticket_id', $ticketId)->get(1)->getRowArray();
+        if (!$row) {
+            return $this->json(['message' => '找不到此對話'], 404);
+        }
+
+        $db->table('customer_service_messages')->insert([
+            'ticket_id'   => $ticketId,
+            'sender_type' => 'admin',
+            'sender_id'   => 0,
+            'content'     => $content,
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        return $this->json(['success' => true, 'message' => '訊息已發送']);
     }
 
     public function smsLogs(): ResponseInterface

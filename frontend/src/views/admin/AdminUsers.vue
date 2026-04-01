@@ -25,7 +25,7 @@
             <td>{{ u.email }}</td>
             <td><span :class="['badge', u.is_verified == 1 ? 'badge-green' : 'badge-gray']">{{ u.is_verified == 1 ? '已驗證' : '未驗證' }}</span></td>
             <td>{{ u.phone || '-' }}</td>
-            <td>{{ u.country || '-' }}</td>
+            <td>{{ countryName(u.country) }}</td>
             <td><span :class="['badge', u.role === 'admin' ? 'badge-purple' : 'badge-blue']">{{ u.role || 'user' }}</span></td>
             <td><span :class="['badge', kycBadgeClass(u.verify_status)]">{{ kycLabel(u.verify_status) }}</span></td>
             <td class="td-num">${{ (u.balance || 0).toLocaleString() }}</td>
@@ -33,6 +33,7 @@
             <td class="td-actions">
               <button class="btn btn-sm btn-primary" @click="openDeposit(u)">儲值</button>
               <button class="btn btn-sm btn-outline" @click="openChangePassword(u)">變更密碼</button>
+              <button class="btn btn-sm btn-outline" style="border-color:#f59e0b;color:#f59e0b" @click="openChangeWithdrawalPassword(u)">提款密碼</button>
               <button class="btn btn-sm btn-outline" style="border-color:#6366f1;color:#6366f1" @click="openUserDetail(u)">詳細資料</button>
             </td>
           </tr>
@@ -113,6 +114,46 @@
     </div>
   </div>
 
+  <!-- 變更提款密碼 Modal -->
+  <div v-if="wdPwdModal.show" class="modal-overlay" @click.self="wdPwdModal.show = false">
+    <div class="modal-box" style="max-width:420px">
+      <div class="modal-hd">
+        <span>變更提款密碼 — {{ wdPwdModal.user?.full_name || wdPwdModal.user?.email }}</span>
+        <button class="modal-x" @click="wdPwdModal.show = false">✕</button>
+      </div>
+      <div class="modal-bd">
+        <label class="f-label">新提款密碼（至少 4 字元）</label>
+        <input v-model="wdPwdModal.newPassword" type="password" class="f-input" placeholder="請輸入新提款密碼" autocomplete="new-password" />
+        <label class="f-label" style="margin-top:0.75rem">確認新提款密碼</label>
+        <input v-model="wdPwdModal.confirmPassword" type="password" class="f-input" placeholder="請再次輸入新提款密碼" autocomplete="new-password" @keyup.enter="submitChangeWithdrawalPassword" />
+      </div>
+      <div class="modal-ft">
+        <button class="btn btn-outline" @click="wdPwdModal.show = false">取消</button>
+        <button class="btn btn-primary" :disabled="wdPwdModal.submitting" @click="submitChangeWithdrawalPassword">{{ wdPwdModal.submitting ? '處理中...' : '確認變更' }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 變更提款密碼 Modal -->
+  <div v-if="wdPwdModal.show" class="modal-overlay" @click.self="wdPwdModal.show = false">
+    <div class="modal-box" style="max-width:420px">
+      <div class="modal-hd">
+        <span>變更提款密碼 — {{ wdPwdModal.user?.full_name || wdPwdModal.user?.email }}</span>
+        <button class="modal-x" @click="wdPwdModal.show = false">✕</button>
+      </div>
+      <div class="modal-bd">
+        <label class="f-label">新提款密碼（至少 4 字元）</label>
+        <input v-model="wdPwdModal.newPassword" type="password" class="f-input" placeholder="請輸入新提款密碼" autocomplete="new-password" />
+        <label class="f-label" style="margin-top:0.75rem">確認新提款密碼</label>
+        <input v-model="wdPwdModal.confirmPassword" type="password" class="f-input" placeholder="請再次輸入新提款密碼" autocomplete="new-password" @keyup.enter="submitChangeWithdrawalPassword" />
+      </div>
+      <div class="modal-ft">
+        <button class="btn btn-outline" @click="wdPwdModal.show = false">取消</button>
+        <button class="btn btn-primary" :disabled="wdPwdModal.submitting" @click="submitChangeWithdrawalPassword">{{ wdPwdModal.submitting ? '處理中...' : '確認變更' }}</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 詳細資料 Modal -->
   <div v-if="detailModal.show" class="modal-overlay" @click.self="detailModal.show = false">
     <div class="modal-box" style="max-width:620px">
@@ -131,7 +172,7 @@
               <div class="kyc-row"><span class="kyc-lbl">姓名</span><span>{{ detailModal.user.full_name || '-' }}</span></div>
               <div class="kyc-row"><span class="kyc-lbl">電話</span><span>{{ detailModal.user.phone || '-' }}</span></div>
               <div class="kyc-row"><span class="kyc-lbl">生日</span><span>{{ detailModal.user.dob || '-' }}</span></div>
-              <div class="kyc-row"><span class="kyc-lbl">國家</span><span>{{ detailModal.user.country || '-' }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">國家</span><span>{{ countryName(detailModal.user.country) }}</span></div>
               <div class="kyc-row"><span class="kyc-lbl">角色</span><span>{{ detailModal.user.role || 'user' }}</span></div>
               <div class="kyc-row"><span class="kyc-lbl">會員等級</span><span>{{ detailModal.user.tier || '-' }}</span></div>
               <div class="kyc-row"><span class="kyc-lbl">Email驗證</span><span>{{ detailModal.user.is_verified == 1 ? '已驗證' : '未驗證' }}</span></div>
@@ -197,6 +238,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { RefreshCw, Plus } from 'lucide-vue-next'
+import { countries } from '../../utils/countries'
+
+const countryName = (code) => {
+  if (!code) return '-'
+  const c = countries.find(c => c.code === code)
+  return c ? c.name : code
+}
 
 const usersList    = ref([])
 const loadingUsers = ref(false)
@@ -254,6 +302,26 @@ const submitChangePassword = async () => {
     alert('密碼已成功變更')
     pwdModal.value.show = false
   } finally { pwdModal.value.submitting = false }
+}
+
+// ── 變更提款密碼 ──
+const wdPwdModal = ref({ show: false, user: null, newPassword: '', confirmPassword: '', submitting: false })
+const openChangeWithdrawalPassword = (user) => { wdPwdModal.value = { show: true, user, newPassword: '', confirmPassword: '', submitting: false } }
+
+const submitChangeWithdrawalPassword = async () => {
+  if (wdPwdModal.value.newPassword.length < 4) { alert('提款密碼至少需要 4 個字元'); return }
+  if (wdPwdModal.value.newPassword !== wdPwdModal.value.confirmPassword) { alert('兩次輸入的密碼不一致'); return }
+  wdPwdModal.value.submitting = true
+  try {
+    const res  = await fetch(`/api/v1/admin-panel/users/${wdPwdModal.value.user.id}/change-withdrawal-password`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ new_password: wdPwdModal.value.newPassword }),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.message || '提款密碼變更失敗'); return }
+    alert('提款密碼已成功變更')
+    wdPwdModal.value.show = false
+  } finally { wdPwdModal.value.submitting = false }
 }
 
 // ── 詳細資料 ──

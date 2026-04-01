@@ -160,8 +160,7 @@ onMounted(async () => {
 
     <section v-if="activeTab === 'tier'" class="cards-section">
       <div class="benefit-cards">
-        <div class="benefit-card">
-          <img src="/go-silver.png" alt="Silver Tier" class="benefit-img" />
+        <div class="benefit-card no-pointer">
           <div class="benefit-content">
             <h4 class="benefit-title">達到 <span class="silver-text">銀卡</span></h4>
             <p class="benefit-desc">{{ silverCardDesc || '在2027年2月28日之前賺取25,000級哩程數,或再搭乘 25 次合格航班' }}</p>
@@ -324,6 +323,13 @@ onMounted(async () => {
 .benefit-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+.benefit-card.no-pointer {
+  cursor: default;
+}
+.benefit-card.no-pointer:hover {
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 .benefit-img { width: 100%; height: 340px; object-fit: cover; }
 .benefit-content { padding: 1.25rem; padding-top: 0; }

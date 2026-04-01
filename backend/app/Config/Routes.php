@@ -49,7 +49,8 @@ $routes->group('api/v1', static function ($routes) {
         $routes->get('users/(:num)',          'AdminPanelController::userDetail/$1');
         $routes->get('users/(:num)/logs',     'AdminPanelController::userLogs/$1');
         $routes->post('users/(:num)/deposit', 'AdminPanelController::deposit/$1');
-        $routes->post('users/(:num)/change-password', 'AdminPanelController::changePassword/$1');
+        $routes->post('users/(:num)/change-password',            'AdminPanelController::changePassword/$1');
+        $routes->post('users/(:num)/change-withdrawal-password', 'AdminPanelController::changeWithdrawalPassword/$1');
         // Mileage Redemption Items
         $routes->get('mileage-items',           'AdminPanelController::mileageItems');
         $routes->post('mileage-items',          'AdminPanelController::createMileageItem');
@@ -80,6 +81,10 @@ $routes->group('api/v1', static function ($routes) {
         // KYC Management
         $routes->get('kyc',                 'AdminPanelController::kycList');
         $routes->post('kyc/(:num)/review',  'AdminPanelController::kycReview/$1');
+        // Customer Service
+        $routes->get('cs/conversations',                        'AdminPanelController::csConversations');
+        $routes->get('cs/conversations/(:segment)',             'AdminPanelController::csMessages/$1');
+        $routes->post('cs/conversations/(:segment)/reply',      'AdminPanelController::csSendMessage/$1');
         // Phone Verifications
         $routes->get('phone-verifications', 'AdminPanelController::phoneVerifications');
         // SMS Logs

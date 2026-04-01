@@ -35,27 +35,27 @@ class WalletService
     {
         $wallet = $this->walletRepo->findByUserId($userId);
         if (!$wallet) {
-            return ['success' => false, 'message' => 'Wallet not found'];
+            return ['success' => false, 'message' => '找不到錢包'];
         }
         if (!empty($wallet['withdrawal_password_hash']) && $oldPassword !== null) {
             if (!password_verify($oldPassword, $wallet['withdrawal_password_hash'])) {
-                return ['success' => false, 'message' => 'Old password incorrect'];
+                return ['success' => false, 'message' => '舊密碼錯誤'];
             }
         }
         $this->walletRepo->updateByUserId($userId, [
             'withdrawal_password_hash' => password_hash($password, PASSWORD_BCRYPT),
         ]);
-        return ['success' => true, 'message' => 'Withdrawal password updated'];
+        return ['success' => true, 'message' => '提款密碼已更新'];
     }
 
     public function bindBankAccount(int $userId, array $data, string $withdrawalPassword): array
     {
         $wallet = $this->walletRepo->findByUserId($userId);
         if (!$wallet || empty($wallet['withdrawal_password_hash'])) {
-            return ['success' => false, 'message' => 'Please set a withdrawal password first'];
+            return ['success' => false, 'message' => '請先設定提款密碼'];
         }
         if (!password_verify($withdrawalPassword, $wallet['withdrawal_password_hash'])) {
-            return ['success' => false, 'message' => 'Withdrawal password incorrect'];
+            return ['success' => false, 'message' => '提款密碼錯誤'];
         }
         $updateData = [
             'bank_name'              => $data['bank_name'],
@@ -68,26 +68,26 @@ class WalletService
             $updateData['bank_account'] = $data['bank_account'];
         }
         $this->walletRepo->updateByUserId($userId, $updateData);
-        return ['success' => true, 'message' => 'Bank account bound'];
+        return ['success' => true, 'message' => '銀行帳號已綁定'];
     }
 
     public function withdraw(int $userId, float $amount, string $withdrawalPassword): array
     {
         $wallet = $this->walletRepo->findByUserId($userId);
         if (!$wallet) {
-            return ['success' => false, 'message' => 'Wallet not found'];
+            return ['success' => false, 'message' => '找不到錢包'];
         }
         if (empty($wallet['withdrawal_password_hash'])) {
-            return ['success' => false, 'message' => 'Please set a withdrawal password first'];
+            return ['success' => false, 'message' => '請先設定提款密碼'];
         }
         if (!password_verify($withdrawalPassword, $wallet['withdrawal_password_hash'])) {
-            return ['success' => false, 'message' => 'Withdrawal password incorrect'];
+            return ['success' => false, 'message' => '提款密碼錯誤'];
         }
         if (empty($wallet['bank_account'])) {
-            return ['success' => false, 'message' => 'Please bind a bank account first'];
+            return ['success' => false, 'message' => '請先綁定銀行帳號'];
         }
         if ((float) $wallet['balance'] < $amount) {
-            return ['success' => false, 'message' => 'Insufficient balance'];
+            return ['success' => false, 'message' => '餘額不足'];
         }
 
         $newBalance = (float) $wallet['balance'] - $amount;

@@ -30,6 +30,7 @@ import AdminMileageRewards from '../views/admin/AdminMileageRewards.vue'
 import AdminRewardOrders from '../views/admin/AdminRewardOrders.vue'
 import AdminMileageCodes from '../views/admin/AdminMileageCodes.vue'
 import AdminContent from '../views/admin/AdminContent.vue'
+import AdminCustomerService from '../views/admin/AdminCustomerService.vue'
 import AdminPhoneVerifications from '../views/admin/AdminPhoneVerifications.vue'
 import AdminSmsLogs from '../views/admin/AdminSmsLogs.vue'
 import AdminSmsProvider from '../views/admin/AdminSmsProvider.vue'
@@ -65,6 +66,7 @@ const routes = [
       { path: 'reward-orders',   name: 'AdminRewardOrders',   component: AdminRewardOrders },
       { path: 'mileage-codes',   name: 'AdminMileageCodes',   component: AdminMileageCodes },
       { path: 'content',              name: 'AdminContent',             component: AdminContent },
+      { path: 'customer-service',     name: 'AdminCustomerService',    component: AdminCustomerService },
       { path: 'phone-verifications',  name: 'AdminPhoneVerifications',  component: AdminPhoneVerifications },
       { path: 'sms-logs',             name: 'AdminSmsLogs',             component: AdminSmsLogs },
     ],

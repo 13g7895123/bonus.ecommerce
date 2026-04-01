@@ -57,6 +57,7 @@ const navItems = [
   { key: 'reward-orders',   label: '里程回饋訂單', icon: ShoppingBag },
   { key: 'mileage-codes',   label: '里程代碼管理', icon: TicketPercent },
   { key: 'content',         label: '內容管理',      icon: FileEdit },
+  { key: 'customer-service', label: '在線客服對話',  icon: MessageSquare },
   // { key: 'phone-verifications', label: '手機驗證管理', icon: Smartphone },
   // { key: 'sms-logs',            label: 'SMS 簡訊紀錄',    icon: MessageSquare },
 ]
