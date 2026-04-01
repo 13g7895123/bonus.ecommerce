@@ -169,25 +169,16 @@ const sendPhoneOtpByProvider = async () => {
   }
 }
 
-/** 取得 OTP 完整設定（帶 5 分鐘 localStorage 快取）
+/** 取得 OTP 完整設定（每次向後端查詢，確保 sadmin 開關即時生效）
  *  回傳 { provider: string, verification_required: boolean }
  */
 const getOtpConfig = async () => {
-  const CACHE_KEY = 'otp_config_cache'
-  const TTL       = 5 * 60 * 1000 // 5 分鐘
   try {
-    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
-    if (cached && Date.now() - cached.ts < TTL) return cached.value
-  } catch (_) {}
-
-  try {
-    const res    = await api.auth.otpProvider()
-    const config = {
+    const res = await api.auth.otpProvider()
+    return {
       provider:              res?.provider ?? 'twilio',
       verification_required: res?.verification_required !== false,
     }
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ value: config, ts: Date.now() }))
-    return config
   } catch (_) {
     return { provider: 'twilio', verification_required: true }
   }

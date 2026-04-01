@@ -13,15 +13,26 @@
             : '發出簡訊後前台自動完成註冊，無需輸入驗證碼（測試用）' }}
         </span>
       </div>
-      <label class="toggle-switch">
-        <input
-          type="checkbox"
-          :checked="verifyEnabled"
-          :disabled="verifyLoading"
-          @change="toggleVerifyMode"
-        />
-        <span class="toggle-slider"></span>
-      </label>
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <!-- 封鎖中 IP 提示 -->
+        <button
+          v-if="blockedCount > 0"
+          class="blocked-badge"
+          @click="$router.push('/sadmin/sms-settings')"
+          title="點擊前往 SMS 防濫用設定頁解封"
+        >
+          🚫 {{ blockedCount }} 個 IP 封鎖中
+        </button>
+        <label class="toggle-switch">
+          <input
+            type="checkbox"
+            :checked="verifyEnabled"
+            :disabled="verifyLoading"
+            @change="toggleVerifyMode"
+          />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
     </div>
     <!-- ─────────────────────────────────────────────── -->
 
@@ -137,6 +148,7 @@ import { RefreshCw } from 'lucide-vue-next'
 // ── SMS 驗證模式開關 ───────────────────────────────────────────
 const verifyEnabled = ref(true)
 const verifyLoading = ref(false)
+const blockedCount  = ref(0)
 
 const loadVerifyMode = async () => {
   try {
@@ -144,8 +156,17 @@ const loadVerifyMode = async () => {
     const data = await res.json()
     verifyEnabled.value = !!data.enabled
   } catch {
-    // 預設啟用（安全優先）
     verifyEnabled.value = true
+  }
+}
+
+const loadBlockedCount = async () => {
+  try {
+    const res  = await fetch('/api/v1/sadmin/sms-security/blocked-ips')
+    const data = await res.json()
+    blockedCount.value = data.total ?? 0
+  } catch {
+    blockedCount.value = 0
   }
 }
 
@@ -226,7 +247,7 @@ const httpBadge = (code) => {
   return 'badge-yellow'
 }
 
-onMounted(() => { loadVerifyMode(); load() })
+onMounted(() => { loadVerifyMode(); loadBlockedCount(); load() })
 </script>
 
 <style scoped>
@@ -402,5 +423,25 @@ onMounted(() => { loadVerifyMode(); load() })
 .toggle-switch input:disabled + .toggle-slider {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 封鎖 IP 提示徽章 */
+.blocked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #450a0a;
+  color: #fca5a5;
+  border: 1px solid #7f1d1d;
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.blocked-badge:hover {
+  background: #7f1d1d;
 }
 </style>
