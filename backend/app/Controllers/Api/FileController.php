@@ -107,7 +107,7 @@ class FileController extends BaseApiController
 
         // 設定快取 Header，避免瀏覽器重複請求
         $this->response->setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-        $this->response->setHeader('ETag', md5($uuid));
+        $this->response->setHeader('ETag', md5($idOrUuid));
         $this->response->setContentType($mime);
         $this->response->setBody(file_get_contents($absPath));
         return $this->response;
