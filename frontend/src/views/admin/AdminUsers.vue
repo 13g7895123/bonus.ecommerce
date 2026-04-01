@@ -27,7 +27,11 @@
             <td><span :class="['badge', kycBadgeClass(u.verify_status)]">{{ kycLabel(u.verify_status) }}</span></td>
             <td class="td-num">${{ (u.balance || 0).toLocaleString() }}</td>
             <td class="td-num">{{ (u.miles_balance || 0).toLocaleString() }}</td>
-            <td><button class="btn btn-sm btn-primary" @click="openDeposit(u)">儲值</button></td>
+            <td class="td-actions">
+              <button class="btn btn-sm btn-primary" @click="openDeposit(u)">儲值</button>
+              <button class="btn btn-sm btn-outline" @click="openChangePassword(u)">變更密碼</button>
+              <button class="btn btn-sm btn-outline" style="border-color:#6366f1;color:#6366f1" @click="openUserDetail(u)">詳細資料</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -54,6 +58,106 @@
       </div>
     </div>
   </div>
+
+  <!-- 變更密碼 Modal -->
+  <div v-if="pwdModal.show" class="modal-overlay" @click.self="pwdModal.show = false">
+    <div class="modal-box" style="max-width:420px">
+      <div class="modal-hd">
+        <span>變更密碼 — {{ pwdModal.user?.full_name || pwdModal.user?.email }}</span>
+        <button class="modal-x" @click="pwdModal.show = false">✕</button>
+      </div>
+      <div class="modal-bd">
+        <label class="f-label">新密碼（至少 6 字元）</label>
+        <input v-model="pwdModal.newPassword" type="password" class="f-input" placeholder="請輸入新密碼" autocomplete="new-password" />
+        <label class="f-label" style="margin-top:0.75rem">確認新密碼</label>
+        <input v-model="pwdModal.confirmPassword" type="password" class="f-input" placeholder="請再次輸入新密碼" autocomplete="new-password" @keyup.enter="submitChangePassword" />
+      </div>
+      <div class="modal-ft">
+        <button class="btn btn-outline" @click="pwdModal.show = false">取消</button>
+        <button class="btn btn-primary" :disabled="pwdModal.submitting" @click="submitChangePassword">{{ pwdModal.submitting ? '處理中...' : '確認變更' }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 詳細資料 Modal -->
+  <div v-if="detailModal.show" class="modal-overlay" @click.self="detailModal.show = false">
+    <div class="modal-box" style="max-width:620px">
+      <div class="modal-hd">
+        <span>使用者詳細資料 — {{ detailModal.user?.email }}</span>
+        <button class="modal-x" @click="detailModal.show = false">✕</button>
+      </div>
+      <div class="modal-bd">
+        <div v-if="detailModal.loading" class="state-msg">載入中...</div>
+        <template v-else-if="detailModal.user">
+          <div class="detail-section">
+            <div class="detail-section-title">基本資料</div>
+            <div class="kyc-rows">
+              <div class="kyc-row"><span class="kyc-lbl">ID</span><span>{{ detailModal.user.id }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">Email</span><span>{{ detailModal.user.email }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">姓名</span><span>{{ detailModal.user.full_name || '-' }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">電話</span><span>{{ detailModal.user.phone || '-' }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">生日</span><span>{{ detailModal.user.dob || '-' }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">國家</span><span>{{ detailModal.user.country || '-' }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">角色</span><span>{{ detailModal.user.role || 'user' }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">會員等級</span><span>{{ detailModal.user.tier || '-' }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">Email驗證</span><span>{{ detailModal.user.is_verified == 1 ? '已驗證' : '未驗證' }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">帳號狀態</span><span>{{ detailModal.user.status || '-' }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">餘額</span><span>${{ (detailModal.user.balance || 0).toLocaleString() }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">里程</span><span>{{ (detailModal.user.miles_balance || 0).toLocaleString() }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">已綁定銀行</span><span>{{ detailModal.user.has_bank_account ? '是' : '否' }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">註冊時間</span><span>{{ detailModal.user.created_at }}</span></div>
+            </div>
+          </div>
+
+          <!-- KYC 資料 -->
+          <template v-if="detailModal.user.verify_status && detailModal.user.verify_status !== 'none' && detailModal.user.verification_data">
+            <div class="detail-section" style="margin-top:1.25rem">
+              <div class="detail-section-title">
+                實名認證資料
+                <span :class="['badge', kycBadgeClass(detailModal.user.verify_status)]" style="margin-left:0.5rem;font-size:0.75rem">{{ kycLabel(detailModal.user.verify_status) }}</span>
+              </div>
+              <div class="kyc-rows">
+                <div class="kyc-row"><span class="kyc-lbl">真實姓名</span><span>{{ detailModal.user.verification_data.real_name || detailModal.user.verification_data.fullName || '-' }}</span></div>
+                <div class="kyc-row"><span class="kyc-lbl">身分證字號</span><span>{{ detailModal.user.verification_data.id_number || detailModal.user.verification_data.idNumber || '-' }}</span></div>
+                <div v-if="detailModal.user.verification_data.reject_reason" class="kyc-row">
+                  <span class="kyc-lbl">拒絕原因</span>
+                  <span style="color:#ef4444">{{ detailModal.user.verification_data.reject_reason }}</span>
+                </div>
+              </div>
+              <!-- 上傳照片 -->
+              <div class="kyc-imgs" style="margin-top:0.75rem">
+                <template v-if="detailModal.user.verification_data.file_ids">
+                  <div v-if="detailModal.user.verification_data.file_ids.front" class="kyc-img-wrap">
+                    <div class="kyc-img-label">身分證正面</div>
+                    <img :src="`/api/v1/files/${detailModal.user.verification_data.file_ids.front}/serve`" class="kyc-img" />
+                  </div>
+                  <div v-if="detailModal.user.verification_data.file_ids.back" class="kyc-img-wrap">
+                    <div class="kyc-img-label">身分證背面</div>
+                    <img :src="`/api/v1/files/${detailModal.user.verification_data.file_ids.back}/serve`" class="kyc-img" />
+                  </div>
+                  <div v-if="detailModal.user.verification_data.file_ids.handheld" class="kyc-img-wrap">
+                    <div class="kyc-img-label">手持身分證</div>
+                    <img :src="`/api/v1/files/${detailModal.user.verification_data.file_ids.handheld}/serve`" class="kyc-img" />
+                  </div>
+                </template>
+                <template v-else>
+                  <div v-if="detailModal.user.verification_data.front_image_url || detailModal.user.verification_data.frontImageUrl" class="kyc-img-wrap">
+                    <div class="kyc-img-label">身分證正面</div>
+                    <img :src="detailModal.user.verification_data.front_image_url || detailModal.user.verification_data.frontImageUrl" class="kyc-img" />
+                  </div>
+                  <div v-if="detailModal.user.verification_data.back_image_url || detailModal.user.verification_data.backImageUrl" class="kyc-img-wrap">
+                    <div class="kyc-img-label">身分證背面</div>
+                    <img :src="detailModal.user.verification_data.back_image_url || detailModal.user.verification_data.backImageUrl" class="kyc-img" />
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </template>
+      </div>
+      <div class="modal-ft"><button class="btn btn-outline" @click="detailModal.show = false">關閉</button></div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -75,6 +179,7 @@ const loadUsers = async () => {
   } finally { loadingUsers.value = false }
 }
 
+// ── 儲值 ──
 const depositModal = ref({ show: false, user: null, amount: '', description: '', submitting: false })
 const openDeposit  = (user) => { depositModal.value = { show: true, user, amount: '', description: '', submitting: false } }
 
@@ -95,6 +200,41 @@ const submitDeposit = async () => {
     alert(`儲值成功！新餘額：$${Number(data.balance).toLocaleString()}`)
     depositModal.value.show = false
   } finally { depositModal.value.submitting = false }
+}
+
+// ── 變更密碼 ──
+const pwdModal = ref({ show: false, user: null, newPassword: '', confirmPassword: '', submitting: false })
+const openChangePassword = (user) => { pwdModal.value = { show: true, user, newPassword: '', confirmPassword: '', submitting: false } }
+
+const submitChangePassword = async () => {
+  if (pwdModal.value.newPassword.length < 6) { alert('密碼至少需要 6 個字元'); return }
+  if (pwdModal.value.newPassword !== pwdModal.value.confirmPassword) { alert('兩次輸入的密碼不一致'); return }
+  pwdModal.value.submitting = true
+  try {
+    const res  = await fetch(`/api/v1/admin-panel/users/${pwdModal.value.user.id}/change-password`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ new_password: pwdModal.value.newPassword }),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.message || '密碼變更失敗'); return }
+    alert('密碼已成功變更')
+    pwdModal.value.show = false
+  } finally { pwdModal.value.submitting = false }
+}
+
+// ── 詳細資料 ──
+const detailModal = ref({ show: false, user: null, loading: false })
+
+const openUserDetail = async (user) => {
+  detailModal.value = { show: true, user: { ...user }, loading: true }
+  try {
+    const res  = await fetch(`/api/v1/admin-panel/users/${user.id}`)
+    const data = await res.json()
+    detailModal.value.user    = data
+    detailModal.value.loading = false
+  } catch {
+    detailModal.value.loading = false
+  }
 }
 
 onMounted(loadUsers)

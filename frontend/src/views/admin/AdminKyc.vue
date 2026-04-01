@@ -19,7 +19,7 @@
           <tr>
             <th>Email</th><th>姓名</th><th>手機</th>
             <th>身分證字號</th><th>代表人姓名</th><th>狀態</th>
-            <th v-if="kycTab === 'pending' || kycDevMode">操作</th>
+            <th>操作</th>
           </tr>
         </thead>
         <tbody>
@@ -30,15 +30,15 @@
             <td>{{ u.verification_data?.idNumber || u.verification_data?.id_number || '-' }}</td>
             <td>{{ u.verification_data?.fullName || u.verification_data?.real_name || '-' }}</td>
             <td><span :class="['badge', kycBadgeClass(u.verify_status)]">{{ kycLabel(u.verify_status) }}</span></td>
-            <td v-if="kycTab === 'pending' || kycDevMode" class="td-actions">
+            <td class="td-actions">
               <template v-if="kycTab === 'pending'">
                 <button class="btn btn-sm btn-green" @click="reviewKyc(u.id, 'approve')">通過</button>
                 <button class="btn btn-sm btn-danger" @click="openKycReject(u)">拒絕</button>
-                <button class="btn btn-sm btn-outline" @click="openKycDetail(u)">詳情</button>
               </template>
-              <template v-else-if="kycDevMode">
+              <template v-if="kycDevMode && kycTab !== 'pending'">
                 <button class="btn btn-sm btn-outline" style="border-color:#f59e0b;color:#f59e0b" @click="reviewKyc(u.id, 'revoke')">↩ 退回</button>
               </template>
+              <button class="btn btn-sm btn-outline" style="border-color:#6366f1;color:#6366f1" @click="openKycDetail(u)">詳情</button>
             </td>
           </tr>
         </tbody>
@@ -48,7 +48,7 @@
 
   <!-- KYC 詳情 Modal -->
   <div v-if="kycDetailModal.show" class="modal-overlay" @click.self="kycDetailModal.show = false">
-    <div class="modal-box" style="max-width:560px">
+    <div class="modal-box" style="max-width:600px">
       <div class="modal-hd">
         <span>KYC 詳情 — {{ kycDetailModal.user?.email }}</span>
         <button class="modal-x" @click="kycDetailModal.show = false">✕</button>
@@ -60,19 +60,50 @@
           <div class="kyc-row"><span class="kyc-lbl">手機</span><span>{{ kycDetailModal.user?.phone }}</span></div>
           <div class="kyc-row"><span class="kyc-lbl">身分證字號</span><span>{{ kycDetailModal.user?.verification_data?.idNumber || kycDetailModal.user?.verification_data?.id_number || '-' }}</span></div>
           <div class="kyc-row"><span class="kyc-lbl">代表人姓名</span><span>{{ kycDetailModal.user?.verification_data?.fullName || kycDetailModal.user?.verification_data?.real_name || '-' }}</span></div>
+          <div class="kyc-row"><span class="kyc-lbl">審核狀態</span>
+            <span :class="['badge', kycBadgeClass(kycDetailModal.user?.verify_status)]">{{ kycLabel(kycDetailModal.user?.verify_status) }}</span>
+          </div>
+          <div v-if="kycDetailModal.user?.verification_data?.reject_reason" class="kyc-row">
+            <span class="kyc-lbl">拒絕原因</span>
+            <span style="color:#ef4444">{{ kycDetailModal.user.verification_data.reject_reason }}</span>
+          </div>
         </div>
-        <div v-if="kycDetailModal.user?.verification_data" class="kyc-imgs">
-          <div v-if="kycDetailModal.user.verification_data.front_image_url || kycDetailModal.user.verification_data.frontImageUrl" class="kyc-img-wrap">
-            <div class="kyc-img-label">身分證正面</div>
-            <img :src="kycDetailModal.user.verification_data.front_image_url || kycDetailModal.user.verification_data.frontImageUrl" class="kyc-img" />
-          </div>
-          <div v-if="kycDetailModal.user.verification_data.back_image_url || kycDetailModal.user.verification_data.backImageUrl" class="kyc-img-wrap">
-            <div class="kyc-img-label">身分證背面</div>
-            <img :src="kycDetailModal.user.verification_data.back_image_url || kycDetailModal.user.verification_data.backImageUrl" class="kyc-img" />
-          </div>
+        <div v-if="kycDetailModal.user?.verification_data" class="kyc-imgs" style="margin-top:1rem">
+          <!-- file_ids 格式 -->
+          <template v-if="kycDetailModal.user.verification_data.file_ids">
+            <div v-if="kycDetailModal.user.verification_data.file_ids.front" class="kyc-img-wrap">
+              <div class="kyc-img-label">身分證正面</div>
+              <img :src="`/api/v1/files/${kycDetailModal.user.verification_data.file_ids.front}/serve`" class="kyc-img" />
+            </div>
+            <div v-if="kycDetailModal.user.verification_data.file_ids.back" class="kyc-img-wrap">
+              <div class="kyc-img-label">身分證背面</div>
+              <img :src="`/api/v1/files/${kycDetailModal.user.verification_data.file_ids.back}/serve`" class="kyc-img" />
+            </div>
+            <div v-if="kycDetailModal.user.verification_data.file_ids.handheld" class="kyc-img-wrap">
+              <div class="kyc-img-label">手持身分證</div>
+              <img :src="`/api/v1/files/${kycDetailModal.user.verification_data.file_ids.handheld}/serve`" class="kyc-img" />
+            </div>
+          </template>
+          <!-- URL 格式（相容舊資料） -->
+          <template v-else>
+            <div v-if="kycDetailModal.user.verification_data.front_image_url || kycDetailModal.user.verification_data.frontImageUrl" class="kyc-img-wrap">
+              <div class="kyc-img-label">身分證正面</div>
+              <img :src="kycDetailModal.user.verification_data.front_image_url || kycDetailModal.user.verification_data.frontImageUrl" class="kyc-img" />
+            </div>
+            <div v-if="kycDetailModal.user.verification_data.back_image_url || kycDetailModal.user.verification_data.backImageUrl" class="kyc-img-wrap">
+              <div class="kyc-img-label">身分證背面</div>
+              <img :src="kycDetailModal.user.verification_data.back_image_url || kycDetailModal.user.verification_data.backImageUrl" class="kyc-img" />
+            </div>
+          </template>
         </div>
       </div>
-      <div class="modal-ft"><button class="btn btn-outline" @click="kycDetailModal.show = false">關閉</button></div>
+      <div class="modal-ft">
+        <template v-if="kycDetailModal.user?.verify_status === 'pending'">
+          <button class="btn btn-green" @click="reviewKyc(kycDetailModal.user.id, 'approve'); kycDetailModal.show = false">通過</button>
+          <button class="btn btn-danger" @click="openKycReject(kycDetailModal.user); kycDetailModal.show = false">拒絕</button>
+        </template>
+        <button class="btn btn-outline" @click="kycDetailModal.show = false">關閉</button>
+      </div>
     </div>
   </div>
 

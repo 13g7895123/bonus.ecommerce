@@ -150,7 +150,34 @@ class AdminPanelController extends Controller
             return $this->json(['message' => 'User not found'], 404);
         }
         unset($user['password_hash']);
+        if (isset($user['verification_data']) && is_string($user['verification_data'])) {
+            $user['verification_data'] = json_decode($user['verification_data'], true);
+        }
+        // Attach wallet info
+        $wallet = model(\App\Models\UserWalletModel::class)->where('user_id', $id)->first();
+        $user['balance']          = $wallet ? (float) $wallet['balance'] : 0;
+        $user['miles_balance']    = $wallet ? (int) $wallet['miles_balance'] : 0;
+        $user['has_bank_account'] = $wallet ? !empty($wallet['bank_account']) : false;
         return $this->json($user);
+    }
+
+    public function changePassword(int $userId): ResponseInterface
+    {
+        $data        = $this->request->getJSON(true) ?? [];
+        $newPassword = $data['new_password'] ?? '';
+
+        if (strlen($newPassword) < 6) {
+            return $this->json(['message' => '密碼至少需要 6 個字元'], 400);
+        }
+
+        $repo = new UserRepository();
+        $user = $repo->find($userId);
+        if (!$user) {
+            return $this->json(['message' => 'User not found'], 404);
+        }
+
+        $repo->update($userId, ['password_hash' => password_hash($newPassword, PASSWORD_DEFAULT)]);
+        return $this->json(['success' => true, 'message' => '密碼已成功更新']);
     }
 
     public function userLogs(int $userId): ResponseInterface

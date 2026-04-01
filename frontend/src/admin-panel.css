@@ -99,4 +99,6 @@
 .kyc-imgs { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
 .kyc-img-wrap { flex: 1; min-width: 140px; }
 .kyc-img-label { font-size: 0.8rem; color: #64748b; margin-bottom: 6px; }
-.kyc-img { width: 100%; max-width: 200px; border-radius: 8px; border: 1px solid #e2e8f0; }
+.kyc-img { width: 100%; max-width: 220px; border-radius: 8px; border: 1px solid #e2e8f0; }
+.detail-section { padding: 0; }
+.detail-section-title { font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.4rem; }

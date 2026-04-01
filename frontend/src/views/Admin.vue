@@ -56,9 +56,9 @@ const navItems = [
   { key: 'mileage-rewards', label: '里程回饋商品', icon: Gift },
   { key: 'reward-orders',   label: '里程回饋訂單', icon: ShoppingBag },
   { key: 'mileage-codes',   label: '里程代碼管理', icon: TicketPercent },
-  { key: 'content',              label: '內容管理',      icon: FileEdit },
-  { key: 'phone-verifications', label: '手機驗證管理', icon: Smartphone },
-  { key: 'sms-logs',            label: 'SMS 簡訊紀錄',    icon: MessageSquare },
+  { key: 'content',         label: '內容管理',      icon: FileEdit },
+  // { key: 'phone-verifications', label: '手機驗證管理', icon: Smartphone },
+  // { key: 'sms-logs',            label: 'SMS 簡訊紀錄',    icon: MessageSquare },
 ]
 
 const isActive = (key) => route.path === `/admin/${key}`
