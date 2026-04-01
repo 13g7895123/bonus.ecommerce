@@ -85,10 +85,15 @@ class FileController extends BaseApiController
      * GET /api/v1/files/(:segment)/serve
      * 直接輸出檔案內容（供 <img src="..."> 使用）
      * 公開端點（is_public=1 的檔案不需驗證）
+     * 支援以整數 ID 或 UUID 查詢
      */
-    public function serve(string $uuid): mixed
+    public function serve(string $idOrUuid): mixed
     {
-        $file = $this->fileService->getByUuid($uuid);
+        // 若全部為數字則以整數 ID 查詢，否則以 UUID 查詢
+        $file = ctype_digit($idOrUuid)
+            ? $this->fileService->getById((int) $idOrUuid)
+            : $this->fileService->getByUuid($idOrUuid);
+
         if (!$file) {
             return $this->error('File not found', 404);
         }

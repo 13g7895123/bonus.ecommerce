@@ -204,25 +204,25 @@
                 <template v-if="detailModal.user.verification_data.file_ids">
                   <div v-if="detailModal.user.verification_data.file_ids.front" class="kyc-img-wrap">
                     <div class="kyc-img-label">身分證正面</div>
-                    <img :src="`/api/v1/files/${detailModal.user.verification_data.file_ids.front}/serve`" class="kyc-img" />
+                    <img :src="`/api/v1/files/${detailModal.user.verification_data.file_ids.front}/serve`" class="kyc-img kyc-img-zoom" @click="openLightbox(`/api/v1/files/${detailModal.user.verification_data.file_ids.front}/serve`)" />
                   </div>
                   <div v-if="detailModal.user.verification_data.file_ids.back" class="kyc-img-wrap">
                     <div class="kyc-img-label">身分證背面</div>
-                    <img :src="`/api/v1/files/${detailModal.user.verification_data.file_ids.back}/serve`" class="kyc-img" />
+                    <img :src="`/api/v1/files/${detailModal.user.verification_data.file_ids.back}/serve`" class="kyc-img kyc-img-zoom" @click="openLightbox(`/api/v1/files/${detailModal.user.verification_data.file_ids.back}/serve`)" />
                   </div>
                   <div v-if="detailModal.user.verification_data.file_ids.handheld" class="kyc-img-wrap">
                     <div class="kyc-img-label">手持身分證</div>
-                    <img :src="`/api/v1/files/${detailModal.user.verification_data.file_ids.handheld}/serve`" class="kyc-img" />
+                    <img :src="`/api/v1/files/${detailModal.user.verification_data.file_ids.handheld}/serve`" class="kyc-img kyc-img-zoom" @click="openLightbox(`/api/v1/files/${detailModal.user.verification_data.file_ids.handheld}/serve`)" />
                   </div>
                 </template>
                 <template v-else>
                   <div v-if="detailModal.user.verification_data.front_image_url || detailModal.user.verification_data.frontImageUrl" class="kyc-img-wrap">
                     <div class="kyc-img-label">身分證正面</div>
-                    <img :src="detailModal.user.verification_data.front_image_url || detailModal.user.verification_data.frontImageUrl" class="kyc-img" />
+                    <img :src="detailModal.user.verification_data.front_image_url || detailModal.user.verification_data.frontImageUrl" class="kyc-img kyc-img-zoom" @click="openLightbox(detailModal.user.verification_data.front_image_url || detailModal.user.verification_data.frontImageUrl)" />
                   </div>
                   <div v-if="detailModal.user.verification_data.back_image_url || detailModal.user.verification_data.backImageUrl" class="kyc-img-wrap">
                     <div class="kyc-img-label">身分證背面</div>
-                    <img :src="detailModal.user.verification_data.back_image_url || detailModal.user.verification_data.backImageUrl" class="kyc-img" />
+                    <img :src="detailModal.user.verification_data.back_image_url || detailModal.user.verification_data.backImageUrl" class="kyc-img kyc-img-zoom" @click="openLightbox(detailModal.user.verification_data.back_image_url || detailModal.user.verification_data.backImageUrl)" />
                   </div>
                 </template>
               </div>
@@ -232,6 +232,12 @@
       </div>
       <div class="modal-ft"><button class="btn btn-outline" @click="detailModal.show = false">關閉</button></div>
     </div>
+  </div>
+
+  <!-- 圖片放大 Lightbox -->
+  <div v-if="lightboxSrc" class="lightbox-overlay" @click="lightboxSrc = null">
+    <img :src="lightboxSrc" class="lightbox-img" @click.stop />
+    <button class="lightbox-close" @click="lightboxSrc = null">✕</button>
   </div>
 </template>
 
@@ -324,6 +330,9 @@ const submitChangeWithdrawalPassword = async () => {
   } finally { wdPwdModal.value.submitting = false }
 }
 
+const lightboxSrc  = ref(null)
+const openLightbox = (src) => { lightboxSrc.value = src }
+
 // ── 詳細資料 ──
 const detailModal = ref({ show: false, user: null, loading: false })
 
@@ -367,3 +376,42 @@ const submitCreateUser = async () => {
 
 onMounted(loadUsers)
 </script>
+
+<style scoped>
+.kyc-img-zoom {
+  cursor: zoom-in;
+  transition: opacity 0.15s;
+}
+.kyc-img-zoom:hover { opacity: 0.85; }
+
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  object-fit: contain;
+}
+.lightbox-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.25); }
+</style>
