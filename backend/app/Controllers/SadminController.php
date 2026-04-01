@@ -316,4 +316,41 @@ class SadminController extends Controller
         return $this->json(['success' => true, 'cleared' => $count, 'message' => "已清除 {$count} 筆速率限制紀錄"]);
     }
 
+    // ── SMS Verification Mode ─────────────────────────────────────────────────
+
+    /**
+     * GET /api/v1/sadmin/sms-verification-mode
+     * 取得「是否強制驗證簡訊才能完成註冊」的開關狀態。
+     * 預設 enabled = true（正式模式，需驗證 OTP）。
+     */
+    public function getSmsVerificationMode(): ResponseInterface
+    {
+        $row     = model(AppConfigModel::class)->getByKey('sms_verification_required');
+        $enabled = ($row['value'] ?? '1') === '1';
+
+        return $this->json(['enabled' => $enabled]);
+    }
+
+    /**
+     * POST /api/v1/sadmin/sms-verification-mode
+     * Body: { "enabled": true | false }
+     * 設定是否強制驗證簡訊。關閉時，前台發送驗證碼後自動完成註冊（測試模式）。
+     */
+    public function setSmsVerificationMode(): ResponseInterface
+    {
+        $data    = $this->request->getJSON(true) ?? [];
+        if (!array_key_exists('enabled', $data)) {
+            return $this->json(['message' => '缺少 enabled 參數'], 400);
+        }
+
+        $enabled = (bool) $data['enabled'];
+        model(AppConfigModel::class)->setByKey('sms_verification_required', $enabled ? '1' : '0');
+
+        return $this->json([
+            'success' => true,
+            'enabled' => $enabled,
+            'message' => $enabled ? 'SMS 驗證已啟用（正式模式）' : 'SMS 驗證已停用（測試模式）',
+        ]);
+    }
+
 }

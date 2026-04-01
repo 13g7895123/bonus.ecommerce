@@ -1,5 +1,30 @@
 <template>
   <div class="panel">
+    <!-- SMS 驗證模式開關 ────────────────────────────── -->
+    <div class="verify-mode-bar">
+      <div class="verify-mode-info">
+        <span class="verify-mode-label">SMS 驗證模式</span>
+        <span :class="['verify-mode-badge', verifyEnabled ? 'badge-green' : 'badge-yellow']">
+          {{ verifyEnabled ? '已啟用（正式）' : '已停用（測試）' }}
+        </span>
+        <span class="verify-mode-desc">
+          {{ verifyEnabled
+            ? '用戶必須輸入驗證碼才能完成註冊'
+            : '發出簡訊後前台自動完成註冊，無需輸入驗證碼（測試用）' }}
+        </span>
+      </div>
+      <label class="toggle-switch">
+        <input
+          type="checkbox"
+          :checked="verifyEnabled"
+          :disabled="verifyLoading"
+          @change="toggleVerifyMode"
+        />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <!-- ─────────────────────────────────────────────── -->
+
     <div class="panel-header">
       <span class="panel-title">SMS 簡訊紀錄</span>
       <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
@@ -109,6 +134,45 @@
 import { ref, onMounted } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
 
+// ── SMS 驗證模式開關 ───────────────────────────────────────────
+const verifyEnabled = ref(true)
+const verifyLoading = ref(false)
+
+const loadVerifyMode = async () => {
+  try {
+    const res  = await fetch('/api/v1/sadmin/sms-verification-mode')
+    const data = await res.json()
+    verifyEnabled.value = !!data.enabled
+  } catch {
+    // 預設啟用（安全優先）
+    verifyEnabled.value = true
+  }
+}
+
+const toggleVerifyMode = async (e) => {
+  const next = e.target.checked
+  verifyLoading.value = true
+  try {
+    const res  = await fetch('/api/v1/sadmin/sms-verification-mode', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ enabled: next }),
+    })
+    const data = await res.json()
+    if (data.success) {
+      verifyEnabled.value = !!data.enabled
+    } else {
+      // 還原 checkbox
+      e.target.checked = verifyEnabled.value
+    }
+  } catch {
+    e.target.checked = verifyEnabled.value
+  } finally {
+    verifyLoading.value = false
+  }
+}
+// ──────────────────────────────────────────────────────────────
+
 const items          = ref([])
 const loading        = ref(false)
 const total          = ref(0)
@@ -162,7 +226,7 @@ const httpBadge = (code) => {
   return 'badge-yellow'
 }
 
-onMounted(load)
+onMounted(() => { loadVerifyMode(); load() })
 </script>
 
 <style scoped>
@@ -258,4 +322,85 @@ onMounted(load)
 .badge-blue   { background: #1e3a5f; color: #93c5fd; }
 .badge-orange { background: #431407; color: #fb923c; }
 .badge-purple { background: #2e1065; color: #c4b5fd; }
+
+/* SMS 驗證模式開關 */
+.verify-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  background: #0f172a;
+  border-bottom: 1px solid #334155;
+  flex-wrap: wrap;
+}
+
+.verify-mode-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.verify-mode-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.badge-yellow { background: #422006; color: #fbbf24; }
+
+.verify-mode-desc {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #334155;
+  border-radius: 28px;
+  transition: background 0.2s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: #22c55e;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(24px);
+}
+
+.toggle-switch input:disabled + .toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 </style>

@@ -115,8 +115,15 @@ class AuthController extends BaseApiController
             return $this->error($result['message'] ?? 'Failed to send OTP', 500);
         }
 
+        // 讀取 sadmin 設定的 SMS 驗證模式開關
+        $row                  = model(\App\Models\AppConfigModel::class)->getByKey('sms_verification_required');
+        $verificationRequired = ($row['value'] ?? '1') === '1';
+
         return $this->success(
-            ['provider' => \App\Services\OtpProviderFactory::activeProvider()],
+            [
+                'provider'              => \App\Services\OtpProviderFactory::activeProvider(),
+                'verification_required' => $verificationRequired,
+            ],
             'OTP sent successfully'
         );
     }

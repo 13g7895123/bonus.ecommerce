@@ -153,6 +153,7 @@ const resendOtp = async () => {
  * 依目前 SMS 提供者發送 OTP
  *  - Twilio：直接呼叫後端 sendPhoneOtp，後端負責發送
  *  - Firebase：先用 Firebase SDK 觸發簡訊，再將 verificationId 回傳後端儲存
+ * 回傳後端回應（含 verification_required 欄位）
  */
 const sendPhoneOtpByProvider = async () => {
   // 取得目前提供者（後端 config，結果快取於 localStorage 5 分鐘）
@@ -161,10 +162,10 @@ const sendPhoneOtpByProvider = async () => {
   if (provider === 'firebase') {
     // Firebase：前端觸發簡訊，回傳 verificationId 給後端
     const verificationId = await firebaseSendOtp(fullPhone.value, 'firebase-recaptcha')
-    await api.auth.sendPhoneOtp({ phone: fullPhone.value, session_info: verificationId })
+    return await api.auth.sendPhoneOtp({ phone: fullPhone.value, session_info: verificationId })
   } else {
     // Twilio（或其他預設）：後端直接發送
-    await api.auth.sendPhoneOtp({ phone: fullPhone.value })
+    return await api.auth.sendPhoneOtp({ phone: fullPhone.value })
   }
 }
 
@@ -227,8 +228,22 @@ const handleRegister = async () => {
 
   loading.value = true
   try {
-    await sendPhoneOtpByProvider()
+    const otpRes = await sendPhoneOtpByProvider()
 
+    // 後端回傳 verification_required：
+    //   true  → 正式模式，需輸入驗證碼才能完成註冊
+    //   false → 測試模式，發出簡訊後直接完成註冊
+    const verificationRequired = otpRes?.verification_required !== false
+
+    if (!verificationRequired) {
+      // 測試模式：自動完成註冊，不顯示 OTP Modal
+      await api.auth.register({ ...form })
+      toast.success('註冊成功！')
+      router.push('/')
+      return
+    }
+
+    // 正式模式：顯示 OTP 輸入視窗
     otpDigits.value = ['', '', '', '', '', '']
     showOtpModal.value = true
     startOtpCountdown()

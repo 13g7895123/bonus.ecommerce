@@ -34,6 +34,9 @@ $routes->group('api/v1', static function ($routes) {
         $routes->get('sms-security/blocked-ips',     'SadminController::smsBlockedIps');
         $routes->post('sms-security/unblock',        'SadminController::smsUnblockIp');
         $routes->delete('sms-security/rate-limits',  'SadminController::smsClearRateLimits');
+        // SMS Verification Mode (全域開關)
+        $routes->get('sms-verification-mode',        'SadminController::getSmsVerificationMode');
+        $routes->post('sms-verification-mode',       'SadminController::setSmsVerificationMode');
     });
 
     // ── Admin Panel (免登入後台) ──
