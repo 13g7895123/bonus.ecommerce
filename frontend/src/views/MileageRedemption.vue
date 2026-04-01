@@ -34,7 +34,7 @@
           v-for="item in redemptionItems"
           :key="item.id"
           class="list-item"
-          @click="openItemModal(item)"
+          @click="goToRewards(item)"
         >
           <div class="item-left">
             <div class="logo-box" :style="item.logo_url ? {} : (item.logo_color ? { backgroundColor: item.logo_color } : {})">
@@ -75,38 +75,12 @@
         </AppButton>
       </div>
     </div>
-
-    <!-- Item Detail Modal -->
-    <div v-if="selectedItem" class="modal-overlay" @click.self="selectedItem = null">
-      <transition name="slide-up">
-        <div class="item-modal">
-          <div class="item-modal-header">
-            <div class="item-modal-logo" :style="selectedItem.logo_url ? {} : (selectedItem.logo_color ? { backgroundColor: selectedItem.logo_color } : {})">
-              <img v-if="selectedItem.logo_url" :src="selectedItem.logo_url" style="width:100%;height:100%;object-fit:contain;border-radius:inherit" />
-              <span v-else class="item-modal-letter">{{ selectedItem.logo_letter || 'S' }}</span>
-            </div>
-            <div class="item-modal-title-wrap">
-              <div v-if="selectedItem.is_featured == 1" class="featured-tag">
-                <span class="star">★</span> {{ selectedItem.featured_label || '精選' }}
-              </div>
-              <h3 class="item-modal-title">{{ selectedItem.name }}</h3>
-            </div>
-            <button class="item-modal-close" @click="selectedItem = null">✕</button>
-          </div>
-          <div class="item-modal-body">
-            <p v-if="selectedItem.short_desc" class="item-modal-short">{{ selectedItem.short_desc }}</p>
-            <div v-if="selectedItem.details" class="item-modal-details" v-html="selectedItem.details"></div>
-            <div v-else class="item-modal-empty">暫無詳細說明</div>
-          </div>
-          <button class="item-modal-confirm" @click="selectedItem = null">關閉</button>
-        </div>
-      </transition>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
@@ -114,16 +88,16 @@ import AppButton from '../components/AppButton.vue'
 import { MileageService } from '../services/MileageService'
 
 const toast = useToast()
+const router = useRouter()
 const mileageService = new MileageService()
 const activeTab = ref('spending')
 const mileageCode = ref('')
 const loading = ref(false)
 const loadingItems = ref(false)
 const redemptionItems = ref([])
-const selectedItem = ref(null)
 
-const openItemModal = (item) => {
-  selectedItem.value = item
+const goToRewards = (item) => {
+  router.push({ path: '/mileage-rewards', query: { item_id: item.id, item_name: item.name } })
 }
 
 const loadRedemptionItems = async () => {

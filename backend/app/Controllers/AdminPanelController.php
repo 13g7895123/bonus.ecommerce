@@ -180,6 +180,42 @@ class AdminPanelController extends Controller
         return $this->json(['success' => true, 'message' => '密碼已成功更新']);
     }
 
+    public function createUser(): ResponseInterface
+    {
+        $data     = $this->request->getJSON(true) ?? [];
+        $email    = strtolower(trim($data['email'] ?? ''));
+        $password = $data['password'] ?? '';
+        $fullName = trim($data['full_name'] ?? '');
+        $phone    = trim($data['phone'] ?? '');
+        $role     = in_array($data['role'] ?? 'user', ['user', 'admin']) ? ($data['role'] ?? 'user') : 'user';
+
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->json(['message' => '請輸入有效的 Email'], 400);
+        }
+        if (strlen($password) < 6) {
+            return $this->json(['message' => '密碼至少需要 6 個字元'], 400);
+        }
+
+        if (model(UserModel::class)->where('email', $email)->first()) {
+            return $this->json(['message' => 'Email 已被使用'], 409);
+        }
+
+        $repo   = new UserRepository();
+        $userId = $repo->create([
+            'email'         => $email,
+            'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+            'full_name'     => $fullName ?: null,
+            'phone'         => $phone ?: null,
+            'role'          => $role,
+            'tier'          => 'regular',
+            'status'        => 'active',
+            'is_verified'   => 0,
+            'verify_status' => 'none',
+        ]);
+
+        return $this->json(['success' => true, 'id' => $userId, 'message' => '使用者已建立'], 201);
+    }
+
     public function userLogs(int $userId): ResponseInterface
     {
         $page   = (int) ($this->request->getGet('page') ?? 1);

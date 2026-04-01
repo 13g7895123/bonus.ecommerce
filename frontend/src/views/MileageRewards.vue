@@ -1,6 +1,6 @@
 <template>
   <div class="ml-page">
-    <PageHeader :title="t('mileageRewards.title')" back-to="/settings" :bordered="false" />
+    <PageHeader :title="pageTitle" :back-to="backPath" :bordered="false" />
 
     <div v-if="loading" class="state-loading">{{ t('common.loading') }}</div>
     <div v-else-if="products.length === 0" class="state-empty">{{ t('mileageRewards.empty') }}</div>
@@ -28,13 +28,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/PageHeader.vue'
 
 const { t } = useI18n()
 const router = useRouter()
+const route  = useRoute()
+
+const itemId   = computed(() => route.query.item_id ? Number(route.query.item_id) : null)
+const itemName = computed(() => route.query.item_name ? decodeURIComponent(route.query.item_name) : null)
+const pageTitle = computed(() => itemName.value || t('mileageRewards.title'))
+const backPath  = computed(() => itemId.value ? '/mileage-redemption' : '/settings')
 
 const loading       = ref(true)
 const products      = ref([])
@@ -54,7 +60,7 @@ const loadData = async () => {
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
     const [productsRes, pendingRes] = await Promise.all([
-      fetch('/api/v1/mileage/reward-products', { headers }),
+      fetch(`/api/v1/mileage/reward-products${itemId.value ? `?item_id=${itemId.value}` : ''}`, { headers }),
       fetch('/api/v1/mileage/reward-orders/my-pending', { headers }),
     ])
 

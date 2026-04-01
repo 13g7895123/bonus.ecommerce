@@ -18,6 +18,11 @@ class MileageRewardProductRepository
         return $this->model->getActive();
     }
 
+    public function getActiveByItemId(int $itemId): array
+    {
+        return $this->model->getActiveByItemId($itemId);
+    }
+
     public function getAll(): array
     {
         return $this->model->getAll();

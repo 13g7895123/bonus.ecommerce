@@ -46,7 +46,11 @@ class MileageController extends BaseApiController
 
     public function rewardProducts()
     {
-        $items = (new MileageRewardProductService())->getActiveProducts();
+        $itemId = (int) ($this->request->getGet('item_id') ?? 0);
+        $svc    = new MileageRewardProductService();
+        $items  = $itemId > 0
+            ? $svc->getActiveByItemId($itemId)
+            : $svc->getActiveProducts();
         return $this->success(['items' => $items]);
     }
 

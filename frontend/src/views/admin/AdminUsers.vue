@@ -2,9 +2,12 @@
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title"></span>
-      <button class="btn btn-outline" :disabled="loadingUsers" @click="loadUsers">
-        <RefreshCw :size="14" />{{ loadingUsers ? '載入中...' : '重新整理' }}
-      </button>
+      <div style="display:flex;gap:0.5rem">
+        <button class="btn btn-primary" @click="openCreateUser"><Plus :size="14" />新增使用者</button>
+        <button class="btn btn-outline" :disabled="loadingUsers" @click="loadUsers">
+          <RefreshCw :size="14" />{{ loadingUsers ? '載入中...' : '重新整理' }}
+        </button>
+      </div>
     </div>
     <div class="table-wrap">
       <div v-if="loadingUsers" class="state-msg">載入中...</div>
@@ -75,6 +78,37 @@
       <div class="modal-ft">
         <button class="btn btn-outline" @click="pwdModal.show = false">取消</button>
         <button class="btn btn-primary" :disabled="pwdModal.submitting" @click="submitChangePassword">{{ pwdModal.submitting ? '處理中...' : '確認變更' }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增使用者 Modal -->
+  <div v-if="createUserModal.show" class="modal-overlay" @click.self="createUserModal.show = false">
+    <div class="modal-box" style="max-width:460px">
+      <div class="modal-hd">
+        <span>新增使用者</span>
+        <button class="modal-x" @click="createUserModal.show = false">✕</button>
+      </div>
+      <div class="modal-bd">
+        <label class="f-label">Email *</label>
+        <input v-model="createUserModal.email" type="email" class="f-input" placeholder="user@example.com" autocomplete="off" />
+        <label class="f-label" style="margin-top:0.75rem">密碼（至少 6 字元）*</label>
+        <input v-model="createUserModal.password" type="password" class="f-input" placeholder="請輸入密碼" autocomplete="new-password" />
+        <label class="f-label" style="margin-top:0.75rem">確認密碼 *</label>
+        <input v-model="createUserModal.confirmPassword" type="password" class="f-input" placeholder="請再次輸入密碼" autocomplete="new-password" />
+        <label class="f-label" style="margin-top:0.75rem">姓名（選填）</label>
+        <input v-model="createUserModal.full_name" type="text" class="f-input" placeholder="中文姓名" />
+        <label class="f-label" style="margin-top:0.75rem">手機（選填）</label>
+        <input v-model="createUserModal.phone" type="text" class="f-input" placeholder="0912345678" />
+        <label class="f-label" style="margin-top:0.75rem">角色</label>
+        <select v-model="createUserModal.role" class="f-input">
+          <option value="user">一般使用者 (user)</option>
+          <option value="admin">管理員 (admin)</option>
+        </select>
+      </div>
+      <div class="modal-ft">
+        <button class="btn btn-outline" @click="createUserModal.show = false">取消</button>
+        <button class="btn btn-primary" :disabled="createUserModal.submitting" @click="submitCreateUser">{{ createUserModal.submitting ? '建立中...' : '確認建立' }}</button>
       </div>
     </div>
   </div>
@@ -162,7 +196,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { RefreshCw } from 'lucide-vue-next'
+import { RefreshCw, Plus } from 'lucide-vue-next'
 
 const usersList    = ref([])
 const loadingUsers = ref(false)
@@ -235,6 +269,32 @@ const openUserDetail = async (user) => {
   } catch {
     detailModal.value.loading = false
   }
+}
+
+// ── 新增使用者 ──
+const createUserModal = ref({ show: false, email: '', password: '', confirmPassword: '', full_name: '', phone: '', role: 'user', submitting: false })
+
+const openCreateUser = () => {
+  createUserModal.value = { show: true, email: '', password: '', confirmPassword: '', full_name: '', phone: '', role: 'user', submitting: false }
+}
+
+const submitCreateUser = async () => {
+  const f = createUserModal.value
+  if (!f.email) { alert('請輸入 Email'); return }
+  if (f.password.length < 6) { alert('密碼至少需要 6 個字元'); return }
+  if (f.password !== f.confirmPassword) { alert('兩次輸入的密碼不一致'); return }
+  f.submitting = true
+  try {
+    const res  = await fetch('/api/v1/admin-panel/users', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: f.email, password: f.password, full_name: f.full_name, phone: f.phone, role: f.role }),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.message || '建立失敗'); return }
+    alert('使用者已成功建立')
+    createUserModal.value.show = false
+    await loadUsers()
+  } finally { f.submitting = false }
 }
 
 onMounted(loadUsers)

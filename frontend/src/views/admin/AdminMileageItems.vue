@@ -47,30 +47,6 @@
         <input v-model="mileageForm.name" class="f-input" placeholder="例：Skywards Miles Mall" />
         <label class="f-label" style="margin-top:0.75rem">簡短說明</label>
         <input v-model="mileageForm.short_desc" class="f-input" placeholder="列表副標題" />
-        <label class="f-label" style="margin-top:0.75rem">詳細內容（支援 HTML 富文本）</label>
-        <RichTextEditor v-model="mileageForm.details" />
-        <button class="btn btn-outline btn-sm" style="margin-top:0.5rem" @click="mileageModalPreview = !mileageModalPreview">
-          <Eye :size="14" />{{ mileageModalPreview ? '隱藏預覽' : '預覽 Modal' }}
-        </button>
-        <div v-if="mileageModalPreview" class="preview-box" style="margin-top:0.5rem">
-          <div class="preview-label">Modal 預覽</div>
-          <div class="mock-modal">
-            <div class="mock-modal-header">
-              <div style="display:flex;align-items:center;gap:0.75rem">
-                <img v-if="mileageForm.logo_mode==='image' && mileageForm.logo_url" :src="mileageForm.logo_url" style="width:40px;height:40px;object-fit:contain;border-radius:6px" />
-                <div v-else class="logo-chip" :style="{ backgroundColor: mileageForm.logo_color }">{{ mileageForm.logo_letter }}</div>
-                <h3 style="font-size:1rem;font-weight:700;margin:0">{{ mileageForm.name || '項目名稱' }}</h3>
-              </div>
-              <button class="mock-modal-close">✕</button>
-            </div>
-            <div class="mock-modal-body">
-              <p v-if="mileageForm.short_desc" style="color:#555;margin-bottom:0.75rem">{{ mileageForm.short_desc }}</p>
-              <div v-if="mileageForm.details" v-html="mileageForm.details"></div>
-              <div v-else style="color:#999;font-style:italic">暫無詳細說明</div>
-            </div>
-            <button class="mock-modal-confirm">關閉</button>
-          </div>
-        </div>
         <div style="margin-top:0.75rem">
           <label class="f-label">Logo 模式</label>
           <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
@@ -168,17 +144,15 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { RefreshCw, Plus, Eye } from 'lucide-vue-next'
-import RichTextEditor from '../../components/admin/RichTextEditor.vue'
+import { RefreshCw, Plus } from 'lucide-vue-next'
 import { fileService } from '../../services/FileService'
 
 const mileageItemsList    = ref([])
 const loadingMileageItems = ref(false)
-const mileageModalPreview = ref(false)
 const logoUploading       = ref(false)
 const logoGallery         = ref([])
 const logoGalleryLoading  = ref(false)
-const mileageForm = ref({ show: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0, submitting: false })
+const mileageForm = ref({ show: false, id: null, name: '', short_desc: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0, submitting: false })
 
 const STATIC_LOGO_IMAGES = [
   { id: 'static-logo',     url: '/logo.png',        original_name: 'logo.png' },
@@ -199,12 +173,11 @@ const loadMileageItems = async () => {
 }
 
 const openMileageForm = (item = null) => {
-  mileageModalPreview.value = false
   logoUploading.value = false
   if (item) {
-    mileageForm.value = { show: true, submitting: false, id: item.id, name: item.name, short_desc: item.short_desc || '', details: item.details || '', logo_letter: item.logo_letter || 'S', logo_color: item.logo_color || '#ffffff', logo_url: item.logo_url || '', logo_mode: item.logo_url ? 'image' : 'letter', is_featured: Number(item.is_featured), featured_label: item.featured_label || '精選', is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
+    mileageForm.value = { show: true, submitting: false, id: item.id, name: item.name, short_desc: item.short_desc || '', logo_letter: item.logo_letter || 'S', logo_color: item.logo_color || '#ffffff', logo_url: item.logo_url || '', logo_mode: item.logo_url ? 'image' : 'letter', is_featured: Number(item.is_featured), featured_label: item.featured_label || '精選', is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
   } else {
-    mileageForm.value = { show: true, submitting: false, id: null, name: '', short_desc: '', details: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0 }
+    mileageForm.value = { show: true, submitting: false, id: null, name: '', short_desc: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0 }
   }
 }
 
@@ -244,7 +217,7 @@ const submitMileageItem = async () => {
     const url    = f.id ? `/api/v1/admin-panel/mileage-items/${f.id}` : '/api/v1/admin-panel/mileage-items'
     const method = f.id ? 'PUT' : 'POST'
     const logoUrl = (f.logo_mode === 'image' || f.logo_mode === 'pick') ? (f.logo_url || null) : null
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, short_desc: f.short_desc, details: f.details, logo_letter: f.logo_letter, logo_color: f.logo_color, logo_url: logoUrl, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order }) })
+    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, short_desc: f.short_desc, logo_letter: f.logo_letter, logo_color: f.logo_color, logo_url: logoUrl, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
     f.show = false
     await loadMileageItems()

@@ -45,6 +45,7 @@ $routes->group('api/v1', static function ($routes) {
         $routes->get('logs',                  'AdminPanelController::logs');
         $routes->get('logs/(:num)',           'AdminPanelController::logDetail/$1');
         $routes->get('users',                 'AdminPanelController::users');
+        $routes->post('users',                'AdminPanelController::createUser');
         $routes->get('users/(:num)',          'AdminPanelController::userDetail/$1');
         $routes->get('users/(:num)/logs',     'AdminPanelController::userLogs/$1');
         $routes->post('users/(:num)/deposit', 'AdminPanelController::deposit/$1');

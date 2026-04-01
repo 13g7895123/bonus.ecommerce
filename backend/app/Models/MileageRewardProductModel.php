@@ -10,12 +10,20 @@ class MileageRewardProductModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
     protected $allowedFields = [
-        'name', 'image_url', 'price', 'mileage_amount', 'miles_points', 'stock', 'is_active', 'sort_order', 'display_style',
+        'mileage_item_id', 'name', 'image_url', 'price', 'mileage_amount', 'miles_points', 'stock', 'is_active', 'sort_order', 'display_style',
     ];
 
     public function getActive(): array
     {
         return $this->where('is_active', 1)
+            ->orderBy('sort_order', 'ASC')
+            ->findAll();
+    }
+
+    public function getActiveByItemId(int $itemId): array
+    {
+        return $this->where('is_active', 1)
+            ->where('mileage_item_id', $itemId)
             ->orderBy('sort_order', 'ASC')
             ->findAll();
     }

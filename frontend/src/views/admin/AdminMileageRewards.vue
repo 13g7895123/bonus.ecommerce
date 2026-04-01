@@ -16,9 +16,10 @@
       <div v-if="loadingRewardProducts" class="state-msg">載入中...</div>
       <div v-else-if="rewardProductsList.length === 0" class="state-msg">尚無商品</div>
       <table v-else class="data-table">
-        <thead><tr><th>商品名稱</th><th>圖片</th><th>售價</th><th>里程回饋</th><th>里程點數</th><th>庫存</th><th>狀態</th><th>排序</th><th>操作</th></tr></thead>
+        <thead><tr><th>所屬對換項目</th><th>商品名稱</th><th>圖片</th><th>售僳</th><th>里程回饋</th><th>里程點數</th><th>庫存</th><th>狀態</th><th>排序</th><th>操作</th></tr></thead>
         <tbody>
           <tr v-for="item in rewardProductsList" :key="item.id">
+            <td>{{ itemName(item.mileage_item_id) }}</td>
             <td class="td-name">{{ item.name }}</td>
             <td>
               <img v-if="item.image_url" :src="item.image_url" style="width:48px;height:48px;object-fit:contain;border-radius:6px;border:1px solid #e2e8f0" />
@@ -48,7 +49,12 @@
         <button class="modal-x" @click="rewardProductForm.show = false">✕</button>
       </div>
       <div class="modal-bd">
-        <label class="f-label">商品名稱 *</label>
+        <label class="f-label">所屬對換項目 *</label>
+        <select v-model.number="rewardProductForm.mileage_item_id" class="f-input">
+          <option value="" disabled>-- 請選擇對換項目 --</option>
+          <option v-for="mi in mileageItemsList" :key="mi.id" :value="mi.id">{{ mi.name }}</option>
+        </select>
+        <label class="f-label" style="margin-top:0.75rem">商品名稱 *</label>
         <input v-model="rewardProductForm.name" class="f-input" placeholder="例：APIVITA 面膜 (8mlX12)" />
         <label class="f-label" style="margin-top:0.75rem">商品圖片 URL</label>
         <div style="display:flex;gap:0.5rem;align-items:center">
@@ -101,11 +107,25 @@ import { ref, onMounted } from 'vue'
 import { RefreshCw, Plus } from 'lucide-vue-next'
 import { fileService } from '../../services/FileService'
 
+const mileageItemsList      = ref([])
 const rewardProductsList    = ref([])
 const loadingRewardProducts = ref(false)
 const rewardDetailDisplayStyle = ref('default')
 const rewardImgUploading       = ref(false)
-const rewardProductForm = ref({ show: false, id: null, name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0, submitting: false })
+const rewardProductForm = ref({ show: false, id: null, mileage_item_id: '', name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0, submitting: false })
+
+const itemName = (id) => {
+  const found = mileageItemsList.value.find(mi => Number(mi.id) === Number(id))
+  return found ? found.name : ('-')
+}
+
+const loadMileageItems = async () => {
+  try {
+    const res  = await fetch('/api/v1/admin-panel/mileage-items')
+    const data = await res.json()
+    mileageItemsList.value = data.items || []
+  } catch {}
+}
 
 const loadRewardProducts = async () => {
   loadingRewardProducts.value = true
@@ -137,9 +157,10 @@ const saveRewardDisplayStyle = async () => {
 const openRewardProductForm = (item = null) => {
   rewardImgUploading.value = false
   if (item) {
-    rewardProductForm.value = { show: true, submitting: false, id: item.id, name: item.name, image_url: item.image_url || '', price: Number(item.price), mileage_amount: Number(item.mileage_amount), miles_points: Number(item.miles_points || 0), stock: Number(item.stock), is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
+    rewardProductForm.value = { show: true, submitting: false, id: item.id, mileage_item_id: item.mileage_item_id || '', name: item.name, image_url: item.image_url || '', price: Number(item.price), mileage_amount: Number(item.mileage_amount), miles_points: Number(item.miles_points || 0), stock: Number(item.stock), is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
   } else {
-    rewardProductForm.value = { show: true, submitting: false, id: null, name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0 }
+    const defaultItemId = mileageItemsList.value.length > 0 ? mileageItemsList.value[0].id : ''
+    rewardProductForm.value = { show: true, submitting: false, id: null, mileage_item_id: defaultItemId, name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0 }
   }
 }
 
@@ -161,7 +182,7 @@ const submitRewardProduct = async () => {
   try {
     const url    = f.id ? `/api/v1/admin-panel/mileage-reward-products/${f.id}` : '/api/v1/admin-panel/mileage-reward-products'
     const method = f.id ? 'PUT' : 'POST'
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: f.mileage_amount, miles_points: f.miles_points, stock: f.stock, is_active: f.is_active, sort_order: f.sort_order }) })
+    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mileage_item_id: f.mileage_item_id || null, name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: f.mileage_amount, miles_points: f.miles_points, stock: f.stock, is_active: f.is_active, sort_order: f.sort_order }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
     f.show = false
     await loadRewardProducts()
@@ -175,6 +196,7 @@ const deleteRewardProduct = async (id) => {
 }
 
 onMounted(() => {
+  loadMileageItems()
   loadRewardDisplayStyle()
   loadRewardProducts()
 })
