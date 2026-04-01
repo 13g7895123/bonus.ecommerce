@@ -3,6 +3,15 @@ import { BaseService } from './BaseService';
 import { fileService } from './FileService';
 import { mockDb } from './mockDb';
 
+// 將完整 URL 轉為相對路徑，避免 domain 變更或舊環境 URL 失效
+function normalizeAvatarUrl(url) {
+  if (!url) return null
+  if (url.startsWith('http')) {
+    try { return new URL(url).pathname } catch (e) { return url }
+  }
+  return url
+}
+
 export class UserService extends BaseService {
   constructor() {
     super('/users', 'users');
@@ -33,6 +42,7 @@ export class UserService extends BaseService {
     // 映射欄位以相容舊版 view
     return {
       ...data,
+      avatar:    normalizeAvatarUrl(data.avatar),
       name:      data.full_name || '',
       firstName: data.firstName || nameParts[0] || '',
       lastName:  data.lastName  || nameParts.slice(1).join(' ') || '',
@@ -82,7 +92,7 @@ export class UserService extends BaseService {
         if (user) mockDb.update(this.table, userId, { avatar: result.url })
       })
     }
-    return { avatar_url: result.url, file: result }
+    return { avatar_url: normalizeAvatarUrl(result.url), file: result }
   }
 
   /* 更改登入密碼 — PUT /users/me/password */
