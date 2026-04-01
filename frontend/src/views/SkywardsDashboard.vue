@@ -161,6 +161,7 @@ onMounted(async () => {
     <section v-if="activeTab === 'tier'" class="cards-section">
       <div class="benefit-cards">
         <div class="benefit-card no-pointer">
+          <img src="/go-silver.png" alt="Silver Tier" class="benefit-img" />
           <div class="benefit-content">
             <h4 class="benefit-title">達到 <span class="silver-text">銀卡</span></h4>
             <p class="benefit-desc">{{ silverCardDesc || '在2027年2月28日之前賺取25,000級哩程數,或再搭乘 25 次合格航班' }}</p>
