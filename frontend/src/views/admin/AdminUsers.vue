@@ -21,7 +21,13 @@
         </thead>
         <tbody>
           <tr v-for="u in usersList" :key="u.id">
-            <td class="td-name">{{ u.full_name || '-' }}</td>
+            <td class="td-name">
+              <div style="display:flex;align-items:center;gap:0.5rem">
+                <img v-if="u.avatar" :src="normalizeFileUrl(u.avatar)" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #e2e8f0" alt="頭像" />
+                <span v-else style="width:28px;height:28px;border-radius:50%;background:#e2e8f0;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.75rem;color:#94a3b8;font-weight:700">{{ (u.full_name || u.email || '?')[0].toUpperCase() }}</span>
+                {{ u.full_name || '-' }}
+              </div>
+            </td>
             <td>{{ u.email }}</td>
             <td><span :class="['badge', u.is_verified == 1 ? 'badge-green' : 'badge-gray']">{{ u.is_verified == 1 ? '已驗證' : '未驗證' }}</span></td>
             <td>{{ u.phone || '-' }}</td>
@@ -163,8 +169,11 @@
       </div>
       <div class="modal-bd">
         <div v-if="detailModal.loading" class="state-msg">載入中...</div>
-        <template v-else-if="detailModal.user">
-          <div class="detail-section">
+        <template v-else-if="detailModal.user">            <!-- 頭像 -->
+            <div style="display:flex;justify-content:center;margin-bottom:1.25rem">
+              <img v-if="detailModal.user.avatar" :src="normalizeFileUrl(detailModal.user.avatar)" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0" alt="頭像" />
+              <div v-else style="width:80px;height:80px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:1.75rem;color:#94a3b8;font-weight:700">{{ (detailModal.user.full_name || detailModal.user.email || '?')[0].toUpperCase() }}</div>
+            </div>          <div class="detail-section">
             <div class="detail-section-title">基本資料</div>
             <div class="kyc-rows">
               <div class="kyc-row"><span class="kyc-lbl">ID</span><span>{{ detailModal.user.id }}</span></div>
@@ -257,6 +266,15 @@ const loadingUsers = ref(false)
 
 const kycLabel      = (s) => ({ approved: '已通過', verified: '已通過', pending: '待審核', rejected: '未通過', none: '未提交' }[s] || '未提交')
 const kycBadgeClass = (s) => ({ approved: 'badge-green', verified: 'badge-green', pending: 'badge-yellow', rejected: 'badge-red', none: 'badge-gray' }[s] || 'badge-gray')
+
+// 統一處理頭像/檔案 URL：將舊 domain 的絕對路徑轉為相對路徑，避免跨域或 domain 變更問題
+const normalizeFileUrl = (url) => {
+  if (!url) return null
+  if (url.startsWith('http')) {
+    try { return new URL(url).pathname } catch (e) { return url }
+  }
+  return url
+}
 
 const loadUsers = async () => {
   loadingUsers.value = true

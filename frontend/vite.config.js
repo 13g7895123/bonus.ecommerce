@@ -17,7 +17,7 @@ export default defineConfig({
     allowedHosts: 'all',
     proxy: {
       '/api': {
-        target: 'http://ecommerce.l',
+        target: 'https://demo.mercylife.cc',
         changeOrigin: true,
       },
     },
