@@ -72,7 +72,12 @@ class AuthController extends BaseApiController
     public function otpProvider()
     {
         $provider = \App\Services\OtpProviderFactory::activeProvider();
-        return $this->success(['provider' => $provider]);
+        $row                  = model(\App\Models\AppConfigModel::class)->getByKey('sms_verification_required');
+        $verificationRequired = ($row['value'] ?? '1') === '1';
+        return $this->success([
+            'provider'              => $provider,
+            'verification_required' => $verificationRequired,
+        ]);
     }
 
     public function sendPhoneOtp()

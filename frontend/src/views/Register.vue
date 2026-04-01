@@ -169,9 +169,11 @@ const sendPhoneOtpByProvider = async () => {
   }
 }
 
-/** 取得 OTP 提供者（帶 5 分鐘 localStorage 快取） */
-const getOtpProvider = async () => {
-  const CACHE_KEY = 'otp_provider_cache'
+/** 取得 OTP 完整設定（帶 5 分鐘 localStorage 快取）
+ *  回傳 { provider: string, verification_required: boolean }
+ */
+const getOtpConfig = async () => {
+  const CACHE_KEY = 'otp_config_cache'
   const TTL       = 5 * 60 * 1000 // 5 分鐘
   try {
     const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
@@ -179,14 +181,20 @@ const getOtpProvider = async () => {
   } catch (_) {}
 
   try {
-    const res      = await api.auth.otpProvider()
-    const provider = res?.provider ?? 'twilio'
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ value: provider, ts: Date.now() }))
-    return provider
+    const res    = await api.auth.otpProvider()
+    const config = {
+      provider:              res?.provider ?? 'twilio',
+      verification_required: res?.verification_required !== false,
+    }
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ value: config, ts: Date.now() }))
+    return config
   } catch (_) {
-    return 'twilio'
+    return { provider: 'twilio', verification_required: true }
   }
 }
+
+// 向下相容舊呼叫
+const getOtpProvider = async () => (await getOtpConfig()).provider
 
 
 const submitOtp = async () => {
@@ -228,22 +236,19 @@ const handleRegister = async () => {
 
   loading.value = true
   try {
-    const otpRes = await sendPhoneOtpByProvider()
-
-    // 後端回傳 verification_required：
-    //   true  → 正式模式，需輸入驗證碼才能完成註冊
-    //   false → 測試模式，發出簡訊後直接完成註冊
-    const verificationRequired = otpRes?.verification_required !== false
+    // 先查模式開關，再決定是否需要發 OTP
+    const { verification_required: verificationRequired } = await getOtpConfig()
 
     if (!verificationRequired) {
-      // 測試模式：自動完成註冊，不顯示 OTP Modal
+      // 測試模式：跳過 OTP，直接完成註冊
       await api.auth.register({ ...form })
       toast.success('註冊成功！')
       router.push('/')
       return
     }
 
-    // 正式模式：顯示 OTP 輸入視窗
+    // 正式模式：先發 OTP，再顯示驗證視窗
+    await sendPhoneOtpByProvider()
     otpDigits.value = ['', '', '', '', '', '']
     showOtpModal.value = true
     startOtpCountdown()
