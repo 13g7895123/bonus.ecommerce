@@ -175,11 +175,15 @@ const sendPhoneOtpByProvider = async () => {
 const getOtpConfig = async () => {
   try {
     const res = await api.auth.otpProvider()
-    return {
+    const config = {
       provider:              res?.provider ?? 'twilio',
       verification_required: res?.verification_required !== false,
     }
-  } catch (_) {
+    console.log('[OTP Config] 後端回應:', res)
+    console.log('[OTP Config] 解析結果:', config)
+    return config
+  } catch (err) {
+    console.error('[OTP Config] 查詢失敗，使用安全預設值（verification_required: true）', err)
     return { provider: 'twilio', verification_required: true }
   }
 }

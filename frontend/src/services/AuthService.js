@@ -96,6 +96,16 @@ export class AuthService extends BaseService {
     return this._post('/verify-phone-otp', data);
   }
 
+  async otpProvider() {
+    if (this.useMock) {
+      return this._get('/otp-provider', async () => ({
+        provider: 'twilio',
+        verification_required: false,
+      }));
+    }
+    return this._get('/otp-provider');
+  }
+
   /* 登出 */
   logout() {
     localStorage.removeItem('token');
