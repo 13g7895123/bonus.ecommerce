@@ -156,6 +156,10 @@ onMounted(async () => {
           </div>
         </div>
       </div>
+      <div class="comfortable-banner">
+        <img src="/comfortable.png" alt="舒適體驗" class="comfortable-img" />
+        <span class="comfortable-text">用哩程數享受更多好康</span>
+      </div>
     </section>
 
     <section v-if="activeTab === 'tier'" class="cards-section">
@@ -338,6 +342,9 @@ onMounted(async () => {
 .benefit-desc { font-size: 0.95rem; color: #666; line-height: 1.4; margin-bottom: 1rem; }
 .benefit-link { display: block; font-weight: 700; color: #000; text-decoration: none; font-size: 1rem; text-transform: uppercase; }
 .section-hint { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; color: #000; }
+.comfortable-banner { position: relative; margin-top: 1.5rem; border-radius: 12px; overflow: hidden; }
+.comfortable-img { width: 100%; display: block; }
+.comfortable-text { position: absolute; top: 1rem; left: 1rem; color: white; font-size: 1.1rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 .silver-text { margin-left: 0rem; color: #000; }
 
 /* 彈窗樣式 */

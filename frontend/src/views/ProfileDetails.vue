@@ -34,8 +34,15 @@
         </div>
         <div class="form-group">
           <label>居住國家/地區</label>
-          <div v-if="!isEditing" class="field-value">{{ user?.country }}</div>
-           <input v-else v-model="formData.country" class="edit-input" />
+          <div v-if="!isEditing" class="field-value">{{ displayCountryName }}</div>
+          <div v-else class="country-selector" @click="openCountryPicker">
+            <span :class="formData.country ? 'country-value' : 'country-placeholder'">
+              {{ editingCountryName || '選擇國家/地區' }}
+            </span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9L12 15L18 9" stroke="#676767" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
         </div>
         <div class="form-group">
           <label>行動號碼(偏好的聯絡方式)</label>
@@ -57,20 +64,96 @@
         </button>
       </div>
     </div>
+
+    <!-- 國家選擇 Bottom Sheet -->
+    <div v-if="showCountryPicker" class="country-overlay" @click.self="closeCountryPicker">
+      <div class="country-sheet">
+        <div class="country-sheet-header">
+          <span class="country-sheet-title">選擇國家/地區</span>
+          <button class="country-sheet-close" @click="closeCountryPicker">✕</button>
+        </div>
+        <div class="country-search-wrap">
+          <svg class="country-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            v-model="countrySearch"
+            class="country-search-input"
+            type="text"
+            placeholder="搜尋國家/地區"
+            autocomplete="off"
+          />
+        </div>
+        <ul class="country-list">
+          <li
+            v-for="country in filteredCountries"
+            :key="country.code"
+            class="country-option"
+            :class="{ selected: formData.country === country.code }"
+            @click="selectCountry(country.code)"
+          >
+            <span>{{ getCountryName(country, currentLocale) }}</span>
+            <svg v-if="formData.country === country.code" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d71921" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </li>
+          <li v-if="filteredCountries.length === 0" class="country-no-result">查無結果</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import { UserService } from '../services/UserService'
+import { countries, getCountryName } from '../utils/countries'
 
 const isEditing = ref(false)
 const user = ref({})
 const formData = ref({})
 const sendingVerify = ref(false)
 const toast = useToast()
+const { locale } = useI18n()
+const currentLocale = computed(() => locale.value)
+const showCountryPicker = ref(false)
+const countrySearch = ref('')
+
+const filteredCountries = computed(() => {
+  const q = countrySearch.value.trim()
+  if (!q) return countries
+  return countries.filter(c =>
+    c.name.includes(q) || c.en.toLowerCase().includes(q.toLowerCase())
+  )
+})
+
+const displayCountryName = computed(() => {
+  const code = user.value?.country
+  if (!code) return ''
+  const c = countries.find(c => c.code === code)
+  return c ? getCountryName(c, currentLocale.value) : code
+})
+
+const editingCountryName = computed(() => {
+  const code = formData.value?.country
+  if (!code) return ''
+  const c = countries.find(c => c.code === code)
+  return c ? getCountryName(c, currentLocale.value) : code
+})
+
+const openCountryPicker = () => {
+  countrySearch.value = ''
+  showCountryPicker.value = true
+}
+
+const closeCountryPicker = () => {
+  showCountryPicker.value = false
+  countrySearch.value = ''
+}
+
+const selectCountry = (code) => {
+  formData.value.country = code
+  closeCountryPicker()
+}
 
 const isEmailVerified = computed(() => !!(user.value?.is_verified || user.value?.verified))
 // 注意：is_verified 已在 UserService.getProfile 正規化為 boolean，
@@ -288,5 +371,115 @@ const saveChanges = async () => {
 .verify-email-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.country-selector {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.country-value { color: #333; }
+.country-placeholder { color: #aaa; }
+
+.country-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.45);
+  z-index: 3000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.country-sheet {
+  background: #fff;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px 16px 0 0;
+  padding: 1.25rem 0 0;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.country-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.country-sheet-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.country-sheet-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.country-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.country-search-icon { flex-shrink: 0; }
+
+.country-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  color: #333;
+  background: transparent;
+}
+
+.country-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.country-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.25rem;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.country-option:active { background: #f9f9f9; }
+.country-option.selected { color: #d71921; font-weight: 600; }
+
+.country-no-result {
+  text-align: center;
+  color: #bbb;
+  padding: 2rem;
+  font-size: 0.9rem;
 }
 </style>
