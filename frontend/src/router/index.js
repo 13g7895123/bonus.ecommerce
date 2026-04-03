@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useToast } from '../composables/useToast'
+import i18n from '../i18n'
 import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
@@ -52,7 +54,8 @@ const routes = [
   {
     path: '/mileage-redemption',
     name: 'MileageRedemption',
-    component: MileageRedemption
+    component: MileageRedemption,
+    meta: { requiresAuth: true }
   },
   {
     path: '/admin',
@@ -112,98 +115,133 @@ const routes = [
   {
     path: '/settings',
     name: 'Settings',
-    component: Settings
+    component: Settings,
+    meta: { requiresAuth: true }
   },
   {
     path: '/skywards',
     name: 'Skywards',
-    component: SkywardsDashboard
+    component: SkywardsDashboard,
+    meta: { requiresAuth: true }
   },
   {
     path: '/profile',
     name: 'Profile',
-    component: Profile
+    component: Profile,
+    meta: { requiresAuth: true }
   },
   {
     path: '/profile/details',
     name: 'ProfileDetails',
-    component: ProfileDetails
+    component: ProfileDetails,
+    meta: { requiresAuth: true }
   },
   {
     path: '/change-password',
     name: 'ChangePassword',
-    component: ChangePassword
+    component: ChangePassword,
+    meta: { requiresAuth: true }
   },
   {
     path: '/identity-verification',
     name: 'IdentityVerification',
-    component: IdentityVerification
+    component: IdentityVerification,
+    meta: { requiresAuth: true }
   },
   {
     path: '/customer-service',
     name: 'CustomerService',
-    component: CustomerService
+    component: CustomerService,
+    meta: { requiresAuth: true }
   },
   {
     path: '/transactions',
     name: 'Transactions',
-    component: Transactions
+    component: Transactions,
+    meta: { requiresAuth: true }
   },
   {
     path: '/transactions/topup',
     name: 'TopUpRecords',
-    component: TopUpRecords
+    component: TopUpRecords,
+    meta: { requiresAuth: true }
   },
   {
     path: '/transactions/withdrawal',
     name: 'WithdrawalSetPassword',
-    component: WithdrawalSetPassword
+    component: WithdrawalSetPassword,
+    meta: { requiresAuth: true }
   },
   {
     path: '/withdrawal/set-password',
     name: 'WithdrawalSetPasswordDirect',
-    component: WithdrawalSetPassword
+    component: WithdrawalSetPassword,
+    meta: { requiresAuth: true }
   },
   {
     path: '/withdrawal/setup',
     name: 'WithdrawalSetup',
-    component: WithdrawalSetup
+    component: WithdrawalSetup,
+    meta: { requiresAuth: true }
   },
   {
     path: '/withdrawal/apply',
     name: 'WithdrawalApply',
-    component: WithdrawalApply
+    component: WithdrawalApply,
+    meta: { requiresAuth: true }
   },
   {
     path: '/my-mail',
     name: 'MyMail',
-    component: MyMail
+    component: MyMail,
+    meta: { requiresAuth: true }
   },
   {
     path: '/mileage-rewards',
     name: 'MileageRewards',
-    component: MileageRewards
+    component: MileageRewards,
+    meta: { requiresAuth: true }
   },
   {
     path: '/mileage-reward-detail',
     name: 'MileageRewardDetail',
-    component: MileageRewardDetail
+    component: MileageRewardDetail,
+    meta: { requiresAuth: true }
   },
   {
     path: '/mileage-reward-confirm',
     name: 'MileageRewardConfirm',
-    component: MileageRewardConfirm
+    component: MileageRewardConfirm,
+    meta: { requiresAuth: true }
   },
   {
     path: '/mileage-records',
     name: 'MileageRecords',
-    component: MileageRecords
+    component: MileageRecords,
+    meta: { requiresAuth: true }
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+router.beforeEach((to, from) => {
+  if (to.meta.requiresAuth) {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      // 如果是在 app 內導航（非初始載入），顯示 toast 提示
+      if (from.name) {
+        const toast = useToast()
+        const t = i18n.global.t
+        toast.warning(t('auth.loginRequired'))
+        return false
+      }
+      // 初始直接訪問騗證頁面，轉到登入頁
+      return { path: '/login' }
+    }
+  }
 })
 
 export default router

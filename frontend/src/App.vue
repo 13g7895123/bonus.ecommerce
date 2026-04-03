@@ -3,10 +3,12 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ToastNotification from '@/components/ToastNotification.vue'
+import { useToast } from '@/composables/useToast'
 
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
+const toast = useToast()
 const isMenuOpen = ref(false)
 const isLoggedIn = ref(false)
 const activeMenu = ref(null)
@@ -76,6 +78,15 @@ const goBack = () => {
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// 需要登入才能進入的頁面，未登入時顯示提示
+const navigateIfLoggedIn = (path) => {
+  if (isLoggedIn.value) {
+    router.push(path)
+  } else {
+    toast.warning(t('auth.loginRequired'))
+  }
 }
 
 const activeMenuLabel = computed(() => {

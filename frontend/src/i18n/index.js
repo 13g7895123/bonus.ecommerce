@@ -85,6 +85,7 @@ const messages = {
       toLogin: '登入',
       resetPassword: '重設密碼',
       sendResetEmail: '發送重設郵件',
+      loginRequired: '請先登入才能使用此功能',
     },
     // 客服
     cs: {
@@ -245,6 +246,7 @@ const messages = {
       toLogin: 'Login',
       resetPassword: 'Reset Password',
       sendResetEmail: 'Send Reset Email',
+      loginRequired: 'Please login to use this feature',
     },
     // Customer Service
     cs: {
