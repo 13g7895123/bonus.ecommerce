@@ -342,9 +342,9 @@ onMounted(async () => {
 .benefit-desc { font-size: 0.95rem; color: #666; line-height: 1.4; margin-bottom: 1rem; }
 .benefit-link { display: block; font-weight: 700; color: #000; text-decoration: none; font-size: 1rem; text-transform: uppercase; }
 .section-hint { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; color: #000; }
-.comfortable-banner { position: relative; border-radius: 12px; overflow: hidden; }
+.comfortable-banner { position: relative; border-radius: 0; overflow: hidden; margin-left: -1.5rem; margin-right: -1.5rem; }
 .comfortable-img { width: 100%; display: block; }
-.comfortable-text { display: block; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #333; font-size: 1.1rem; font-weight: 700; }
+.comfortable-text { display: block; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #333; font-size: 1.1rem; font-weight: 700; text-align: left; }
 .silver-text { margin-left: 0rem; color: #000; }
 
 /* 彈窗樣式 */
