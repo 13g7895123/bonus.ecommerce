@@ -249,7 +249,7 @@ const handleNext = async () => {
     })
 
     toast.success('實名認證資料已送出')
-    router.push('/settings')
+    router.push('/identity-verification/complete')
   } catch (error) {
     toast.error('儲存失敗: ' + (error?.message || ''))
   }

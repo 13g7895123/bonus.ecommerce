@@ -11,6 +11,7 @@ import Profile from '../views/Profile.vue'
 import ProfileDetails from '../views/ProfileDetails.vue'
 import ChangePassword from '../views/ChangePassword.vue'
 import IdentityVerification from '../views/IdentityVerification.vue'
+import IdentityVerificationComplete from '../views/IdentityVerificationComplete.vue'
 import CustomerService from '../views/CustomerService.vue'
 import Transactions from '../views/Transactions.vue'
 import TopUpRecords from '../views/TopUpRecords.vue'
@@ -146,6 +147,12 @@ const routes = [
     path: '/identity-verification',
     name: 'IdentityVerification',
     component: IdentityVerification,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/identity-verification/complete',
+    name: 'IdentityVerificationComplete',
+    component: IdentityVerificationComplete,
     meta: { requiresAuth: true }
   },
   {

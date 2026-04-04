@@ -80,7 +80,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
@@ -89,6 +89,7 @@ import { MileageService } from '../services/MileageService'
 
 const toast = useToast()
 const router = useRouter()
+const route = useRoute()
 const mileageService = new MileageService()
 const activeTab = ref('spending')
 const mileageCode = ref('')
@@ -131,6 +132,9 @@ const submitCode = async () => {
 }
 
 onMounted(() => {
+  if (route.query.tab) {
+    activeTab.value = route.query.tab
+  }
   loadRedemptionItems()
 })
 </script>

@@ -90,7 +90,7 @@
             :class="{ selected: formData.country === country.code }"
             @click="selectCountry(country.code)"
           >
-            <span>{{ getCountryName(country, currentLocale) }}</span>
+            <span>{{ getCountryName(country, locale) }}</span>
             <svg v-if="formData.country === country.code" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d71921" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </li>
           <li v-if="filteredCountries.length === 0" class="country-no-result">查無結果</li>
@@ -121,8 +121,11 @@ const countrySearch = ref('')
 const filteredCountries = computed(() => {
   const q = countrySearch.value.trim()
   if (!q) return countries
+  const ql = q.toLowerCase()
   return countries.filter(c =>
-    c.name.includes(q) || c.en.toLowerCase().includes(q.toLowerCase())
+    c.name.includes(q) ||
+    c.en.toLowerCase().includes(ql) ||
+    getCountryName(c, locale.value).toLowerCase().includes(ql)
   )
 })
 
@@ -130,14 +133,14 @@ const displayCountryName = computed(() => {
   const code = user.value?.country
   if (!code) return ''
   const c = countries.find(c => c.code === code)
-  return c ? getCountryName(c, currentLocale.value) : code
+  return c ? getCountryName(c, locale.value) : code
 })
 
 const editingCountryName = computed(() => {
   const code = formData.value?.country
   if (!code) return ''
   const c = countries.find(c => c.code === code)
-  return c ? getCountryName(c, currentLocale.value) : code
+  return c ? getCountryName(c, locale.value) : code
 })
 
 const openCountryPicker = () => {

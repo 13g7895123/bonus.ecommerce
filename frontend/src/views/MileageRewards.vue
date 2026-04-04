@@ -133,17 +133,17 @@ onMounted(loadData)
 .product-img-wrapper {
   position: relative;
   width: 100%;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   background-color: #f0f0f0;
+  border-radius: 4px;
 }
 
 .product-img {
   width: 100%;
-  height: auto;
-  object-fit: contain;
-  border-radius: 4px;
+  height: 100%;
+  object-fit: cover;
   display: block;
-  margin: 0 auto;
 }
 
 .pending-badge {
