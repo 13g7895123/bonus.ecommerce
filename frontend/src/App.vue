@@ -45,6 +45,12 @@ onMounted(() => {
     isMenuOpen.value = true
     activeMenu.value = 'news'
   }
+  // 監聽 API 401（登入過期）事件
+  window.addEventListener('auth:expired', () => {
+    isLoggedIn.value = false
+    toast.warning(t('auth.sessionExpired') || '登入已過期，請重新登入')
+    router.push('/')
+  })
 })
 
 // 登出處理

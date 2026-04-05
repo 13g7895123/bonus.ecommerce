@@ -86,6 +86,7 @@ const messages = {
       resetPassword: '重設密碼',
       sendResetEmail: '發送重設郵件',
       loginRequired: '請先登入才能使用此功能',
+      sessionExpired: '登入已過期，請重新登入',
     },
     // 客服
     cs: {
@@ -247,6 +248,7 @@ const messages = {
       resetPassword: 'Reset Password',
       sendResetEmail: 'Send Reset Email',
       loginRequired: 'Please login to use this feature',
+      sessionExpired: 'Session expired, please login again',
     },
     // Customer Service
     cs: {

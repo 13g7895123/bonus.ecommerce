@@ -238,15 +238,10 @@ router.beforeEach((to, from) => {
   if (to.meta.requiresAuth) {
     const token = localStorage.getItem('token')
     if (!token) {
-      // 如果是在 app 內導航（非初始載入），顯示 toast 提示
-      if (from.name) {
-        const toast = useToast()
-        const t = i18n.global.t
-        toast.warning(t('auth.loginRequired'))
-        return false
-      }
-      // 初始直接訪問騗證頁面，轉到登入頁
-      return { path: '/login' }
+      const toast = useToast()
+      const t = i18n.global.t
+      toast.warning(t('auth.loginRequired'))
+      return { path: '/' }
     }
   }
 })

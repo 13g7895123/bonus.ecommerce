@@ -59,7 +59,6 @@
     <!-- Enter Miles Tab -->
     <div v-if="activeTab === 'redemption'" class="tab-content redemption-content">
       <div class="redemption-box">
-        <label class="input-label">輸入里程代碼</label>
         <AppInput 
           v-model="mileageCode" 
           placeholder="輸入里程代碼" 
@@ -597,7 +596,7 @@ onMounted(() => {
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  margin-top: 1rem;
+  /* margin-top: 1rem; */
 }
 
 .submit-btn:disabled {

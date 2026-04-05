@@ -253,7 +253,7 @@ onUnmounted(() => {
 <style scoped>
 .cs-page {
   background-color: #f5f5f5;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -307,6 +307,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  /* 為固定輸入列空出足夠空間 */
+  padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
 }
 
 /* 圖片預覽列 */
@@ -317,6 +319,12 @@ onUnmounted(() => {
   padding: 0.5rem 1rem;
   background: #fff;
   border-top: 1px solid #f0f0f0;
+  position: fixed;
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  right: 0;
+  z-index: 19;
+  box-sizing: border-box;
 }
 
 .preview-thumb {
@@ -433,22 +441,27 @@ onUnmounted(() => {
 
 /* 固定輸入列 */
 .input-bar {
-  position: relative;
-  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   background-color: #ffffff;
   border-top: 1px solid #eee;
   z-index: 20;
   box-sizing: border-box;
-  flex-shrink: 0;
 }
 
 .plus-btn {
   width: 36px;
   height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  aspect-ratio: 1 / 1;
   border: 1.5px solid #ccc;
   border-radius: 50%;
   background: none;
@@ -460,6 +473,8 @@ onUnmounted(() => {
   justify-content: center;
   flex-shrink: 0;
   line-height: 1;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .chat-input {
