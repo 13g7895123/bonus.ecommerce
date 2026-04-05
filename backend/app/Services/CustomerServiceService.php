@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Libraries\WsNotifier;
 use App\Repositories\CustomerServiceMessageRepository;
 
 class CustomerServiceService
@@ -22,6 +23,7 @@ class CustomerServiceService
     {
         $ticketId  = $this->repo->getOrCreateTicket($userId);
         $imagePath = null;
+        $createdAt = date('Y-m-d H:i:s');
 
         if ($imageFile && $imageFile->isValid() && !$imageFile->hasMoved()) {
             $uploadDir = WRITEPATH . 'uploads/cs/' . $userId . '/';
@@ -33,12 +35,24 @@ class CustomerServiceService
             $imagePath = 'cs/' . $userId . '/' . $name;
         }
 
-        $this->repo->create([
+        $msgId = $this->repo->create([
             'ticket_id'   => $ticketId,
             'sender_type' => 'user',
             'sender_id'   => $userId,
             'content'     => $content,
             'image_path'  => $imagePath,
+            'created_at'  => $createdAt,
+        ]);
+
+        // Push to connected WebSocket clients (fire-and-forget)
+        WsNotifier::notify($ticketId, [
+            'id'          => $msgId,
+            'ticket_id'   => $ticketId,
+            'sender_type' => 'user',
+            'sender_id'   => $userId,
+            'content'     => $content,
+            'image_url'   => $imagePath ? base_url('uploads/' . $imagePath) : null,
+            'created_at'  => $createdAt,
         ]);
 
         return ['success' => true, 'data' => ['ticket_id' => $ticketId]];
@@ -56,3 +70,4 @@ class CustomerServiceService
         return ['success' => true, 'sent' => count($messages)];
     }
 }
+

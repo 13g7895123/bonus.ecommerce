@@ -48,6 +48,9 @@ services:
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
       TWILIO_VERIFY_SERVICE_SID: ${TWILIO_VERIFY_SERVICE_SID:-}
       FIREBASE_WEB_API_KEY: ${FIREBASE_WEB_API_KEY:-}
+      # WebSocket notifier: notify Swoole server after message saved
+      WS_INTERNAL_HOST: backend-ws
+      WS_PORT: ${WS_PORT:-9501}
     command: >
       /bin/bash -c "
         composer install --no-interaction &&
@@ -85,6 +88,37 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+
+  # Swoole WebSocket server – real-time customer service chat
+  backend-ws:
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile.swoole
+    volumes:
+      - ../backend:/var/www/html
+    environment:
+      TZ: Asia/Taipei
+      DB_HOSTNAME: db
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE:-86400}
+      WS_PORT: ${WS_PORT:-9501}
+    command: >
+      /bin/bash -c "
+        composer install --no-interaction --quiet &&
+        php spark ws:start
+      "
+    # Expose port to host for vite dev-mode WS proxy (optional in production)
+    ports:
+      - "${WS_PORT:-9501}:9501"
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    restart: unless-stopped
 
   phpmyadmin:
     image: phpmyadmin:latest

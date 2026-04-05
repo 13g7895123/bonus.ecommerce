@@ -100,6 +100,8 @@ const page = ref(1)
 const hasMore = ref(true)
 const ticketId = ref(null)
 let pollTimer = null
+let ws = null
+let reconnectTimer = null
 
 // 按日期分組訊息
 const groupedMessages = computed(() => {
@@ -223,10 +225,11 @@ const sendMessage = async () => {
     await api.cs.sendMessage(text || null, selectedImage.value || null)
     inputText.value = ''
     removeImage()
-    // 重新載入訊息取得最新
-    await loadMessages(1, false)
+    // 若 WebSocket 已連線，訊息會即時 push 進來；否則 fallback reload
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      await loadMessages(1, false)
+    }
   } catch (e) {
-    // 恢復輸入框
     inputText.value = tempText
     console.error('發送失敗', e)
   } finally {
@@ -239,14 +242,63 @@ const openImage = (url) => {
   window.open(url, '_blank')
 }
 
+// ── WebSocket 即時連線 ──────────────────────────────────────────────────────
+const connectWs = () => {
+  const token = localStorage.getItem('token')
+  if (!token) return
+
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+  const url = `${protocol}://${window.location.host}/ws?token=${encodeURIComponent(token)}`
+
+  ws = new WebSocket(url)
+
+  ws.onopen = () => {
+    // WS 連上後降低輪詢頻率（保留作為最終 fallback）
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
+  }
+
+  ws.onmessage = (evt) => {
+    try {
+      const payload = JSON.parse(evt.data)
+      if (payload.type === 'message') {
+        const msg = payload.data
+        // 避免重複（傳送後 REST 也會 reload）
+        if (!messages.value.find(m => m.id === msg.id)) {
+          messages.value.push(msg)
+          const el = messagesContainer.value
+          const isAtBottom = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 80
+          if (isAtBottom) scrollToBottom(true)
+        }
+      }
+    } catch (e) {
+      // ignore malformed frames
+    }
+  }
+
+  ws.onclose = () => {
+    ws = null
+    // 斷線後恢復輪詢，並嘗試 5 秒後重連
+    if (!pollTimer) pollTimer = setInterval(pollMessages, 10000)
+    reconnectTimer = setTimeout(connectWs, 5000)
+  }
+
+  ws.onerror = () => {
+    ws?.close()
+  }
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 onMounted(async () => {
   await initLoad()
-  // 每 10 秒輪詢一次新訊息
-  pollTimer = setInterval(pollMessages, 10000)
+  connectWs()
+  // 啟動輪詢作為 WebSocket 斷線時的 fallback（30 秒間隔）
+  pollTimer = setInterval(pollMessages, 30000)
 })
 
 onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer)
+  if (reconnectTimer) clearTimeout(reconnectTimer)
+  if (ws) { ws.onclose = null; ws.close() }
 })
 </script>
 

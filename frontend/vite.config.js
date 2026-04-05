@@ -16,6 +16,12 @@ export default defineConfig({
     host: '0.0.0.0',
     allowedHosts: 'all',
     proxy: {
+      // WebSocket → local Swoole server (Docker exposes WS_PORT to host)
+      '/ws': {
+        target: `ws://localhost:${process.env.WS_PORT || 9501}`,
+        ws: true,
+        changeOrigin: true,
+      },
       '/api': {
         target: 'https://demo.mercylife.cc',
         changeOrigin: true,

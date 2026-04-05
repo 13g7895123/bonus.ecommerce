@@ -616,12 +616,25 @@ class AdminPanelController extends Controller
             return $this->json(['message' => '找不到此對話'], 404);
         }
 
+        $createdAt = date('Y-m-d H:i:s');
         $db->table('customer_service_messages')->insert([
             'ticket_id'   => $ticketId,
             'sender_type' => 'admin',
             'sender_id'   => 0,
             'content'     => $content,
-            'created_at'  => date('Y-m-d H:i:s'),
+            'created_at'  => $createdAt,
+        ]);
+        $msgId = $db->insertID();
+
+        // Push to connected user via WebSocket (fire-and-forget)
+        \App\Libraries\WsNotifier::notify($ticketId, [
+            'id'          => $msgId,
+            'ticket_id'   => $ticketId,
+            'sender_type' => 'admin',
+            'sender_id'   => 0,
+            'content'     => $content,
+            'image_url'   => null,
+            'created_at'  => $createdAt,
         ]);
 
         return $this->json(['success' => true, 'message' => '訊息已發送']);
