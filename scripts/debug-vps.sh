@@ -53,8 +53,8 @@ info "Docker   : $(docker --version 2>/dev/null || echo '未安裝')"
 section "Docker 容器狀態"
 CONTAINERS=(frontend backend backend-web backend-ws db)
 for svc in "${CONTAINERS[@]}"; do
-  # 用 label 或名稱模糊比對
-  CNAME=$(docker ps --format '{{.Names}}' | grep "$svc" | head -1 || true)
+  # 精確比對：完整服務名稱結尾（避免 backend 匹配到 backend-ws）
+  CNAME=$(docker ps --format '{{.Names}}' | grep -E "\-${svc}-[0-9]+$" | head -1 || true)
   if [[ -z "$CNAME" ]]; then
     err "容器未執行: *$svc*"
   else
@@ -86,14 +86,20 @@ check_port "$WS_PORT"       "backend-ws Swoole"
 
 # ── 3. Swoole WebSocket Health ───────────────────────────────────────────────
 section "Swoole WebSocket Health"
-WS_HEALTH=$(curl -sf --max-time 3 "http://localhost:$WS_PORT/health" 2>/dev/null || echo "")
-if [[ -n "$WS_HEALTH" ]]; then
+WS_HEALTH=$(curl -s --max-time 3 "http://localhost:$WS_PORT/health" 2>/dev/null || echo "")
+if echo "$WS_HEALTH" | grep -q '"status"'; then
   CONN=$(echo "$WS_HEALTH" | grep -o '"connections":[0-9]*' | cut -d: -f2 || echo "?")
   TICK=$(echo "$WS_HEALTH" | grep -o '"tickets":[0-9]*'    | cut -d: -f2 || echo "?")
   ok "Swoole 回應正常 — 目前連線:${CONN}  ticket:${TICK}"
   info "raw: $WS_HEALTH"
 else
-  err "Swoole /health 無回應 (port $WS_PORT)"
+  # Swoole WebSocket\Server 對非 WS 請求可能回傳非 2xx，改用 TCP + /notify 間接確認
+  if nc -z -w 3 localhost "$WS_PORT" 2>/dev/null; then
+    warn "Swoole port $WS_PORT TCP OPEN，但 /health 無標準 JSON 回應（可能是舊版回傳行為）"
+    info "raw response: $WS_HEALTH"
+  else
+    err "Swoole /health 無回應 (port $WS_PORT)"
+  fi
 fi
 
 # ── 4. 後端 API 健康檢查 ──────────────────────────────────────────────────────
@@ -118,7 +124,7 @@ fi
 
 # ── 5. WsNotifier 通道（php-fpm → Swoole）───────────────────────────────────
 section "WsNotifier 內部通道 (php-fpm→Swoole)"
-BACKEND_WS_CNAME=$(docker ps --format '{{.Names}}' | grep 'backend$\|backend-[^w]' | head -1 || true)
+BACKEND_WS_CNAME=$(docker ps --format '{{.Names}}' | grep -E '\-backend-[0-9]+$' | head -1 || true)
 if [[ -n "$BACKEND_WS_CNAME" ]]; then
   NOTIFY_CODE=$(docker exec "$BACKEND_WS_CNAME" \
     curl -o /dev/null -sw '%{http_code}' --max-time 3 \
@@ -156,7 +162,7 @@ fi
 section "近期錯誤 logs（最近 50 行）"
 LOG_SVCS=(backend backend-ws)
 for svc in "${LOG_SVCS[@]}"; do
-  CNAME=$(docker ps --format '{{.Names}}' | grep "$svc" | head -1 || true)
+  CNAME=$(docker ps --format '{{.Names}}' | grep -E "\-${svc}-[0-9]+$" | head -1 || true)
   if [[ -n "$CNAME" ]]; then
     ERRLOGS=$(docker logs "$CNAME" --tail=50 2>&1 | grep -iE 'error|fatal|exception|failed' | tail -10 || true)
     if [[ -n "$ERRLOGS" ]]; then

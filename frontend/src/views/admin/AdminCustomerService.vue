@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onUnmounted } from 'vue'
 import { RefreshCw, MessageSquare } from 'lucide-vue-next'
 
 const conversations  = ref([])
@@ -89,6 +89,59 @@ const loadingMsgs    = ref(false)
 const replyText      = ref('')
 const sending        = ref(false)
 const msgContainer   = ref(null)
+
+// ── WebSocket ────────────────────────────────────────────────────────────────
+let ws = null
+let reconnectTimer = null
+
+const connectWs = (ticketId) => {
+  disconnectWs()
+  const token = localStorage.getItem('token')
+  if (!token || !ticketId) return
+
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+  const url = `${protocol}://${window.location.host}/ws?token=${encodeURIComponent(token)}&ticket_id=${encodeURIComponent(ticketId)}`
+
+  ws = new WebSocket(url)
+
+  ws.onmessage = (evt) => {
+    try {
+      const payload = JSON.parse(evt.data)
+      if (payload.type === 'message') {
+        const msg = payload.data
+        // 避免重複
+        if (!messages.value.find(m => m.id === msg.id)) {
+          messages.value.push(msg)
+          // 同步更新左側對話列表最後訊息
+          const conv = conversations.value.find(c => c.ticket_id === ticketId)
+          if (conv) {
+            conv.last_message = msg.content || '（圖片）'
+            conv.last_at = msg.created_at
+          }
+          scrollToBottom()
+        }
+      }
+    } catch { /* ignore */ }
+  }
+
+  ws.onclose = () => {
+    ws = null
+    // 若仍在同一個 ticket，5 秒後重連
+    if (activeTicket.value === ticketId) {
+      reconnectTimer = setTimeout(() => connectWs(ticketId), 5000)
+    }
+  }
+
+  ws.onerror = () => ws?.close()
+}
+
+const disconnectWs = () => {
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null }
+  if (ws) { ws.onclose = null; ws.close(); ws = null }
+}
+
+onUnmounted(disconnectWs)
+// ─────────────────────────────────────────────────────────────────────────────
 
 const formatTime = (dt) => {
   if (!dt) return ''
@@ -122,6 +175,8 @@ const openConversation = async (conv) => {
     messages.value = data.items || []
     await scrollToBottom()
   } finally { loadingMsgs.value = false }
+  // 連接 WebSocket 訂閱此 ticket
+  connectWs(conv.ticket_id)
 }
 
 const sendReply = async () => {
@@ -136,11 +191,13 @@ const sendReply = async () => {
     const data = await res.json()
     if (!res.ok) { alert(data.message || '發送失敗'); return }
     replyText.value = ''
-    // Reload messages
-    const res2 = await fetch(`/api/v1/admin-panel/cs/conversations/${activeTicket.value}`)
-    const data2 = await res2.json()
-    messages.value = data2.items || []
-    await scrollToBottom()
+    // WS 連線時訊息會自動 push 進來；否則 fallback reload
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      const res2 = await fetch(`/api/v1/admin-panel/cs/conversations/${activeTicket.value}`)
+      const data2 = await res2.json()
+      messages.value = data2.items || []
+      await scrollToBottom()
+    }
   } finally { sending.value = false }
 }
 

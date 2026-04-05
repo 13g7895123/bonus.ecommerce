@@ -30,9 +30,9 @@ class WsServer extends BaseCommand
 
         // -------------------------------------------------------------------
         // Shared state (single worker process, no cross-process needed)
-        // fd  => ['user_id' => int, 'ticket_id' => string]
+        // fd  => ['user_id' => int, 'ticket_id' => string, 'role' => 'user'|'admin']
         $clients = [];
-        // ticket_id => [fd => true, ...]
+        // ticket_id => [fd => true, ...]  (both user and admin subscribers)
         $tickets = [];
         // -------------------------------------------------------------------
 
@@ -53,18 +53,26 @@ class WsServer extends BaseCommand
                 return;
             }
 
-            try {
-                $ticketId = $this->getOrCreateTicket($userId);
-            } catch (\Throwable $e) {
-                $server->disconnect($request->fd, 1011, 'Server error');
-                CLI::error("[WS] DB error on open: " . $e->getMessage());
-                return;
+            // Admin can pass ?ticket_id=xxx to subscribe to a specific conversation
+            $role     = $this->getUserRole($token) ?: 'user';
+            $ticketId = null;
+
+            if ($role === 'admin' && !empty($request->get['ticket_id'])) {
+                $ticketId = (string) $request->get['ticket_id'];
+            } else {
+                try {
+                    $ticketId = $this->getOrCreateTicket($userId);
+                } catch (\Throwable $e) {
+                    $server->disconnect($request->fd, 1011, 'Server error');
+                    CLI::error("[WS] DB error on open: " . $e->getMessage());
+                    return;
+                }
             }
 
-            $clients[$request->fd] = ['user_id' => $userId, 'ticket_id' => $ticketId];
+            $clients[$request->fd] = ['user_id' => $userId, 'ticket_id' => $ticketId, 'role' => $role];
             $tickets[$ticketId][$request->fd] = true;
 
-            CLI::write("[WS] CONNECT  fd={$request->fd}  userId={$userId}  ticket={$ticketId}");
+            CLI::write("[WS] CONNECT  fd={$request->fd}  userId={$userId}  role={$role}  ticket={$ticketId}");
         });
 
         // ── WebSocket: client message (no-op – sends go through REST) ─────
@@ -144,28 +152,36 @@ class WsServer extends BaseCommand
      */
     private function verifyJwt(string $token): ?int
     {
-        if (empty($token)) {
-            return null;
-        }
+        $payload = $this->decodeJwt($token);
+        return ($payload['user_id'] ?? 0) ? (int) $payload['user_id'] : null;
+    }
+
+    /**
+     * Get role from token payload.
+     */
+    private function getUserRole(string $token): ?string
+    {
+        $payload = $this->decodeJwt($token);
+        return $payload['role'] ?? null;
+    }
+
+    /**
+     * Decode and verify HS256 JWT. Returns payload array or null.
+     */
+    private function decodeJwt(string $token): ?array
+    {
+        if (empty($token)) return null;
         $parts = explode('.', $token);
-        if (count($parts) !== 3) {
-            return null;
-        }
+        if (count($parts) !== 3) return null;
         [$header, $body, $sig] = $parts;
 
         $secret   = getenv('JWT_SECRET') ?: 'default_secret_change_me_in_production';
         $expected = rtrim(strtr(base64_encode(hash_hmac('sha256', "{$header}.{$body}", $secret, true)), '+/', '-_'), '=');
-
-        if (!hash_equals($expected, $sig)) {
-            return null;
-        }
+        if (!hash_equals($expected, $sig)) return null;
 
         $payload = json_decode(self::base64urlDecode($body), true);
-        if (!$payload || ($payload['exp'] ?? 0) < time()) {
-            return null;
-        }
-
-        return ($payload['user_id'] ?? 0) ? (int) $payload['user_id'] : null;
+        if (!$payload || ($payload['exp'] ?? 0) < time()) return null;
+        return $payload;
     }
 
     /**
