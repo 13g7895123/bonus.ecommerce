@@ -17,7 +17,7 @@ class WsNotifier
     public static function notify(string $ticketId, array $message): void
     {
         $host    = getenv('WS_INTERNAL_HOST') ?: 'backend-ws';
-        $port    = getenv('WS_PORT')          ?: '9501';
+        $port    = getenv('WS_INTERNAL_PORT')  ?: '9501';
         $url     = "http://{$host}:{$port}/notify";
         $payload = json_encode(['ticket_id' => $ticketId, 'message' => $message]);
 

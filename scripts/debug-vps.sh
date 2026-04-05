@@ -86,6 +86,7 @@ check_port "$WS_PORT"       "backend-ws Swoole"
 
 # ── 3. Swoole WebSocket Health ───────────────────────────────────────────────
 section "Swoole WebSocket Health"
+# Host-side: WS_PORT maps to container:9501 via Docker
 WS_HEALTH=$(curl -s --max-time 3 "http://localhost:$WS_PORT/health" 2>/dev/null || echo "")
 if echo "$WS_HEALTH" | grep -q '"status"'; then
   CONN=$(echo "$WS_HEALTH" | grep -o '"connections":[0-9]*' | cut -d: -f2 || echo "?")
@@ -93,12 +94,20 @@ if echo "$WS_HEALTH" | grep -q '"status"'; then
   ok "Swoole 回應正常 — 目前連線:${CONN}  ticket:${TICK}"
   info "raw: $WS_HEALTH"
 else
-  # Swoole WebSocket\Server 對非 WS 請求可能回傳非 2xx，改用 TCP + /notify 間接確認
-  if nc -z -w 3 localhost "$WS_PORT" 2>/dev/null; then
-    warn "Swoole port $WS_PORT TCP OPEN，但 /health 無標準 JSON 回應（可能是舊版回傳行為）"
-    info "raw response: $WS_HEALTH"
+  # Fallback: check health from inside the container (port 9501)
+  WS_CNAME=$(docker ps --format '{{.Names}}' | grep -E "\-backend-ws-[0-9]+$" | head -1 || true)
+  if [[ -n "$WS_CNAME" ]]; then
+    INTERNAL_HEALTH=$(docker exec "$WS_CNAME" curl -s --max-time 3 http://localhost:9501/health 2>/dev/null || echo "")
+    if echo "$INTERNAL_HEALTH" | grep -q '"status"'; then
+      ok "Swoole 容器內 /health 正常（外部 port $WS_PORT 映射可能有問題）"
+      info "internal raw: $INTERNAL_HEALTH"
+    else
+      err "Swoole /health 無回應（容器內 port 9501 也不通）"
+      info "raw response from host: $WS_HEALTH"
+      info "raw response from container: $INTERNAL_HEALTH"
+    fi
   else
-    err "Swoole /health 無回應 (port $WS_PORT)"
+    err "Swoole /health 無回應 (port $WS_PORT)，且找不到 backend-ws 容器"
   fi
 fi
 

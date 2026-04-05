@@ -26,7 +26,9 @@ class WsServer extends BaseCommand
 
     public function run(array $params): void
     {
-        $port = (int) (getenv('WS_PORT') ?: 9501);
+        // Always bind to 9501 inside the container.
+        // WS_PORT env controls the *host* port mapping in docker-compose, not the internal listen port.
+        $port = 9501;
 
         // -------------------------------------------------------------------
         // Shared state (single worker process, no cross-process needed)
