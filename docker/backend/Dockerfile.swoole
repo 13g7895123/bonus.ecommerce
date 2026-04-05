@@ -1,9 +1,27 @@
-FROM phpswoole/swoole:5-php8.2-alpine
+FROM php:8.2-cli-alpine
 
-# Install PHP extensions needed by CI4
-RUN apk add --no-cache bash icu-dev oniguruma-dev libzip-dev autoconf gcc g++ make \
-    && docker-php-ext-install pdo_mysql intl mbstring zip \
-    && apk del autoconf gcc g++ make
+# Build tools + runtime deps
+RUN apk add --no-cache \
+    bash \
+    icu-dev \
+    oniguruma-dev \
+    libzip-dev \
+    openssl-dev \
+    curl \
+    autoconf \
+    gcc \
+    g++ \
+    make \
+    linux-headers
+
+# PHP extensions required by CI4
+RUN docker-php-ext-install pdo_mysql intl mbstring zip
+
+# Install Swoole via PECL
+RUN pecl install swoole \
+    && docker-php-ext-enable swoole \
+    && apk del autoconf gcc g++ make linux-headers \
+    && rm -rf /tmp/pear
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
