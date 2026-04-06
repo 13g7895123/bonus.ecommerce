@@ -32,11 +32,14 @@ http.interceptors.response.use(
   error => {
     const message = error.response?.data?.message || error.message || '請求失敗';
     const status = error.response?.status || 500;
-    // 登入過期 → 清除憑證並通知應用層處理
+    // 登入過期 → 清除憑證並通知應用層處理（排除 auth 端點，避免誤判登入失敗為過期）
     if (status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.dispatchEvent(new CustomEvent('auth:expired'));
+      const requestUrl = error.config?.url || '';
+      if (!requestUrl.includes('/auth/')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.dispatchEvent(new CustomEvent('auth:expired'));
+      }
     }
     return Promise.reject({ response: { data: { message }, status } });
   }

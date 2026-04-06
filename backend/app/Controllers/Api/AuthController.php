@@ -47,7 +47,7 @@ class AuthController extends BaseApiController
 
         $result = (new AuthService())->login($email, $password);
         if (!$result['success']) {
-            return $this->error($result['message'], 401);
+            return $this->error($result['message']);
         }
         return $this->success($result['data'], 'Login successful');
     }
