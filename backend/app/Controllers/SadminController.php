@@ -60,6 +60,7 @@ class SadminController extends Controller
             'method'        => $this->request->getGet('method'),
             'uri'           => $this->request->getGet('uri'),
             'user_id'       => $this->request->getGet('user_id'),
+            'user_email'    => $this->request->getGet('user_email'),
             'response_code' => $this->request->getGet('response_code'),
             'date_from'     => $this->request->getGet('date_from'),
             'date_to'       => $this->request->getGet('date_to'),
@@ -78,6 +79,14 @@ class SadminController extends Controller
         }
         if (is_string($log['request_headers'])) {
             $log['request_headers'] = json_decode($log['request_headers'], true);
+        }
+        // Attach user info
+        if (!empty($log['user_id'])) {
+            $user = model(\App\Models\UserModel::class)->find($log['user_id']);
+            if ($user) {
+                $log['user_email'] = $user['email'];
+                $log['user_name']  = $user['full_name'];
+            }
         }
         return $this->json($log);
     }
