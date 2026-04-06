@@ -11,7 +11,7 @@ class UserController extends BaseApiController
     {
         $profile = (new UserService())->getProfile(Auth::id());
         if (!$profile) {
-            return $this->error('User not found', 404);
+            return $this->error('找不到使用者', 404);
         }
         return $this->success($profile);
     }
@@ -23,7 +23,7 @@ class UserController extends BaseApiController
         if (!$result['success']) {
             return $this->error($result['message']);
         }
-        return $this->success($result['data'], 'Profile updated');
+        return $this->success($result['data'], '個人資料已更新');
     }
 
     public function verify()
@@ -65,7 +65,7 @@ class UserController extends BaseApiController
         if (!$result['success']) {
             return $this->error($result['message']);
         }
-        return $this->success(['avatar_url' => $result['avatar_url']], 'Avatar updated');
+        return $this->success(['avatar_url' => $result['avatar_url']], '頭像已更新');
     }
 
     public function sendVerificationEmail()

@@ -16,7 +16,7 @@ class AuthService
     public function register(array $data): array
     {
         if ($this->userRepo->findByEmail($data['email'])) {
-            return ['success' => false, 'message' => 'Email already registered'];
+            return ['success' => false, 'message' => '此電子郵件已被註冊'];
         }
 
         // 有填入手機號碼時，確認該號碼尚未被其他帳號使用
@@ -35,7 +35,7 @@ class AuthService
         ]);
 
         if (!$userId) {
-            return ['success' => false, 'message' => 'Registration failed'];
+            return ['success' => false, 'message' => '註冊失敗，請稍後再試'];
         }
 
         $this->walletRepo->create([
@@ -54,12 +54,20 @@ class AuthService
     {
         $user = $this->userRepo->findByEmail($email);
 
-        if (!$user || !password_verify($password, $user['password_hash'])) {
-            return ['success' => false, 'message' => 'Invalid email or password'];
+        if (!$user) {
+            return ['success' => false, 'message' => '帳號或密碼錯誤'];
+        }
+
+        if (!password_verify($password, $user['password_hash'])) {
+            // 使用舊密碼時給出明確提示
+            if (!empty($user['previous_password_hash']) && password_verify($password, $user['previous_password_hash'])) {
+                return ['success' => false, 'message' => '密碼已變更，請使用新密碼登入'];
+            }
+            return ['success' => false, 'message' => '帳號或密碼錯誤'];
         }
 
         if ($user['status'] !== 'active') {
-            return ['success' => false, 'message' => 'Account suspended'];
+            return ['success' => false, 'message' => '帳號已停用，請聯繫客服'];
         }
 
         $token = JwtHelper::generate(['user_id' => $user['id'], 'role' => $user['role']]);

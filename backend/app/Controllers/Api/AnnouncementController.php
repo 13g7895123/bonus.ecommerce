@@ -19,7 +19,7 @@ class AnnouncementController extends BaseApiController
     {
         $item = (new AnnouncementService())->getById($id);
         if (!$item) {
-            return $this->error('Announcement not found', 404);
+            return $this->error('找不到公告', 404);
         }
         return $this->success($item);
     }

@@ -173,10 +173,13 @@ class AdminPanelController extends Controller
         $repo = new UserRepository();
         $user = $repo->find($userId);
         if (!$user) {
-            return $this->json(['message' => 'User not found'], 404);
+            return $this->json(['message' => '找不到使用者'], 404);
         }
 
-        $repo->update($userId, ['password_hash' => password_hash($newPassword, PASSWORD_DEFAULT)]);
+        $repo->update($userId, [
+            'previous_password_hash' => $user['password_hash'] ?? null,
+            'password_hash'          => password_hash($newPassword, PASSWORD_DEFAULT),
+        ]);
         return $this->json(['success' => true, 'message' => '密碼已成功更新']);
     }
 

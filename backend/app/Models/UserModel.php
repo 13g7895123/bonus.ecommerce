@@ -10,7 +10,7 @@ class UserModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
     protected $allowedFields = [
-        'email', 'password_hash', 'full_name', 'phone',
+        'email', 'password_hash', 'previous_password_hash', 'full_name', 'phone',
         'avatar', 'avatar_file_id', 'dob', 'country',
         'tier', 'role', 'is_verified', 'verify_status',
         'verification_data', 'status',

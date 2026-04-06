@@ -34,7 +34,7 @@ class UserService
     {
         $allowed = array_intersect_key($data, array_flip(['full_name', 'phone', 'dob', 'country']));
         if (empty($allowed)) {
-            return ['success' => false, 'message' => 'No valid fields to update'];
+            return ['success' => false, 'message' => '沒有可更新的欄位'];
         }
         $this->userRepo->update($userId, $allowed);
         return ['success' => true, 'data' => $this->getProfile($userId)];
@@ -88,7 +88,7 @@ class UserService
             'verification_data' => json_encode($verificationData),
         ]);
 
-        return ['success' => true, 'message' => 'Verification submitted'];
+        return ['success' => true, 'message' => '已完成驗證申請'];
     }
 
     public function changePassword(int $userId, string $newPassword): array
@@ -97,8 +97,10 @@ class UserService
             return ['success' => false, 'message' => '密碼須為 6-12 位'];
         }
 
+        $user = $this->userRepo->find($userId);
         $this->userRepo->update($userId, [
-            'password_hash' => password_hash($newPassword, PASSWORD_BCRYPT),
+            'previous_password_hash' => $user['password_hash'] ?? null,
+            'password_hash'          => password_hash($newPassword, PASSWORD_BCRYPT),
         ]);
 
         return ['success' => true, 'message' => '密碼已更新'];
