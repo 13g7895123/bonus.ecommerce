@@ -3,6 +3,12 @@
     <PageHeader title="提款申請" back-to="/settings" />
 
     <div class="wsp-content">
+      <!-- 載入中 -->
+      <div v-if="pageLoading" class="wsp-loading">
+        <span>資料載入中...</span>
+      </div>
+
+      <template v-else>
       <p class="wsp-desc">為保護您的帳戶安全，請先設定提款密碼</p>
 
       <AppInput v-model="password" type="password" label="設定提款密碼" placeholder="請設定6-12位數字密碼" />
@@ -14,6 +20,7 @@
         </AppButton>
       </div>
       <DebugFillButton @fill="fillRandomData" />
+      </template><!-- end v-else pageLoading -->
     </div>
   </div>
 </template>
@@ -36,10 +43,12 @@ const walletService = new WalletService()
 const password        = ref('')
 const confirmPassword = ref('')
 const loading         = ref(false)
+const pageLoading     = ref(true)
 
 onMounted(async () => {
   // 只有來自「忘記提款密碼」的 reset=true 才允許已設定過密碼的使用者進入
   if (route.query.reset === 'true') {
+    pageLoading.value = false
     return
   }
 
@@ -48,9 +57,12 @@ onMounted(async () => {
     if (wallet?.has_withdrawal_pw) {
       // 已設定提款密碼 → 跳過此頁，一律到下一步（綁定/確認銀行資料）
       router.replace('/withdrawal/setup')
+      return
     }
   } catch (e) {
     // 載入失敗不阻斷，依然顯示設定頁面
+  } finally {
+    pageLoading.value = false
   }
 })
 
@@ -96,6 +108,15 @@ const fillRandomData = () => {
 
 .wsp-content {
   padding: 0 5rem 3rem 5rem;
+}
+
+.wsp-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 0;
+  font-size: 0.875rem;
+  color: #999;
 }
 
 .wsp-desc {
