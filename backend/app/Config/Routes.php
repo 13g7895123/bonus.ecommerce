@@ -89,6 +89,11 @@ $routes->group('api/v1', static function ($routes) {
         $routes->get('phone-verifications', 'AdminPanelController::phoneVerifications');
         // SMS Logs
         $routes->get('sms-logs',            'AdminPanelController::smsLogs');
+        // Mails
+        $routes->get('mails',               'AdminPanelController::mailList');
+        $routes->post('mails',              'AdminPanelController::createMail');
+        $routes->put('mails/(:num)',         'AdminPanelController::updateMail/$1');
+        $routes->delete('mails/(:num)',      'AdminPanelController::deleteMail/$1');
     });
 
     // ── Auth (Public) ──
@@ -158,6 +163,9 @@ $routes->group('api/v1', static function ($routes) {
 
     // ── App Config (Public) ──
     $routes->get('config/(:segment)', 'AdminPanelController::getConfig/$1');
+
+    // ── Mails (Public listing) ──
+    $routes->get('mails', 'AdminPanelController::publicMailList');
 
     // ── Customer Service (JWT required) ──
     $routes->group('cs', ['filter' => 'jwt'], static function ($routes) {

@@ -24,7 +24,7 @@ class FileService
         'application/pdf',
     ];
 
-    private const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+    private const MAX_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
 
     private const TYPE_DIR = [
         'avatar'     => 'uploads/avatars',

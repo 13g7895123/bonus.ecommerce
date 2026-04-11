@@ -163,6 +163,12 @@ onMounted(async () => {
     const status = rawStatus || (profile?.verification_data ? 'pending' : 'none')
     verificationStatus.value = status
 
+    // 已審核通過 → 直接跳至結果頁，不再顯示填資料的表單
+    if (status === 'approved' || status === 'verified') {
+      router.push('/identity-verification/complete')
+      return
+    }
+
     // 從 API 返回的 verification_data 預填表單
     const vd = profile?.verification_data
       ? (typeof profile.verification_data === 'string'

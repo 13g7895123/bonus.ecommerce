@@ -41,12 +41,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import PageLayout from '../components/PageLayout.vue'
 import ContentList from '../components/ContentList.vue'
 import ContentListItem from '../components/ContentListItem.vue'
 
 const selectedMail = ref(null)
+const mails        = ref([])
 
 const openMail = (mail) => {
   selectedMail.value = mail
@@ -56,23 +57,31 @@ const closeMail = () => {
   selectedMail.value = null
 }
 
-const mails = [
-  {
-    id: 1,
-    subject: '【賣家交易安全提醒】請賣家勿點選可疑QRcode或Line連結:',
-    time: '2026/03/11 10:30',
-    content: `親愛的用戶您好：
-
-近期詐騙集團猖獗，常假冒買家要求賣家點選不明連結或QRcode進行匯款或個資驗證。
-在此這別提醒您：
-1. 本平臺不會要求您私下加Line聯繫。
-2. 請勿點選不明連結或掃描QRcode。
-3. 若有疑慮，請直接聯繫客服中心確認。
-
-感謝您的配合！
-`
-  },
-]
+onMounted(async () => {
+  try {
+    const res = await fetch('/api/v1/mails')
+    if (res.ok) {
+      const data = await res.json()
+      mails.value = (data.items || []).map(m => ({
+        id:      m.id,
+        subject: m.subject,
+        content: m.content,
+        time:    m.created_at ? m.created_at.replace('T', ' ').substring(0, 16) : '',
+      }))
+    }
+  } catch {}
+  // 若 API 沒有資料，顯示預設信件
+  if (!mails.value.length) {
+    mails.value = [
+      {
+        id: 1,
+        subject: '【賣家交易安全提醒】請賣家勿點選可疑QRcode或Line連結:',
+        time: '2026/03/11 10:30',
+        content: `親愛的用戶您好：\n\n近期詐騙集團猖獗，常假冒買家要求賣家點選不明連結或QRcode進行匯款或個資驗證。\n在此這別提醒您：\n1. 本平臺不會要求您私下加Line聯繫。\n2. 請勿點選不明連結或掃描QRcode。\n3. 若有疑慮，請直接聯繫客服中心確認。\n\n感謝您的配合！\n`,
+      },
+    ]
+  }
+})
 </script>
 
 <style scoped>

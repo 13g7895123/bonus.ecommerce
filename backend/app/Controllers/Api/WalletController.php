@@ -38,17 +38,13 @@ class WalletController extends BaseApiController
 
     public function bindBank()
     {
-        $data     = $this->getJson();
-        $password = $data['withdrawal_password'] ?? '';
+        $data = $this->getJson();
 
         if (empty($data['bank_name']) || empty($data['bank_account']) || empty($data['bank_account_name'])) {
             return $this->error('請填寫銀行名稱、帳號及戶名');
         }
-        if (!$password) {
-            return $this->error('請輸入提款密碼');
-        }
 
-        $result = (new WalletService())->bindBankAccount(Auth::id(), $data, $password);
+        $result = (new WalletService())->bindBankAccount(Auth::id(), $data);
         if (!$result['success']) {
             return $this->error($result['message']);
         }

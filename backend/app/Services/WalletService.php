@@ -21,6 +21,10 @@ class WalletService
         $wallet['has_bank_account'] = !empty($wallet['bank_account']);
         $wallet['has_withdrawal_pw'] = !empty($wallet['withdrawal_password_hash']);
         $wallet['has_passbook']      = !empty($wallet['bank_passbook_file_id']);
+        if ($wallet['has_passbook']) {
+            $file = model(\App\Models\FileModel::class)->find((int) $wallet['bank_passbook_file_id']);
+            $wallet['bank_passbook_url'] = $file['url'] ?? null;
+        }
         if (!empty($wallet['bank_account'])) {
             $acc = $wallet['bank_account'];
             $wallet['bank_account_masked'] = str_repeat('*', max(0, strlen($acc) - 4)) . substr($acc, -4);
@@ -48,14 +52,11 @@ class WalletService
         return ['success' => true, 'message' => '提款密碼已更新'];
     }
 
-    public function bindBankAccount(int $userId, array $data, string $withdrawalPassword): array
+    public function bindBankAccount(int $userId, array $data): array
     {
         $wallet = $this->walletRepo->findByUserId($userId);
-        if (!$wallet || empty($wallet['withdrawal_password_hash'])) {
-            return ['success' => false, 'message' => '請先設定提款密碼'];
-        }
-        if (!password_verify($withdrawalPassword, $wallet['withdrawal_password_hash'])) {
-            return ['success' => false, 'message' => '提款密碼錯誤'];
+        if (!$wallet) {
+            return ['success' => false, 'message' => '找不到錢包'];
         }
         $updateData = [
             'bank_name'              => $data['bank_name'],

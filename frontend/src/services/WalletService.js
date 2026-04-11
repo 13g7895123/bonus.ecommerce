@@ -110,7 +110,6 @@ export class WalletService extends BaseService {
       bank_account:          bankData.accountNo            || bankData.bank_account,
       bank_account_name:     bankData.accountName          || bankData.bank_account_name,
       bank_passbook_file_id: bankData.passbookFileId       || bankData.bank_passbook_file_id || null,
-      withdrawal_password:   bankData.withdrawalPassword   || bankData.withdrawal_password,
     });
   }
 

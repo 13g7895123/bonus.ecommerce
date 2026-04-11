@@ -666,6 +666,64 @@ class AdminPanelController extends Controller
 
     // ── HTML Panel ────────────────────────────────────────────────────────────
 
+    // ── Mails ─────────────────────────────────────────────────────────────────
+
+    public function publicMailList(): ResponseInterface
+    {
+        $items = model(\App\Models\MailModel::class)->listActive();
+        return $this->json(['items' => $items, 'total' => count($items)]);
+    }
+
+    public function mailList(): ResponseInterface
+    {
+        $items = model(\App\Models\MailModel::class)->listAll();
+        return $this->json(['items' => $items, 'total' => count($items)]);
+    }
+
+    public function createMail(): ResponseInterface
+    {
+        $data    = $this->request->getJSON(true) ?? [];
+        $subject = trim($data['subject'] ?? '');
+        $content = trim($data['content'] ?? '');
+        if (!$subject || !$content) {
+            return $this->json(['message' => '主旨與內容不得為空'], 400);
+        }
+        $id = model(\App\Models\MailModel::class)->insert([
+            'subject'    => $subject,
+            'content'    => $content,
+            'is_active'  => (int) ($data['is_active'] ?? 1),
+            'sort_order' => (int) ($data['sort_order'] ?? 0),
+        ]);
+        return $this->json(['id' => $id, 'message' => '信件已建立'], 201);
+    }
+
+    public function updateMail(int $id): ResponseInterface
+    {
+        $data  = $this->request->getJSON(true) ?? [];
+        $model = model(\App\Models\MailModel::class);
+        $mail  = $model->find($id);
+        if (!$mail) {
+            return $this->json(['message' => '信件不存在'], 404);
+        }
+        $update = [];
+        if (isset($data['subject']))    $update['subject']    = trim($data['subject']);
+        if (isset($data['content']))    $update['content']    = trim($data['content']);
+        if (isset($data['is_active']))  $update['is_active']  = (int) $data['is_active'];
+        if (isset($data['sort_order'])) $update['sort_order'] = (int) $data['sort_order'];
+        $model->update($id, $update);
+        return $this->json(['message' => '信件已更新']);
+    }
+
+    public function deleteMail(int $id): ResponseInterface
+    {
+        $model = model(\App\Models\MailModel::class);
+        if (!$model->find($id)) {
+            return $this->json(['message' => '信件不存在'], 404);
+        }
+        $model->delete($id);
+        return $this->json(['message' => '信件已刪除']);
+    }
+
     public function index(): ResponseInterface
     {
         return $this->response->setBody($this->renderHtml());
