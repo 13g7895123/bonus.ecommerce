@@ -36,21 +36,32 @@
               <span class="amount-value red">$ {{ balance.toLocaleString() }}</span>
             </div>
             <div class="amount-row">
-              <span class="amount-label">{{ t('mileageRewards.mileageReward') }}</span>
-              <span class="amount-value red">$ {{ mileageReward.toLocaleString() }}</span>
+              <span class="amount-label">兌換費用</span>
+              <span class="amount-value red">$ {{ totalPrice.toLocaleString() }}</span>
+            </div>
+            <div v-if="totalMiles > 0" class="amount-row">
+              <span class="amount-label">所需里程</span>
+              <span class="amount-value red">{{ totalMiles.toLocaleString() }} 點</span>
+            </div>
+            <div class="amount-row">
+              <span class="amount-label">回饋金額</span>
+              <span class="amount-value green">$ {{ mileageReward.toLocaleString() }}</span>
             </div>
           </div>
 
           <!-- 金額資訊 - 水平樣式 -->
           <div v-else class="amount-section-horizontal">
             <div class="amount-card amount-card-left">
-              <span class="amount-card-label">{{ t('mileageRewards.mileageReward') }}</span>
-              <span class="amount-card-value">$ {{ mileageReward.toLocaleString() }}</span>
+              <span class="amount-card-label">兌換費用</span>
+              <span class="amount-card-value">$ {{ totalPrice.toLocaleString() }}</span>
             </div>
             <div class="amount-card amount-card-right">
-              <span class="amount-card-label">{{ t('mileageRewards.accountBalance') }}</span>
-              <span class="amount-card-value">$ {{ balance.toLocaleString() }}</span>
+              <span class="amount-card-label">回饋金額</span>
+              <span class="amount-card-value green">$ {{ mileageReward.toLocaleString() }}</span>
             </div>
+          </div>
+          <div v-if="displayStyle === 'horizontal' && totalMiles > 0" class="miles-hint">
+            所需里程：{{ totalMiles.toLocaleString() }} 點
           </div>
 
         <!-- 錯誤提示 -->
@@ -109,6 +120,16 @@ const mileageReward = computed(() => {
 })
 
 const milesPoints = computed(() => {
+  if (!product.value) return 0
+  return Number(product.value.miles_points || 0) * quantity.value
+})
+
+const totalPrice = computed(() => {
+  if (!product.value) return 0
+  return Number(product.value.price) * quantity.value
+})
+
+const totalMiles = computed(() => {
   if (!product.value) return 0
   return Number(product.value.miles_points || 0) * quantity.value
 })
@@ -413,6 +434,21 @@ onMounted(loadData)
 
 .amount-value.red {
   color: #d71921;
+}
+
+.amount-value.green {
+  color: #2e7d32;
+}
+
+.amount-card-value.green {
+  color: #2e7d32;
+}
+
+.miles-hint {
+  text-align: center;
+  font-size: 0.82rem;
+  color: #d71921;
+  margin: 0.4rem 1rem 0;
 }
 
 /* 錯誤訊息 */

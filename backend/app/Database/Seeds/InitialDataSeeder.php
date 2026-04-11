@@ -10,6 +10,7 @@ class InitialDataSeeder extends Seeder
     {
         $this->seedUsers();
         $this->seedAnnouncements();
+        $this->seedMails();
     }
 
     private function seedUsers(): void
@@ -110,5 +111,25 @@ class InitialDataSeeder extends Seeder
         ];
 
         $this->db->table('announcements')->insertBatch($announcements);
+    }
+
+    private function seedMails(): void
+    {
+        $existing = $this->db->table('mails')
+            ->where('subject', '【賣家交易安全提醒】請賣家勿點選可疑QRcode或Line連結')
+            ->countAllResults();
+
+        if ($existing > 0) {
+            return;
+        }
+
+        $this->db->table('mails')->insert([
+            'subject'    => '【賣家交易安全提醒】請賣家勿點選可疑QRcode或Line連結',
+            'content'    => "親愛的用戶您好：\n\n近期詐騙集團猖獗，常假冒買家要求賣家點選不明連結或QRcode進行匯款或個資驗證。\n在此特別提醒您：\n1. 本平臺不會要求您私下加Line聯繫。\n2. 請勿點選不明連結或掃描QRcode。\n3. 若有疑慮，請直接聯繫客服中心確認。\n\n感謝您的配合！",
+            'is_active'  => 1,
+            'sort_order' => 0,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
     }
 }

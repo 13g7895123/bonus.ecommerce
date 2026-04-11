@@ -17,11 +17,9 @@
         <div class="product-info">
           <span v-if="hasPendingOrder(item.id)" class="pending-badge">{{ t('mileageRewards.pendingReview') }}</span>
           <div class="info-row name">{{ item.name }}</div>
-          <div class="info-row gray redeem-label">兌換條件：</div>
-          <div class="info-row red">${{ Number(item.price).toLocaleString() }} 金額</div>
-          <div v-if="Number(item.miles_points) > 0" class="info-row red">+ {{ Number(item.miles_points).toLocaleString() }} 里程點數</div>
-          <div class="info-row gray reward-label">回饋金額：</div>
-          <div class="info-row green">${{ Number(item.mileage_amount).toLocaleString() }}</div>
+          <div class="info-row gray">{{ t('mileageRewards.mileageReward') }}{{ Math.round(Number(item.mileage_amount) / Number(item.price) * 100) }}%(${{ Number(item.mileage_amount).toLocaleString() }})</div>
+          <div class="info-row red">${{ Number(item.price).toLocaleString() }}</div>
+          <div class="info-row red">{{ t('mileageRewards.milesPoints') }}:<span class="red-text">{{ Number(item.miles_points || 0).toLocaleString() }}</span></div>
           <div class="info-row gray">數量：{{ item.stock }}</div>
         </div>
       </div>
@@ -195,18 +193,5 @@ onMounted(loadData)
 .red-text {
   color: #d71921;
   font-weight: 600;
-}
-
-.info-row.green {
-  color: #2e7d32;
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
-.redeem-label,
-.reward-label {
-  margin-top: 0.35rem;
-  font-size: 0.75rem;
-  color: #888;
 }
 </style>

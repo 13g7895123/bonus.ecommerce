@@ -3,6 +3,12 @@
     <PageHeader title="實名認證" back-to="/settings" />
 
     <div class="iv-content">
+      <!-- 載入中 -->
+      <div v-if="pageLoading" class="iv-loading">
+        <span>資料載入中...</span>
+      </div>
+
+      <template v-else>
       <!-- 說明文字 -->
       <p class="iv-desc">為了保障帳戶安全體驗 請您綁定個人身份資訊</p>
 
@@ -94,6 +100,7 @@
         <AppButton block @click="handleNext" class="iv-next-btn">下一步</AppButton>
         <DebugFillButton @fill="fillRandomData" />
       </template>
+      </template><!-- end v-else pageLoading -->
     </div>
   </div>
 </template>
@@ -131,6 +138,7 @@ const backUploading  = ref(false)
 // 已送出的認證狀態：'none' | 'pending' | 'approved' | 'rejected'
 const verificationStatus = ref('none')
 const rejectionReason    = ref('')
+const pageLoading        = ref(true)
 
 const isSubmitted = computed(() => verificationStatus.value !== 'none')
 
@@ -161,8 +169,6 @@ onMounted(async () => {
 
     // verify_status 若為空字串（舊資料），依 verification_data 是否存在推斷
     const status = rawStatus || (profile?.verification_data ? 'pending' : 'none')
-    verificationStatus.value = status
-
     // 已審核通過 → 直接跳至結果頁，不再顯示填資料的表單
     if (status === 'approved' || status === 'verified') {
       router.push('/identity-verification/complete')
@@ -192,6 +198,8 @@ onMounted(async () => {
     }
   } catch (e) {
     // 預填失敗不阻斷流程
+  } finally {
+    pageLoading.value = false
   }
 })
 
@@ -278,6 +286,15 @@ const handleNext = async () => {
   color: #999;
   text-align: center;
   margin-bottom: 1.5rem;
+}
+
+.iv-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 0;
+  font-size: 0.875rem;
+  color: #999;
 }
 
 :deep(.app-input-label) {
