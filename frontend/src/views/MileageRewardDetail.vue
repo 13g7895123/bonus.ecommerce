@@ -1,6 +1,6 @@
 <template>
   <div class="ml-page">
-    <PageHeader :title="t('mileageRewards.title')" back-to="/mileage-rewards" :bordered="false" />
+    <PageHeader :title="t('mileageRewards.title')" :back-to="backPath" :bordered="false" />
 
     <div v-if="loading" class="state-loading">{{ t('common.loading') }}</div>
     <div v-else-if="!product" class="state-empty">{{ t('mileageRewards.empty') }}</div>
@@ -113,6 +113,14 @@ const milesBalance  = ref(0)
 const pendingOrders = ref([])
 const errorMsg      = ref('')
 const displayStyle  = ref('default')
+
+const backPath = computed(() => {
+  const q = new URLSearchParams()
+  if (route.query.item_id)   q.set('item_id',   route.query.item_id)
+  if (route.query.item_name) q.set('item_name', route.query.item_name)
+  const qs = q.toString()
+  return `/mileage-rewards${qs ? '?' + qs : ''}`
+})
 
 const mileageReward = computed(() => {
   if (!product.value) return 0

@@ -50,7 +50,10 @@ const hasPendingOrder = (productId) =>
   pendingOrders.value.some(o => Number(o.product_id) === Number(productId))
 
 const goToDetail = (productId) => {
-  router.push({ path: '/mileage-reward-detail', query: { product_id: productId } })
+  const q = { product_id: productId }
+  if (itemId.value) q.item_id = itemId.value
+  if (itemName.value) q.item_name = itemName.value
+  router.push({ path: '/mileage-reward-detail', query: q })
 }
 
 const loadData = async () => {

@@ -3,6 +3,12 @@
     <PageHeader title="提款申請" back-to="/settings" />
 
     <div class="ws-content">
+      <!-- 載入中 -->
+      <div v-if="pageLoading" class="ws-loading">
+        <span>資料載入中...</span>
+      </div>
+
+      <template v-else>
       <p class="ws-desc">為了保障帳戶安全體驗 請您綁定個人身份資訊</p>
 
       <!-- 已上傳過存摺 → 顯示存摺圖片 -->
@@ -57,6 +63,7 @@
         </AppButton>
       </div>
       <DebugFillButton @fill="fillRandomData" />
+      </template><!-- end v-else pageLoading -->
     </div>
   </div>
 </template>
@@ -92,6 +99,7 @@ const loading            = ref(false)
 const hasExistingBank    = ref(false)
 const hasExistingPassbook = ref(false)
 const bankList           = ref([])
+const pageLoading        = ref(true)
 
 onMounted(async () => {
   // 載入銀行清單
@@ -130,6 +138,8 @@ onMounted(async () => {
     }
   } catch (e) {
     // 讀取失敗不阻斷，讓使用者依然可以填入資料
+  } finally {
+    pageLoading.value = false
   }
 })
 
@@ -138,7 +148,19 @@ const handleFileSelected = async (file) => {
   try {
     const result = await fileService.upload(file, 'passbook')
     passbookFileId.value = result.id
-    toast.success('存摺上傳成功')
+    passbookUrl.value    = result.url
+    // 若銀行已綁定，立即將存折儲存到後端
+    if (hasExistingBank.value) {
+      await walletService.setupBank(null, {
+        bankName:       bankName.value,
+        branchName:     branchName.value,
+        accountNo:      accountNo.value,
+        accountName:    accountName.value,
+        passbookFileId: result.id,
+      })
+      hasExistingPassbook.value = true
+    }
+    toast.success('存折上傳成功')
   } catch (e) {
     toast.error(e?.response?.data?.message || '存摺上傳失敗')
     passbookPreview.value = ''
@@ -200,6 +222,15 @@ const viewPassbook = () => {
   color: #999;
   text-align: center;
   margin-bottom: 1.5rem;
+}
+
+.ws-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 0;
+  font-size: 0.875rem;
+  color: #999;
 }
 
 .section-label {

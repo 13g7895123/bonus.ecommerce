@@ -62,8 +62,11 @@ class WalletService
             'bank_name'              => $data['bank_name'],
             'bank_branch'            => $data['bank_branch'] ?? null,
             'bank_account_name'      => $data['bank_account_name'],
-            'bank_passbook_file_id'  => $data['bank_passbook_file_id'] ?? null,
         ];
+        // 只在有新存摺時才更新，避免覆蓋既有值為 null
+        if (!empty($data['bank_passbook_file_id'])) {
+            $updateData['bank_passbook_file_id'] = $data['bank_passbook_file_id'];
+        }
         // 銀行帳號一旦設定，不允許透過此介面修改
         if (empty($wallet['bank_account'])) {
             $updateData['bank_account'] = $data['bank_account'];
