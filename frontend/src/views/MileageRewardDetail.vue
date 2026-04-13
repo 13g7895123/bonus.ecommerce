@@ -35,8 +35,9 @@
               <span class="amount-label">{{ t('mileageRewards.accountBalance') }}</span>
               <span class="amount-value red">$ {{ balance.toLocaleString() }}</span>
             </div>
+            <hr class="amount-divider" />
             <div class="amount-row">
-              <span class="amount-label">兌換費用</span>
+              <span class="amount-label">商品金額</span>
               <span class="amount-value red">$ {{ totalPrice.toLocaleString() }}</span>
             </div>
             <div v-if="totalMiles > 0" class="amount-row">
@@ -44,7 +45,7 @@
               <span class="amount-value red">{{ totalMiles.toLocaleString() }} 點</span>
             </div>
             <div class="amount-row">
-              <span class="amount-label">回饋金額</span>
+              <span class="amount-label">回饋</span>
               <span class="amount-value green">$ {{ mileageReward.toLocaleString() }}</span>
             </div>
           </div>
@@ -52,11 +53,11 @@
           <!-- 金額資訊 - 水平樣式 -->
           <div v-else class="amount-section-horizontal">
             <div class="amount-card amount-card-left">
-              <span class="amount-card-label">兌換費用</span>
+              <span class="amount-card-label">商品金額</span>
               <span class="amount-card-value">$ {{ totalPrice.toLocaleString() }}</span>
             </div>
             <div class="amount-card amount-card-right">
-              <span class="amount-card-label">回饋金額</span>
+              <span class="amount-card-label">回饋</span>
               <span class="amount-card-value green">$ {{ mileageReward.toLocaleString() }}</span>
             </div>
           </div>
@@ -386,6 +387,12 @@ onMounted(loadData)
   gap: 0.6rem;
 }
 
+.amount-divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 0.25rem 0;
+}
+
 /* 水平樣式 */
 .amount-section-horizontal {
   margin-top: 1.5rem;
@@ -422,7 +429,7 @@ onMounted(loadData)
 
 .amount-row {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
 }
@@ -475,6 +482,8 @@ onMounted(loadData)
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* 內容最大寬度居中 */
@@ -482,6 +491,7 @@ onMounted(loadData)
   max-width: 560px;
   margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
 }
 
 /* 固定在底部的操作區 */
