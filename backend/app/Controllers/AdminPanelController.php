@@ -724,6 +724,61 @@ class AdminPanelController extends Controller
         return $this->json(['message' => '信件已刪除']);
     }
 
+    // ── Announcements ─────────────────────────────────────────────────────────
+
+    public function announcementList(): ResponseInterface
+    {
+        $page  = (int) ($this->request->getGet('page') ?? 1);
+        $limit = min((int) ($this->request->getGet('limit') ?? 50), 100);
+        $model = model(\App\Models\AnnouncementModel::class);
+        $total = $model->countAll();
+        $items = $model->orderBy('published_at', 'DESC')->paginate($limit, 'default', $page);
+        return $this->json(['items' => $items ?? [], 'total' => $total]);
+    }
+
+    public function createAnnouncement(): ResponseInterface
+    {
+        $data  = $this->request->getJSON(true) ?? [];
+        $title = trim($data['title'] ?? '');
+        if (!$title) {
+            return $this->json(['message' => '標題為必填'], 400);
+        }
+        $model = model(\App\Models\AnnouncementModel::class);
+        $id    = $model->insert([
+            'title'        => $title,
+            'content'      => $data['content'] ?? '',
+            'is_published' => isset($data['is_published']) ? (int) $data['is_published'] : 1,
+            'published_at' => $data['published_at'] ?? date('Y-m-d H:i:s'),
+        ], true);
+        return $this->json(['success' => true, 'id' => $id], 201);
+    }
+
+    public function updateAnnouncement(int $id): ResponseInterface
+    {
+        $model = model(\App\Models\AnnouncementModel::class);
+        if (!$model->find($id)) {
+            return $this->json(['message' => '找不到公告'], 404);
+        }
+        $data    = $this->request->getJSON(true) ?? [];
+        $payload = [];
+        if (isset($data['title']))        $payload['title']        = trim($data['title']);
+        if (isset($data['content']))      $payload['content']      = $data['content'];
+        if (isset($data['is_published'])) $payload['is_published'] = (int) $data['is_published'];
+        if (isset($data['published_at'])) $payload['published_at'] = $data['published_at'] ?: date('Y-m-d H:i:s');
+        $model->update($id, $payload);
+        return $this->json(['success' => true]);
+    }
+
+    public function deleteAnnouncement(int $id): ResponseInterface
+    {
+        $model = model(\App\Models\AnnouncementModel::class);
+        if (!$model->find($id)) {
+            return $this->json(['message' => '找不到公告'], 404);
+        }
+        $model->delete($id);
+        return $this->json(['success' => true]);
+    }
+
     public function index(): ResponseInterface
     {
         return $this->response->setBody($this->renderHtml());

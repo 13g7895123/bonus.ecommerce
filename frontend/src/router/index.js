@@ -39,6 +39,7 @@ import AdminSmsLogs from '../views/admin/AdminSmsLogs.vue'
 import AdminSmsProvider from '../views/admin/AdminSmsProvider.vue'
 import AdminBanks from '../views/admin/AdminBanks.vue'
 import AdminMails from '../views/admin/AdminMails.vue'
+import AdminAnnouncements from '../views/admin/AdminAnnouncements.vue'
 import Sadmin from '../views/Sadmin.vue'
 import SadminOverview from '../views/sadmin/SadminOverview.vue'
 import SadminApiLogs from '../views/sadmin/SadminApiLogs.vue'
@@ -77,6 +78,7 @@ const routes = [
       { path: 'sms-logs',             name: 'AdminSmsLogs',             component: AdminSmsLogs },
       { path: 'banks',                name: 'AdminBanks',               component: AdminBanks },
       { path: 'mails',                name: 'AdminMails',               component: AdminMails },
+      { path: 'announcements',         name: 'AdminAnnouncements',        component: AdminAnnouncements },
     ],
   },
   {

@@ -59,7 +59,7 @@
 
       <div style="margin-top: 20px;">
         <AppButton block :disabled="loading" @click="handleSubmit">
-          {{ loading ? '處理中...' : '送出' }}
+          {{ loading ? '處理中...' : '申請' }}
         </AppButton>
       </div>
       <DebugFillButton @fill="fillRandomData" />

@@ -15,6 +15,9 @@
             <span v-if="hasPendingOrder" class="pending-badge">{{ t('mileageRewards.pendingReview') }}</span>
           </div>
 
+          <!-- 品名 -->
+          <div class="product-name">{{ product.name }}</div>
+
           <!-- 數量列 -->
           <div class="qty-row" :class="{ 'qty-row--horizontal': displayStyle === 'horizontal' }">
             <span class="qty-label">數量</span>
@@ -35,6 +38,14 @@
               <span class="amount-label">{{ t('mileageRewards.accountBalance') }}</span>
               <span class="amount-value red">$ {{ balance.toLocaleString() }}</span>
             </div>
+            <div class="amount-row">
+              <span class="amount-label">里程點數餘額</span>
+              <span class="amount-value red">{{ milesBalance.toLocaleString() }} 點</span>
+            </div>
+            <div class="amount-row">
+              <span class="amount-label">里程點數餘額</span>
+              <span class="amount-value red">{{ milesBalance.toLocaleString() }} 點</span>
+            </div>
             <hr class="amount-divider" />
             <div class="amount-row">
               <span class="amount-label">商品金額</span>
@@ -45,7 +56,7 @@
               <span class="amount-value red">{{ totalMiles.toLocaleString() }} 點</span>
             </div>
             <div class="amount-row">
-              <span class="amount-label">回饋</span>
+              <span class="amount-label">回饋（{{ mileagePercent }}%）</span>
               <span class="amount-value green">$ {{ mileageReward.toLocaleString() }}</span>
             </div>
           </div>
@@ -57,7 +68,7 @@
               <span class="amount-card-value">$ {{ totalPrice.toLocaleString() }}</span>
             </div>
             <div class="amount-card amount-card-right">
-              <span class="amount-card-label">回饋</span>
+              <span class="amount-card-label">回饋（{{ mileagePercent }}%）</span>
               <span class="amount-card-value green">$ {{ mileageReward.toLocaleString() }}</span>
             </div>
           </div>
@@ -123,9 +134,14 @@ const backPath = computed(() => {
   return `/mileage-rewards${qs ? '?' + qs : ''}`
 })
 
+const mileagePercent = computed(() => {
+  if (!product.value) return 0
+  return Number(product.value.mileage_amount)
+})
+
 const mileageReward = computed(() => {
   if (!product.value) return 0
-  return Number(product.value.mileage_amount) * quantity.value
+  return Math.round(Number(product.value.price) * Number(product.value.mileage_amount) / 100 * quantity.value)
 })
 
 const milesPoints = computed(() => {
@@ -257,8 +273,8 @@ onMounted(loadData)
 }
 
 .product-image {
-  width: 100%;
-  max-width: 360px;
+  width: 60%;
+  max-width: 220px;
   height: auto;
   aspect-ratio: 1;
   object-fit: contain;
@@ -283,11 +299,21 @@ onMounted(loadData)
   white-space: nowrap;
 }
 
+/* 品名 */
+.product-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  padding: 0 0.25rem;
+  margin-bottom: 0.75rem;
+  text-align: left;
+}
+
 /* 數量列 */
 .qty-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.75rem;
   padding: 0 0.25rem;
 }

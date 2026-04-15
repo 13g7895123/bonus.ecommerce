@@ -94,6 +94,11 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('mails',              'AdminPanelController::createMail');
         $routes->put('mails/(:num)',         'AdminPanelController::updateMail/$1');
         $routes->delete('mails/(:num)',      'AdminPanelController::deleteMail/$1');
+        // Announcements
+        $routes->get('announcements',              'AdminPanelController::announcementList');
+        $routes->post('announcements',             'AdminPanelController::createAnnouncement');
+        $routes->put('announcements/(:num)',        'AdminPanelController::updateAnnouncement/$1');
+        $routes->delete('announcements/(:num)',     'AdminPanelController::deleteAnnouncement/$1');
     });
 
     // ── Auth (Public) ──

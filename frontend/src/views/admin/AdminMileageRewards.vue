@@ -26,7 +26,7 @@
               <span v-else style="color:#94a3b8">—</span>
             </td>
             <td class="td-num">${{ Number(item.price).toLocaleString() }}</td>
-            <td class="td-num">${{ Number(item.mileage_amount).toLocaleString() }}</td>
+            <td class="td-num">{{ item.mileage_amount }}%</td>
             <td class="td-num">{{ item.miles_points ?? 0 }}</td>
             <td class="td-num">{{ item.stock }}</td>
             <td><span :class="['badge', item.is_active == 1 ? 'badge-green' : 'badge-red']">{{ item.is_active == 1 ? '啟用' : '停用' }}</span></td>
@@ -71,8 +71,8 @@
             <input v-model.number="rewardProductForm.price" class="f-input" type="number" min="0" step="0.01" placeholder="1880" />
           </div>
           <div style="flex:1">
-            <label class="f-label">里程回饋 ($)</label>
-            <input v-model.number="rewardProductForm.mileage_amount" class="f-input" type="number" min="0" step="0.01" placeholder="188" />
+            <label class="f-label">里程回饋 (%)</label>
+            <input v-model.number="rewardProductForm.mileage_amount" class="f-input" type="number" min="0" max="100" step="0.1" placeholder="10" />
           </div>
           <div style="flex:1">
             <label class="f-label">里程點數</label>
