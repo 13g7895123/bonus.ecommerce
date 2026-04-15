@@ -79,7 +79,7 @@ onMounted(async () => {
         id:      m.id,
         subject: m.subject,
         content: m.content,
-        is_read: !!m.is_read,
+        is_read: m.is_read == 1,
         time:    m.created_at ? m.created_at.replace('T', ' ').substring(0, 16) : '',
       }))
     }

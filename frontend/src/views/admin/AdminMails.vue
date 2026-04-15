@@ -420,6 +420,12 @@ onMounted(() => {
   color: #111827;
 }
 
+.tab-btn:focus,
+.tab-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 .tab-btn.active {
   color: #1d4ed8;
   border-bottom-color: #1d4ed8;
