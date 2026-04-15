@@ -158,7 +158,47 @@ class AdminPanelController extends Controller
         $user['balance']          = $wallet ? (float) $wallet['balance'] : 0;
         $user['miles_balance']    = $wallet ? (int) $wallet['miles_balance'] : 0;
         $user['has_bank_account'] = $wallet ? !empty($wallet['bank_account']) : false;
+        $user['bank_info']        = $wallet ? [
+            'bank_name'         => $wallet['bank_name'] ?? null,
+            'bank_branch'       => $wallet['bank_branch'] ?? null,
+            'bank_account'      => $wallet['bank_account'] ?? null,
+            'bank_account_name' => $wallet['bank_account_name'] ?? null,
+        ] : null;
         return $this->json($user);
+    }
+
+    public function updateUserBank(int $id): ResponseInterface
+    {
+        $data = $this->request->getJSON(true) ?? [];
+        $walletModel = model(\App\Models\UserWalletModel::class);
+        $wallet = $walletModel->where('user_id', $id)->first();
+        if (!$wallet) {
+            return $this->json(['message' => '該使用者尚未建立錢包'], 404);
+        }
+        $walletModel->where('user_id', $id)->set([
+            'bank_name'         => $data['bank_name'] ?? null,
+            'bank_branch'       => $data['bank_branch'] ?? null,
+            'bank_account'      => $data['bank_account'] ?? null,
+            'bank_account_name' => $data['bank_account_name'] ?? null,
+        ])->update();
+        return $this->json(['success' => true, 'message' => '銀行資料已更新']);
+    }
+
+    public function deleteUserBank(int $id): ResponseInterface
+    {
+        $walletModel = model(\App\Models\UserWalletModel::class);
+        $wallet = $walletModel->where('user_id', $id)->first();
+        if (!$wallet) {
+            return $this->json(['message' => '該使用者尚未建立錢包'], 404);
+        }
+        $walletModel->where('user_id', $id)->set([
+            'bank_name'         => null,
+            'bank_branch'       => null,
+            'bank_account'      => null,
+            'bank_account_name' => null,
+            'bank_passbook_file_id' => null,
+        ])->update();
+        return $this->json(['success' => true, 'message' => '銀行資料已刪除']);
     }
 
     public function changePassword(int $userId): ResponseInterface

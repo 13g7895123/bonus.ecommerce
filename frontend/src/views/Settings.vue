@@ -1,15 +1,29 @@
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 const { t, locale } = useI18n()
 
-
 const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     router.push('/login')
+}
+
+// 條款/隱私 Modal
+const legalModal = ref({ show: false, title: '', content: '', loading: false })
+const openLegalModal = async (type) => {
+  const isTerms = type === 'terms'
+  legalModal.value = { show: true, title: isTerms ? '網站服務條款' : '隱私政策', content: '', loading: true }
+  try {
+    const key = isTerms ? 'terms_html' : 'privacy_html'
+    const res = await fetch(`/api/v1/config/${key}`)
+    const data = await res.json()
+    legalModal.value.content = data.value || ''
+  } catch {}
+  legalModal.value.loading = false
 }
 </script>
 <template>
@@ -93,11 +107,45 @@ const handleLogout = () => {
       <img src="/settings/enjoy.png" alt="Enjoy" style="width: 100%; border-radius: 12px; display: block;" />
     </div>
 
+    <!-- 條款與隱私 -->
+    <div class="section section-wide" style="background-color: transparent; margin-bottom: 10px;">
+      <div>
+        <button class="settings-rounded-btn" style="width:100%" @click="openLegalModal('terms')">
+          <span class="btn-label">網站服務條款</span>
+        </button>
+        <button class="settings-rounded-btn" style="width:100%;margin-top:0.5rem" @click="openLegalModal('privacy')">
+          <span class="btn-label">隱私政策</span>
+        </button>
+      </div>
+    </div>
+
     <!-- 登出按鈕 -->
     <div class="logout-container">
       <button class="logout-btn" @click="handleLogout">{{ $t('settings.logout') }}</button>
     </div>
   </div>
+
+  <!-- 條款/隱私 Modal -->
+  <Teleport to="body">
+    <div v-if="legalModal.show"
+      style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:1rem"
+      @click.self="legalModal.show = false">
+      <div style="width:100%;max-width:480px;max-height:80vh;background:#fff;border-radius:12px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid #e2e8f0">
+          <h3 style="margin:0;font-size:1rem;font-weight:700">{{ legalModal.title }}</h3>
+          <button @click="legalModal.show = false" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#94a3b8">✕</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+          <div v-if="legalModal.loading" style="text-align:center;color:#94a3b8;padding:2rem">載入中...</div>
+          <div v-else-if="legalModal.content" v-html="legalModal.content"></div>
+          <div v-else style="color:#94a3b8;text-align:center;padding:2rem">尚無內容</div>
+        </div>
+        <div style="padding:1rem 1.25rem;border-top:1px solid #e2e8f0;text-align:right">
+          <button @click="legalModal.show = false" style="padding:0.5rem 1.5rem;background:#d71921;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">我已閱讀</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>

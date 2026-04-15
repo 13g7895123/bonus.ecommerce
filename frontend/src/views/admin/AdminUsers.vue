@@ -237,6 +237,26 @@
               </div>
             </div>
           </template>
+
+          <!-- 銀行資料 -->
+          <div class="detail-section" style="margin-top:1.25rem">
+            <div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">
+              <span>提款銀行資料</span>
+              <div style="display:flex;gap:0.5rem">
+                <button class="btn btn-sm btn-outline" @click="openBankEdit(detailModal.user)">編輯</button>
+                <button v-if="detailModal.user.has_bank_account" class="btn btn-sm btn-danger" @click="deleteBankInfo(detailModal.user)">刪除</button>
+              </div>
+            </div>
+            <div class="kyc-rows">
+              <template v-if="detailModal.user.has_bank_account && detailModal.user.bank_info">
+                <div class="kyc-row"><span class="kyc-lbl">銀行名稱</span><span>{{ detailModal.user.bank_info.bank_name || '—' }}</span></div>
+                <div class="kyc-row"><span class="kyc-lbl">分行</span><span>{{ detailModal.user.bank_info.bank_branch || '—' }}</span></div>
+                <div class="kyc-row"><span class="kyc-lbl">帳號</span><span>{{ detailModal.user.bank_info.bank_account || '—' }}</span></div>
+                <div class="kyc-row"><span class="kyc-lbl">戶名</span><span>{{ detailModal.user.bank_info.bank_account_name || '—' }}</span></div>
+              </template>
+              <div v-else class="kyc-row" style="color:#94a3b8">尚未綁定銀行帳戶</div>
+            </div>
+          </div>
         </template>
       </div>
       <div class="modal-ft"><button class="btn btn-outline" @click="detailModal.show = false">關閉</button></div>
@@ -248,6 +268,36 @@
     <img :src="lightboxSrc" class="lightbox-img" @click.stop />
     <button class="lightbox-close" @click="lightboxSrc = null">✕</button>
   </div>
+
+  <!-- 編輯銀行資料 Modal -->
+  <Teleport to="body">
+    <div v-if="bankModal.show"
+      style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:1rem"
+      @click.self="bankModal.show = false">
+      <div style="width:100%;max-width:420px;background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div class="modal-hd">
+          <span>編輯銀行資料 — {{ bankModal.user?.full_name || bankModal.user?.email }}</span>
+          <button class="modal-x" @click="bankModal.show = false">✕</button>
+        </div>
+        <div class="modal-bd">
+          <label class="f-label">銀行名稱</label>
+          <input v-model="bankModal.bank_name" class="f-input" placeholder="例：玉山銀行" />
+          <label class="f-label" style="margin-top:0.75rem">分行</label>
+          <input v-model="bankModal.bank_branch" class="f-input" placeholder="例：信義分行" />
+          <label class="f-label" style="margin-top:0.75rem">銀行帳號</label>
+          <input v-model="bankModal.bank_account" class="f-input" placeholder="例：1234567890123" />
+          <label class="f-label" style="margin-top:0.75rem">戶名</label>
+          <input v-model="bankModal.bank_account_name" class="f-input" placeholder="帳戶戴名" />
+        </div>
+        <div class="modal-ft">
+          <button class="btn btn-outline" @click="bankModal.show = false">取消</button>
+          <button class="btn btn-primary" :disabled="bankModal.submitting" @click="submitBankEdit">
+            {{ bankModal.submitting ? '處理中...' : '儲存' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -390,6 +440,52 @@ const submitCreateUser = async () => {
     createUserModal.value.show = false
     await loadUsers()
   } finally { f.submitting = false }
+}
+
+// ── 銀行資料 ──
+const bankModal = ref({ show: false, user: null, bank_name: '', bank_branch: '', bank_account: '', bank_account_name: '', submitting: false })
+
+const openBankEdit = (user) => {
+  const b = user.bank_info || {}
+  bankModal.value = {
+    show: true, user, submitting: false,
+    bank_name:         b.bank_name || '',
+    bank_branch:       b.bank_branch || '',
+    bank_account:      b.bank_account || '',
+    bank_account_name: b.bank_account_name || '',
+  }
+}
+
+const submitBankEdit = async () => {
+  const f = bankModal.value
+  f.submitting = true
+  try {
+    const res  = await fetch(`/api/v1/admin-panel/users/${f.user.id}/bank`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bank_name: f.bank_name, bank_branch: f.bank_branch, bank_account: f.bank_account, bank_account_name: f.bank_account_name }),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.message || '更新失敗'); return }
+    // Update local state
+    detailModal.value.user.bank_info = { bank_name: f.bank_name, bank_branch: f.bank_branch, bank_account: f.bank_account, bank_account_name: f.bank_account_name }
+    detailModal.value.user.has_bank_account = !!f.bank_account
+    const u = usersList.value.find(u => u.id === f.user.id)
+    if (u) u.has_bank_account = !!f.bank_account
+    alert('銀行資料已更新')
+    bankModal.value.show = false
+  } finally { f.submitting = false }
+}
+
+const deleteBankInfo = async (user) => {
+  if (!confirm('確定要刪除此使用者的銀行資料嗎？')) return
+  const res  = await fetch(`/api/v1/admin-panel/users/${user.id}/bank`, { method: 'DELETE' })
+  const data = await res.json()
+  if (!res.ok) { alert(data.message || '刪除失敗'); return }
+  detailModal.value.user.bank_info = null
+  detailModal.value.user.has_bank_account = false
+  const u = usersList.value.find(u => u.id === user.id)
+  if (u) u.has_bank_account = false
+  alert('銀行資料已刪除')
 }
 
 onMounted(loadUsers)

@@ -51,6 +51,8 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('users/(:num)/deposit', 'AdminPanelController::deposit/$1');
         $routes->post('users/(:num)/change-password',            'AdminPanelController::changePassword/$1');
         $routes->post('users/(:num)/change-withdrawal-password', 'AdminPanelController::changeWithdrawalPassword/$1');
+        $routes->put('users/(:num)/bank',                        'AdminPanelController::updateUserBank/$1');
+        $routes->delete('users/(:num)/bank',                     'AdminPanelController::deleteUserBank/$1');
         // Mileage Redemption Items
         $routes->get('mileage-items',           'AdminPanelController::mileageItems');
         $routes->post('mileage-items',          'AdminPanelController::createMileageItem');
