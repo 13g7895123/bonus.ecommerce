@@ -302,7 +302,7 @@ onMounted(loadData)
   color: #1e293b;
   padding: 0 0.25rem;
   margin-bottom: 0.75rem;
-  text-align: left;
+  text-align: center;
 }
 
 /* 數量列 */

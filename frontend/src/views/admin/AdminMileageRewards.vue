@@ -75,8 +75,9 @@
             <input v-model.number="rewardProductForm.mileage_amount" class="f-input" type="number" min="0" max="100" step="0.1" placeholder="10" />
           </div>
           <div style="flex:1">
-            <label class="f-label">里程點數</label>
-            <input v-model.number="rewardProductForm.miles_points" class="f-input" type="number" min="0" placeholder="0" />
+            <label class="f-label">里程點數 <span style="font-size:0.75rem;color:#94a3b8">(自動計算)</span></label>
+            <input :value="rewardProductForm.miles_points" class="f-input" type="number" readonly
+              style="background:#f8fafc;color:#64748b;cursor:not-allowed" />
           </div>
         </div>
         <div style="display:flex;gap:1rem;margin-top:0.75rem;align-items:flex-end">
@@ -103,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { RefreshCw, Plus } from 'lucide-vue-next'
 import { fileService } from '../../services/FileService'
 
@@ -194,6 +195,19 @@ const deleteRewardProduct = async (id) => {
   await fetch(`/api/v1/admin-panel/mileage-reward-products/${id}`, { method: 'DELETE' })
   await loadRewardProducts()
 }
+
+// 里程回饋 (%) 輸入時自動計算里程點數
+watch(
+  () => [rewardProductForm.value.price, rewardProductForm.value.mileage_amount],
+  ([price, pct]) => {
+    if (!rewardProductForm.value.show) return
+    const p = Number(price)
+    const a = Number(pct)
+    if (p > 0 && a >= 0) {
+      rewardProductForm.value.miles_points = Math.round(p * a / 100)
+    }
+  }
+)
 
 onMounted(() => {
   loadMileageItems()
