@@ -352,7 +352,7 @@ const handleRegister = async () => {
         
         <div class="checkbox-group">
           <input v-model="form.terms" type="checkbox" id="terms" />
-          <label for="terms">我同意<span class="red-text" @click.stop="openLegalModal('terms')">網站服務條款</span>及<span class="red-text" @click.stop="openLegalModal('privacy')">隱私政策</span></label>
+          <label for="terms">我同意</label><span class="red-text" @click="openLegalModal('terms')">網站服務條款</span><label for="terms">及</label><span class="red-text" @click="openLegalModal('privacy')">隱私政策</span>
         </div>
         
         <AppButton class="login-submit-btn" :disabled="loading" @click="handleRegister" block>
