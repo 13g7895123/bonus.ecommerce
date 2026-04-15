@@ -571,11 +571,13 @@ const handleRegister = async () => {
 .checkbox-group {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  /* gap: 0.75rem; */
   text-align: left;
   margin-bottom: 2rem;
+  margin-left: 0.75rem;
   font-size: 0.95rem;
   color: #333;
+  user-select: none;
 }
 
 .checkbox-group input {
