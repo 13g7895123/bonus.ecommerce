@@ -373,12 +373,12 @@ const handleRegister = async () => {
     <div v-if="legalModal.show"
       style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:1rem"
       @click.self="legalModal.show = false">
-      <div style="width:100%;max-width:480px;max-height:80vh;background:#fff;border-radius:12px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="width:100%;max-width:480px;max-height:80vh;background:#fff;border-radius:12px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);color:#1e293b">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid #e2e8f0">
-          <h3 style="margin:0;font-size:1rem;font-weight:700">{{ legalModal.title }}</h3>
+          <h3 style="margin:0;font-size:1rem;font-weight:700;color:#1e293b">{{ legalModal.title }}</h3>
           <button @click="legalModal.show = false" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#94a3b8">✕</button>
         </div>
-        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem;color:#333">
           <div v-if="legalModal.loading" style="text-align:center;color:#94a3b8;padding:2rem">載入中...</div>
           <div v-else-if="legalModal.content" v-html="legalModal.content"></div>
           <div v-else style="color:#94a3b8;text-align:center;padding:2rem">尚無內容</div>
