@@ -77,4 +77,10 @@ class UserController extends BaseApiController
         //   3. 另建 GET /users/me/verify-email?token=xxx 驗證 token 並更新 is_verified=1
         return $this->success(null, '驗證信已發送，請查收電子郵件');
     }
+
+    public function myMails()
+    {
+        $items = model(\App\Models\UserMailModel::class)->listForUser(Auth::id());
+        return $this->success(['items' => $items, 'total' => count($items)]);
+    }
 }

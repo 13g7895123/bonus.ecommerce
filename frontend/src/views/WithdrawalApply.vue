@@ -191,7 +191,7 @@ const fillRandomData = () => {
 }
 
 .link-text {
-  color: #666;
+  color: #d71921;
   font-size: 0.9rem;
   text-decoration: none;
   cursor: pointer;

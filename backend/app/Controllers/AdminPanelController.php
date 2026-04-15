@@ -764,6 +764,36 @@ class AdminPanelController extends Controller
         return $this->json(['message' => '信件已刪除']);
     }
 
+    public function sendMailToUser(int $id): ResponseInterface
+    {
+        $mailModel = model(\App\Models\MailModel::class);
+        $mail = $mailModel->find($id);
+        if (!$mail) {
+            return $this->json(['message' => '信件不存在'], 404);
+        }
+
+        $data   = $this->request->getJSON(true) ?? [];
+        $userId = (int) ($data['user_id'] ?? 0);
+        if (!$userId) {
+            return $this->json(['message' => '請選擇使用者'], 400);
+        }
+
+        $user = model(\App\Models\UserModel::class)->find($userId);
+        if (!$user) {
+            return $this->json(['message' => '使用者不存在'], 404);
+        }
+
+        model(\App\Models\UserMailModel::class)->insert([
+            'user_id' => $userId,
+            'mail_id' => $id,
+            'subject' => $mail['subject'],
+            'content' => $mail['content'],
+            'is_read' => 0,
+        ]);
+
+        return $this->json(['message' => '信件已發送']);
+    }
+
     // ── Announcements ─────────────────────────────────────────────────────────
 
     public function announcementList(): ResponseInterface

@@ -96,6 +96,7 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('mails',              'AdminPanelController::createMail');
         $routes->put('mails/(:num)',         'AdminPanelController::updateMail/$1');
         $routes->delete('mails/(:num)',      'AdminPanelController::deleteMail/$1');
+        $routes->post('mails/(:num)/send',  'AdminPanelController::sendMailToUser/$1');
         // Announcements
         $routes->get('announcements',              'AdminPanelController::announcementList');
         $routes->post('announcements',             'AdminPanelController::createAnnouncement');
@@ -171,6 +172,11 @@ $routes->group('api/v1', static function ($routes) {
 
     // ── Mails (Public listing) ──
     $routes->get('mails', 'AdminPanelController::publicMailList');
+
+    // ── User Inbox ──
+    $routes->group('me', ['filter' => 'jwt'], static function ($routes) {
+        $routes->get('mails',  'Api\UserController::myMails');
+    });
 
     // ── Customer Service (JWT required) ──
     $routes->group('cs', ['filter' => 'jwt'], static function ($routes) {
