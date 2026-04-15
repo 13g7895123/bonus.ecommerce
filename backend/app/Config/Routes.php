@@ -155,11 +155,9 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('reward-products/(:num)/purchase', 'Api\MileageController::purchaseRewardProduct/$1');
     });
 
-    // ── Announcements (JWT required) ──
-    $routes->group('announcements', ['filter' => 'jwt'], static function ($routes) {
-        $routes->get('/',          'Api\AnnouncementController::index');
-        $routes->get('(:num)',     'Api\AnnouncementController::show/$1');
-    });
+    // ── Announcements (Public) ──
+    $routes->get('announcements',       'Api\AnnouncementController::index');
+    $routes->get('announcements/(:num)', 'Api\AnnouncementController::show/$1');
 
     // ── Skywards (JWT required) ──
     $routes->group('skywards', ['filter' => 'jwt'], static function ($routes) {

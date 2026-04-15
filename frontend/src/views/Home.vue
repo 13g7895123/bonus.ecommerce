@@ -2,17 +2,25 @@
 import { ref, onMounted } from 'vue'
 
 const isLoggedIn = ref(false)
+const announcements = ref([])
 
-onMounted(() => {
+onMounted(async () => {
   const token = localStorage.getItem('token')
   isLoggedIn.value = !!token
-})
 
-const announcements = ref([
-  { id: 1, date: '2024-03-09', title: '阿聯酋航空最新航班資訊公告' },
-  { id: 2, date: '2024-03-08', title: 'Skywards 集哩程計畫更新提醒' },
-  { id: 3, date: '2024-03-05', title: '全球機場貴賓室服務調整通知' },
-])
+  try {
+    const res  = await fetch('/api/v1/announcements?limit=10')
+    if (res.ok) {
+      const json = await res.json()
+      const items = json.data?.items || json.data || []
+      announcements.value = items.map(a => ({
+        id:    a.id,
+        date:  (a.published_at || '').substring(0, 10),
+        title: a.title,
+      }))
+    }
+  } catch {}
+})
 </script>
 
 <template>

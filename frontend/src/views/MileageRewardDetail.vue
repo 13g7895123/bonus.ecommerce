@@ -42,10 +42,6 @@
               <span class="amount-label">里程點數餘額</span>
               <span class="amount-value red">{{ milesBalance.toLocaleString() }} 點</span>
             </div>
-            <div class="amount-row">
-              <span class="amount-label">里程點數餘額</span>
-              <span class="amount-value red">{{ milesBalance.toLocaleString() }} 點</span>
-            </div>
             <hr class="amount-divider" />
             <div class="amount-row">
               <span class="amount-label">商品金額</span>
@@ -320,6 +316,7 @@ onMounted(loadData)
 
 .qty-label {
   font-size: 0.95rem;
+  text-align: left;
   color: #333;
   flex: 1;
   min-width: 0;

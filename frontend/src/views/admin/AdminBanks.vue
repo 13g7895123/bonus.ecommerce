@@ -28,22 +28,26 @@
   </div>
 
   <!-- 新增/編輯 Modal -->
-  <div v-if="modal.show" class="modal-overlay" @click.self="modal.show = false">
-    <div class="modal-box" style="max-width:380px">
-      <div class="modal-hd">
-        <span>{{ modal.editIndex >= 0 ? '編輯銀行' : '新增銀行' }}</span>
-        <button class="modal-x" @click="modal.show = false">✕</button>
-      </div>
-      <div class="modal-bd">
-        <label class="f-label">銀行名稱 *</label>
-        <input v-model="modal.name" class="f-input" placeholder="例：玉山銀行" @keyup.enter="confirmModal" />
-      </div>
-      <div class="modal-ft">
-        <button class="btn btn-outline" @click="modal.show = false">取消</button>
-        <button class="btn btn-primary" @click="confirmModal">{{ modal.editIndex >= 0 ? '儲存' : '新增' }}</button>
+  <Teleport to="body">
+    <div v-if="modal.show"
+      style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:1rem"
+      @click.self="modal.show = false">
+      <div class="modal-box" style="max-width:380px;width:100%;background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div class="modal-hd">
+          <span>{{ modal.editIndex >= 0 ? '編輯銀行' : '新增銀行' }}</span>
+          <button class="modal-x" @click="modal.show = false">✕</button>
+        </div>
+        <div class="modal-bd">
+          <label class="f-label">銀行名稱 *</label>
+          <input v-model="modal.name" class="f-input" placeholder="例：玉山銀行" @keyup.enter="confirmModal" />
+        </div>
+        <div class="modal-ft">
+          <button class="btn btn-outline" @click="modal.show = false">取消</button>
+          <button class="btn btn-primary" @click="confirmModal">{{ modal.editIndex >= 0 ? '儲存' : '新增' }}</button>
+        </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup>

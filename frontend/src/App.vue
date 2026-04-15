@@ -40,6 +40,7 @@ watch(route, (newRoute) => {
 
 onMounted(() => {
   checkLoginStatus()
+  loadAnnouncements()
   // 處理重新整理頁面時的狀態
   if (route.query.openMenu === 'news') {
     isMenuOpen.value = true
@@ -67,11 +68,22 @@ const isHomePage = computed(() => route.path === '/')
 const isSettingsPage = computed(() => route.path === '/settings')
 const isSkywardsPage = computed(() => route.path === '/skywards')
 
-const announcements = ref([
-  { id: 1, date: '2024-03-09 10:30:00', title: '【賣家交易安全提醒】請賣家勿點選可疑QRcode或Line連結' },
-  { id: 2, date: '2024-03-08 14:15:20', title: 'Skywards 集哩程計畫更新提醒' },
-  { id: 3, date: '2024-03-05 09:45:10', title: '全球機場貴賓室服務調整通知' },
-])
+const announcements = ref([])
+
+const loadAnnouncements = async () => {
+  try {
+    const res  = await fetch('/api/v1/announcements?limit=20')
+    if (res.ok) {
+      const json = await res.json()
+      const items = json.data?.items || []
+      announcements.value = items.map(a => ({
+        id:    a.id,
+        date:  a.published_at || '',
+        title: a.title,
+      }))
+    }
+  } catch {}
+}
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value
