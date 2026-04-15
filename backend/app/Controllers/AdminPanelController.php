@@ -772,26 +772,35 @@ class AdminPanelController extends Controller
             return $this->json(['message' => '信件不存在'], 404);
         }
 
-        $data   = $this->request->getJSON(true) ?? [];
-        $userId = (int) ($data['user_id'] ?? 0);
-        if (!$userId) {
+        $data     = $this->request->getJSON(true) ?? [];
+        $userIds  = $data['user_ids'] ?? [];
+
+        // 相容舊版單一 user_id
+        if (empty($userIds) && !empty($data['user_id'])) {
+            $userIds = [(int) $data['user_id']];
+        }
+
+        if (empty($userIds)) {
             return $this->json(['message' => '請選擇使用者'], 400);
         }
 
-        $user = model(\App\Models\UserModel::class)->find($userId);
-        if (!$user) {
-            return $this->json(['message' => '使用者不存在'], 404);
+        $userMailModel = model(\App\Models\UserMailModel::class);
+        $count = 0;
+        foreach ($userIds as $userId) {
+            $userId = (int) $userId;
+            if (!$userId) continue;
+            if (!model(\App\Models\UserModel::class)->find($userId)) continue;
+            $userMailModel->insert([
+                'user_id' => $userId,
+                'mail_id' => $id,
+                'subject' => $mail['subject'],
+                'content' => $mail['content'],
+                'is_read' => 0,
+            ]);
+            $count++;
         }
 
-        model(\App\Models\UserMailModel::class)->insert([
-            'user_id' => $userId,
-            'mail_id' => $id,
-            'subject' => $mail['subject'],
-            'content' => $mail['content'],
-            'is_read' => 0,
-        ]);
-
-        return $this->json(['message' => '信件已發送']);
+        return $this->json(['message' => "信件已發送給 {$count} 位使用者", 'count' => $count]);
     }
 
     // ── Announcements ─────────────────────────────────────────────────────────

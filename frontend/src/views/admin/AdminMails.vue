@@ -79,7 +79,7 @@
   </div>
   <!-- 發送信件給使用者 Modal -->
   <div v-if="send.show" class="modal-overlay" @click.self="send.show = false">
-    <div class="modal-box" style="max-width:480px">
+    <div class="modal-box" style="max-width:520px">
       <div class="modal-hd">
         <span>發送信件給使用者</span>
         <button class="modal-x" @click="send.show = false">✕</button>
@@ -95,32 +95,43 @@
             class="f-input"
             placeholder="搜尋帳號或姓名..."
             @input="filterUsers"
-            @focus="send.dropdownOpen = true"
+            @focus="openDropdown"
+            @blur="send.dropdownOpen = false"
           />
-          <div v-if="send.dropdownOpen && send.filtered.length" class="user-dropdown">
+          <div v-if="send.dropdownOpen" class="user-dropdown" @mousedown.prevent>
+            <div v-if="send.filtered.length" class="user-option select-all-option" @click="toggleSelectAll">
+              <input type="checkbox" :checked="isAllSelected" :indeterminate.prop="isIndeterminate" style="width:15px;height:15px;cursor:pointer" />
+              <span class="user-email">全選（{{ send.filtered.length }} 筆）</span>
+            </div>
+            <div v-if="send.filtered.length" class="dropdown-divider"></div>
             <div
               v-for="u in send.filtered"
               :key="u.id"
               class="user-option"
-              @mousedown.prevent="selectUser(u)"
+              @click="toggleUser(u)"
             >
+              <input type="checkbox" :checked="isSelected(u.id)" style="width:15px;height:15px;cursor:pointer" />
               <span class="user-email">{{ u.email }}</span>
               <span v-if="u.full_name" class="user-name">{{ u.full_name }}</span>
             </div>
-          </div>
-          <div v-if="send.dropdownOpen && send.search && !send.filtered.length" class="user-dropdown">
-            <div class="user-option no-result">無符合結果</div>
+            <div v-if="!send.filtered.length" class="user-option no-result">無符合結果</div>
           </div>
         </div>
-        <div v-if="send.selectedUser" class="selected-user-tag">
-          已選：{{ send.selectedUser.email }}{{ send.selectedUser.full_name ? ` (${send.selectedUser.full_name})` : '' }}
-          <button class="clear-btn" @click="clearUser">✕</button>
+        <!-- 已選 tags -->
+        <div v-if="send.selectedUsers.length" class="selected-tags-wrap">
+          <div class="selected-count">已選 {{ send.selectedUsers.length }} 位使用者</div>
+          <div class="tags-list">
+            <span v-for="u in send.selectedUsers" :key="u.id" class="user-tag">
+              {{ u.email }}
+              <button class="tag-remove" @click="toggleUser(u)">✕</button>
+            </span>
+          </div>
         </div>
       </div>
       <div class="modal-ft">
         <button class="btn btn-outline" @click="send.show = false">取消</button>
-        <button class="btn btn-primary" :disabled="send.submitting || !send.selectedUser" @click="submitSend">
-          {{ send.submitting ? '發送中...' : '發送' }}
+        <button class="btn btn-primary" :disabled="send.submitting || !send.selectedUsers.length" @click="submitSend">
+          {{ send.submitting ? '發送中...' : `發送（${send.selectedUsers.length}）` }}
         </button>
       </div>
     </div>
@@ -128,7 +139,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Plus, RefreshCw } from 'lucide-vue-next'
 
 const loading = ref(false)
@@ -142,8 +153,19 @@ const form = ref({
 const send = ref({
   show: false, mailId: null, subject: '',
   search: '', filtered: [], dropdownOpen: false,
-  selectedUser: null, submitting: false,
+  selectedUsers: [], submitting: false,
 })
+
+const isSelected = (id) => send.value.selectedUsers.some(u => u.id === id)
+
+const isAllSelected = computed(() =>
+  send.value.filtered.length > 0 &&
+  send.value.filtered.every(u => isSelected(u.id))
+)
+
+const isIndeterminate = computed(() =>
+  send.value.filtered.some(u => isSelected(u.id)) && !isAllSelected.value
+)
 
 const loadMails = async () => {
   loading.value = true
@@ -225,48 +247,67 @@ const openSend = (mail) => {
   send.value = {
     show: true, mailId: mail.id, subject: mail.subject,
     search: '', filtered: [], dropdownOpen: false,
-    selectedUser: null, submitting: false,
+    selectedUsers: [], submitting: false,
   }
+}
+
+const openDropdown = () => {
+  if (!send.value.filtered.length) {
+    send.value.filtered = allUsers.value.slice(0, 50)
+  }
+  send.value.dropdownOpen = true
 }
 
 const filterUsers = () => {
   const q = send.value.search.trim().toLowerCase()
   if (!q) {
-    send.value.filtered = allUsers.value.slice(0, 20)
+    send.value.filtered = allUsers.value.slice(0, 50)
   } else {
     send.value.filtered = allUsers.value
       .filter(u =>
         (u.email || '').toLowerCase().includes(q) ||
         (u.full_name || '').toLowerCase().includes(q)
       )
-      .slice(0, 20)
+      .slice(0, 50)
   }
   send.value.dropdownOpen = true
 }
 
-const selectUser = (user) => {
-  send.value.selectedUser = user
-  send.value.search = user.email
-  send.value.dropdownOpen = false
+const toggleUser = (user) => {
+  const idx = send.value.selectedUsers.findIndex(u => u.id === user.id)
+  if (idx === -1) {
+    send.value.selectedUsers.push(user)
+  } else {
+    send.value.selectedUsers.splice(idx, 1)
+  }
 }
 
-const clearUser = () => {
-  send.value.selectedUser = null
-  send.value.search = ''
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    // 取消全選（只取消目前 filtered 中的）
+    const filteredIds = new Set(send.value.filtered.map(u => u.id))
+    send.value.selectedUsers = send.value.selectedUsers.filter(u => !filteredIds.has(u.id))
+  } else {
+    // 全選 filtered 中尚未選取的
+    const selectedIds = new Set(send.value.selectedUsers.map(u => u.id))
+    send.value.filtered.forEach(u => {
+      if (!selectedIds.has(u.id)) send.value.selectedUsers.push(u)
+    })
+  }
 }
 
 const submitSend = async () => {
-  if (!send.value.selectedUser) return
+  if (!send.value.selectedUsers.length) return
   send.value.submitting = true
   try {
     const res = await fetch(`/api/v1/admin-panel/mails/${send.value.mailId}/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: send.value.selectedUser.id }),
+      body: JSON.stringify({ user_ids: send.value.selectedUsers.map(u => u.id) }),
     })
     if (res.ok) {
       send.value.show = false
-      alert('信件已發送')
+      alert(`信件已發送給 ${send.value.selectedUsers.length} 位使用者`)
     } else {
       const d = await res.json()
       alert(d.message || '發送失敗')
@@ -330,30 +371,58 @@ onMounted(() => {
   font-size: 0.8rem;
 }
 
-.selected-user-tag {
-  margin-top: 0.5rem;
-  padding: 0.4rem 0.75rem;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  color: #1d4ed8;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.select-all-option {
+  background: #f9fafb;
+  font-weight: 600;
 }
 
-.clear-btn {
+.dropdown-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0;
+}
+
+.selected-tags-wrap {
+  margin-top: 0.65rem;
+}
+
+.selected-count {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 0.4rem;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.user-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+  color: #1d4ed8;
+}
+
+.tag-remove {
   background: none;
   border: none;
   cursor: pointer;
-  color: #6b7280;
-  font-size: 0.85rem;
-  padding: 0 0.25rem;
+  color: #93c5fd;
+  font-size: 0.75rem;
+  padding: 0;
   line-height: 1;
 }
 
-.clear-btn:hover {
+.tag-remove:hover {
   color: #ef4444;
 }
 </style>
