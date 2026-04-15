@@ -3,12 +3,19 @@
     <div class="panel-header">
       <span class="panel-title"></span>
       <div style="display:flex;gap:0.5rem;align-items:center">
-        <button class="btn btn-primary" @click="openForm()"><Plus :size="14" /> 新增信件</button>
-        <button class="btn btn-outline" :disabled="loading" @click="loadMails"><RefreshCw :size="14" /></button>
+        <button v-if="activeTab === 'mails'" class="btn btn-primary" @click="openForm()"><Plus :size="14" /> 新增信件</button>
+        <button class="btn btn-outline" :disabled="loading" @click="activeTab === 'mails' ? loadMails() : loadRecords()"><RefreshCw :size="14" /></button>
       </div>
     </div>
 
-    <div class="table-wrap">
+    <!-- 分頁 Tab -->
+    <div class="tab-bar">
+      <button :class="['tab-btn', activeTab === 'mails' ? 'active' : '']" @click="switchTab('mails')">信件列表</button>
+      <button :class="['tab-btn', activeTab === 'records' ? 'active' : '']" @click="switchTab('records')">發送紀錄</button>
+    </div>
+
+    <!-- 信件列表 -->
+    <div v-if="activeTab === 'mails'" class="table-wrap">
       <div v-if="loading" class="state-msg">載入中...</div>
       <div v-else-if="mails.length === 0" class="state-msg">尚無信件</div>
       <table v-else class="data-table">
@@ -38,6 +45,45 @@
               <button class="btn btn-sm btn-primary" @click="openSend(mail)">發送</button>
               <button class="btn btn-sm btn-danger" @click="deleteMail(mail.id)">刪除</button>
             </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 發送紀錄 -->
+    <div v-if="activeTab === 'records'" class="table-wrap">
+      <!-- 篩選列 -->
+      <div class="records-filter">
+        <select v-model="records.mailFilter" class="f-input" style="max-width:220px" @change="loadRecords">
+          <option value="">所有信件</option>
+          <option v-for="m in mails" :key="m.id" :value="m.id">{{ m.subject }}</option>
+        </select>
+      </div>
+      <div v-if="records.loading" class="state-msg">載入中...</div>
+      <div v-else-if="records.items.length === 0" class="state-msg">尚無發送紀錄</div>
+      <table v-else class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>信件主旨</th>
+            <th>收件帳號</th>
+            <th>姓名</th>
+            <th>已讀</th>
+            <th>發送時間</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="r in records.items" :key="r.id">
+            <td>{{ r.id }}</td>
+            <td class="td-name">{{ r.subject }}</td>
+            <td>{{ r.email }}</td>
+            <td>{{ r.full_name || '-' }}</td>
+            <td>
+              <span :class="['badge', r.is_read == 1 ? 'badge-green' : 'badge-red']">
+                {{ r.is_read == 1 ? '已讀' : '未讀' }}
+              </span>
+            </td>
+            <td>{{ r.created_at }}</td>
           </tr>
         </tbody>
       </table>
@@ -145,6 +191,32 @@ import { Plus, RefreshCw } from 'lucide-vue-next'
 const loading = ref(false)
 const mails   = ref([])
 const allUsers = ref([])
+const activeTab = ref('mails')
+
+const records = ref({ loading: false, items: [], mailFilter: '' })
+
+const switchTab = (tab) => {
+  activeTab.value = tab
+  if (tab === 'records') loadRecords()
+  if (tab === 'mails') loadMails()
+}
+
+const loadRecords = async () => {
+  records.value.loading = true
+  try {
+    const mailId = records.value.mailFilter
+    const url = mailId
+      ? `/api/v1/admin-panel/mails/${mailId}/records`
+      : '/api/v1/admin-panel/mails/records'
+    const res = await fetch(url)
+    if (res.ok) {
+      const data = await res.json()
+      records.value.items = data.items || []
+    }
+  } finally {
+    records.value.loading = false
+  }
+}
 
 const form = ref({
   show: false, id: null, subject: '', content: '', is_active: 1, sort_order: 0, submitting: false,
@@ -324,6 +396,41 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 0;
+}
+
+.tab-btn {
+  padding: 0.6rem 1.25rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab-btn:hover {
+  color: #111827;
+}
+
+.tab-btn.active {
+  color: #1d4ed8;
+  border-bottom-color: #1d4ed8;
+  font-weight: 600;
+}
+
+.records-filter {
+  padding: 0.75rem 0 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
 .user-select-wrap {
   position: relative;
 }

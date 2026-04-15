@@ -59,10 +59,13 @@ const closeMail = () => {
 
 onMounted(async () => {
   try {
-    const res = await fetch('/api/v1/mails')
+    const token = localStorage.getItem('token')
+    const res = await fetch('/api/v1/me/mails', {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+    })
     if (res.ok) {
       const data = await res.json()
-      mails.value = (data.items || []).map(m => ({
+      mails.value = ((data.data?.items || data.items) || []).map(m => ({
         id:      m.id,
         subject: m.subject,
         content: m.content,

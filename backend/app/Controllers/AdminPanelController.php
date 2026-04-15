@@ -803,6 +803,30 @@ class AdminPanelController extends Controller
         return $this->json(['message' => "信件已發送給 {$count} 位使用者", 'count' => $count]);
     }
 
+    public function mailSendRecords(int $id): ResponseInterface
+    {
+        $db = \Config\Database::connect();
+        $records = $db->table('user_mails um')
+            ->select('um.id, um.user_id, um.is_read, um.created_at, um.subject, u.email, u.full_name')
+            ->join('users u', 'u.id = um.user_id', 'left')
+            ->where('um.mail_id', $id)
+            ->orderBy('um.created_at', 'DESC')
+            ->get()->getResultArray();
+        return $this->json(['items' => $records, 'total' => count($records)]);
+    }
+
+    public function allMailSendRecords(): ResponseInterface
+    {
+        $db = \Config\Database::connect();
+        $records = $db->table('user_mails um')
+            ->select('um.id, um.user_id, um.mail_id, um.subject, um.is_read, um.created_at, u.email, u.full_name')
+            ->join('users u', 'u.id = um.user_id', 'left')
+            ->orderBy('um.created_at', 'DESC')
+            ->limit(500)
+            ->get()->getResultArray();
+        return $this->json(['items' => $records, 'total' => count($records)]);
+    }
+
     // ── Announcements ─────────────────────────────────────────────────────────
 
     public function announcementList(): ResponseInterface

@@ -97,6 +97,8 @@ $routes->group('api/v1', static function ($routes) {
         $routes->put('mails/(:num)',         'AdminPanelController::updateMail/$1');
         $routes->delete('mails/(:num)',      'AdminPanelController::deleteMail/$1');
         $routes->post('mails/(:num)/send',  'AdminPanelController::sendMailToUser/$1');
+        $routes->get('mails/(:num)/records', 'AdminPanelController::mailSendRecords/$1');
+        $routes->get('mails/records',        'AdminPanelController::allMailSendRecords');
         // Announcements
         $routes->get('announcements',              'AdminPanelController::announcementList');
         $routes->post('announcements',             'AdminPanelController::createAnnouncement');
