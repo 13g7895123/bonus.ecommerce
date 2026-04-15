@@ -83,4 +83,15 @@ class UserController extends BaseApiController
         $items = model(\App\Models\UserMailModel::class)->listForUser(Auth::id());
         return $this->success(['items' => $items, 'total' => count($items)]);
     }
+
+    public function markMailRead(int $id)
+    {
+        $model = model(\App\Models\UserMailModel::class);
+        $mail  = $model->where('id', $id)->where('user_id', Auth::id())->first();
+        if (!$mail) {
+            return $this->error('信件不存在', 404);
+        }
+        $model->update($id, ['is_read' => 1]);
+        return $this->success(null, '已標記為已讀');
+    }
 }

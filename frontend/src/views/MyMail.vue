@@ -49,8 +49,18 @@ import ContentListItem from '../components/ContentListItem.vue'
 const selectedMail = ref(null)
 const mails        = ref([])
 
-const openMail = (mail) => {
+const openMail = async (mail) => {
   selectedMail.value = mail
+  if (!mail.is_read) {
+    const token = localStorage.getItem('token')
+    try {
+      await fetch(`/api/v1/me/mails/${mail.id}`, {
+        method: 'PATCH',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      })
+    } catch {}
+    mail.is_read = true
+  }
 }
 
 const closeMail = () => {
@@ -69,6 +79,7 @@ onMounted(async () => {
         id:      m.id,
         subject: m.subject,
         content: m.content,
+        is_read: !!m.is_read,
         time:    m.created_at ? m.created_at.replace('T', ' ').substring(0, 16) : '',
       }))
     }

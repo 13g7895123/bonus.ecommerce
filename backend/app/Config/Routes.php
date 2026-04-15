@@ -177,7 +177,8 @@ $routes->group('api/v1', static function ($routes) {
 
     // ── User Inbox ──
     $routes->group('me', ['filter' => 'jwt'], static function ($routes) {
-        $routes->get('mails',  'Api\UserController::myMails');
+        $routes->get('mails',           'Api\UserController::myMails');
+        $routes->patch('mails/(:num)',   'Api\UserController::markMailRead/$1');
     });
 
     // ── Customer Service (JWT required) ──

@@ -406,6 +406,7 @@ onMounted(() => {
 .tab-btn {
   padding: 0.6rem 1.25rem;
   border: none;
+  border-radius: 0;
   background: none;
   cursor: pointer;
   font-size: 0.9rem;
