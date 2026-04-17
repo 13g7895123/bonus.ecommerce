@@ -137,6 +137,7 @@
         <label class="f-label">選擇使用者 *</label>
         <div class="user-select-wrap">
           <input
+            ref="searchInputRef"
             v-model="send.search"
             class="f-input"
             placeholder="搜尋帳號或姓名..."
@@ -144,24 +145,26 @@
             @focus="openDropdown"
             @blur="send.dropdownOpen = false"
           />
-          <div v-if="send.dropdownOpen" class="user-dropdown" @mousedown.prevent>
-            <div v-if="send.filtered.length" class="user-option select-all-option" @click="toggleSelectAll">
-              <input type="checkbox" :checked="isAllSelected" :indeterminate.prop="isIndeterminate" style="width:15px;height:15px;cursor:pointer" />
-              <span class="user-email">全選（{{ send.filtered.length }} 筆）</span>
+          <Teleport to="body">
+            <div v-if="send.dropdownOpen" class="user-dropdown-fixed" :style="dropdownStyle" @mousedown.prevent>
+              <div v-if="send.filtered.length" class="user-option select-all-option" @click="toggleSelectAll">
+                <input type="checkbox" :checked="isAllSelected" :indeterminate.prop="isIndeterminate" style="width:15px;height:15px;cursor:pointer" />
+                <span class="user-email">全選（{{ send.filtered.length }} 筆）</span>
+              </div>
+              <div v-if="send.filtered.length" class="dropdown-divider"></div>
+              <div
+                v-for="u in send.filtered"
+                :key="u.id"
+                class="user-option"
+                @click="toggleUser(u)"
+              >
+                <input type="checkbox" :checked="isSelected(u.id)" style="width:15px;height:15px;cursor:pointer" />
+                <span class="user-email">{{ u.email }}</span>
+                <span v-if="u.full_name" class="user-name">{{ u.full_name }}</span>
+              </div>
+              <div v-if="!send.filtered.length" class="user-option no-result">無符合結果</div>
             </div>
-            <div v-if="send.filtered.length" class="dropdown-divider"></div>
-            <div
-              v-for="u in send.filtered"
-              :key="u.id"
-              class="user-option"
-              @click="toggleUser(u)"
-            >
-              <input type="checkbox" :checked="isSelected(u.id)" style="width:15px;height:15px;cursor:pointer" />
-              <span class="user-email">{{ u.email }}</span>
-              <span v-if="u.full_name" class="user-name">{{ u.full_name }}</span>
-            </div>
-            <div v-if="!send.filtered.length" class="user-option no-result">無符合結果</div>
-          </div>
+          </Teleport>
         </div>
         <!-- 已選 tags -->
         <div v-if="send.selectedUsers.length" class="selected-tags-wrap">
@@ -185,12 +188,27 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { Plus, RefreshCw } from 'lucide-vue-next'
 
 const loading = ref(false)
 const mails   = ref([])
 const allUsers = ref([])
+const searchInputRef = ref(null)
+const dropdownPos = ref({ top: 0, left: 0, width: 0 })
+
+const dropdownStyle = computed(() => ({
+  top:   dropdownPos.value.top  + 'px',
+  left:  dropdownPos.value.left + 'px',
+  width: dropdownPos.value.width + 'px',
+}))
+
+const updateDropdownPos = () => {
+  if (searchInputRef.value) {
+    const rect = searchInputRef.value.getBoundingClientRect()
+    dropdownPos.value = { top: rect.bottom, left: rect.left, width: rect.width }
+  }
+}
 const activeTab = ref('mails')
 
 const records = ref({ loading: false, items: [], mailFilter: '' })
@@ -327,6 +345,7 @@ const openDropdown = () => {
   if (!send.value.filtered.length) {
     send.value.filtered = allUsers.value.slice(0, 50)
   }
+  updateDropdownPos()
   send.value.dropdownOpen = true
 }
 
@@ -342,6 +361,7 @@ const filterUsers = () => {
       )
       .slice(0, 50)
   }
+  updateDropdownPos()
   send.value.dropdownOpen = true
 }
 
@@ -455,6 +475,18 @@ onMounted(() => {
   overflow-y: auto;
   z-index: 100;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.user-dropdown-fixed {
+  position: fixed;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .user-option {
