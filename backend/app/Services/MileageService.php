@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\AppConfigModel;
 use App\Models\MileageCodeModel;
 use App\Repositories\MileageRecordRepository;
 use App\Repositories\UserWalletRepository;
+use App\Repositories\UserRepository;
 
 class MileageService
 {
@@ -12,6 +14,8 @@ class MileageService
         private readonly MileageRecordRepository $repo       = new MileageRecordRepository(),
         private readonly UserWalletRepository    $walletRepo = new UserWalletRepository(),
         private readonly MileageCodeModel        $codeModel  = new MileageCodeModel(),
+        private readonly AppConfigModel          $configModel = new AppConfigModel(),
+        private readonly UserRepository          $userRepo   = new UserRepository(),
     ) {}
 
     public function getHistory(int $userId, int $page = 1, int $limit = 20): array
@@ -52,7 +56,35 @@ class MileageService
             'created_at' => date('Y-m-d H:i:s'),
         ]]);
 
+        $this->upgradeUserTierIfNeeded($userId, $newMiles);
+
         return ['success' => true, 'message' => "成功兌換 {$bonus} 哩程數", 'miles_earned' => $bonus, 'miles_balance' => $newMiles];
+    }
+
+    private function upgradeUserTierIfNeeded(int $userId, int $totalMiles): void
+    {
+        $silver   = (int) ($this->configModel->getByKey('tier_silver_miles')['value']   ?? 25000);
+        $gold     = (int) ($this->configModel->getByKey('tier_gold_miles')['value']     ?? 50000);
+        $platinum = (int) ($this->configModel->getByKey('tier_platinum_miles')['value'] ?? 100000);
+
+        if ($totalMiles >= $platinum) {
+            $newTier = 'platinum';
+        } elseif ($totalMiles >= $gold) {
+            $newTier = 'gold';
+        } elseif ($totalMiles >= $silver) {
+            $newTier = 'silver';
+        } else {
+            return;
+        }
+
+        $user = $this->userRepo->find($userId);
+        if (!$user) return;
+
+        $tierOrder = ['regular' => 0, 'silver' => 1, 'gold' => 2, 'platinum' => 3];
+        $currentTier = $user['tier'] ?? 'regular';
+        if (($tierOrder[$newTier] ?? 0) > ($tierOrder[$currentTier] ?? 0)) {
+            $this->userRepo->update($userId, ['tier' => $newTier]);
+        }
     }
 
     /**

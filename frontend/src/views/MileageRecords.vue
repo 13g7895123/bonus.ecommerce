@@ -49,7 +49,9 @@ const formatTime = (val) => {
 onMounted(async () => {
   try {
     const result = await walletService.getTransactions()
-    records.value = (result?.items || []).map(t => ({
+    records.value = (result?.items || [])
+      .filter(t => !['adjustment', 'deposit'].includes(t.type))
+      .map(t => ({
       id:     t.id,
       type:   TYPE_LABEL[t.type] || t.type || '交易',
       time:   formatTime(t.created_at || t.createdAt),

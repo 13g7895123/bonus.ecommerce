@@ -10,6 +10,18 @@
       <button type="button" @click="editor?.chain().focus().setTextAlign('left').run()" :class="{ active: editor?.isActive({ textAlign: 'left' }) }" title="靠左">←</button>
       <button type="button" @click="editor?.chain().focus().setTextAlign('center').run()" :class="{ active: editor?.isActive({ textAlign: 'center' }) }" title="置中">≡</button>
       <button type="button" @click="editor?.chain().focus().setTextAlign('right').run()" :class="{ active: editor?.isActive({ textAlign: 'right' }) }" title="靠右">→</button>
+      <select class="font-size-select" title="字體大小" @change="setFontSize($event.target.value)">
+        <option value="">字體大小</option>
+        <option value="12px">12px</option>
+        <option value="14px">14px</option>
+        <option value="16px">16px</option>
+        <option value="18px">18px</option>
+        <option value="20px">20px</option>
+        <option value="24px">24px</option>
+        <option value="28px">28px</option>
+        <option value="32px">32px</option>
+        <option value="36px">36px</option>
+      </select>
       <button type="button" @click="clearContent" title="清空">✕</button>
     </div>
     <editor-content :editor="editor" class="rich-content" />
@@ -22,6 +34,40 @@ import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
+import TextStyle from '@tiptap/extension-text-style'
+import { Extension } from '@tiptap/core'
+
+// 自訂字體大小 Extension（基於 TextStyle）
+const FontSize = Extension.create({
+  name: 'fontSize',
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['textStyle'],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: element => element.style.fontSize || null,
+            renderHTML: attributes => {
+              if (!attributes.fontSize) return {}
+              return { style: `font-size: ${attributes.fontSize}` }
+            },
+          },
+        },
+      },
+    ]
+  },
+  addCommands() {
+    return {
+      setFontSize: fontSize => ({ chain }) => {
+        return chain().setMark('textStyle', { fontSize }).run()
+      },
+      unsetFontSize: () => ({ chain }) => {
+        return chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run()
+      },
+    }
+  },
+})
 
 const props = defineProps({ modelValue: { type: String, default: '' } })
 const emit = defineEmits(['update:modelValue'])
@@ -32,11 +78,22 @@ const editor = useEditor({
     StarterKit,
     Underline,
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    TextStyle,
+    FontSize,
   ],
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
   },
 })
+
+const setFontSize = (size) => {
+  if (!editor.value) return
+  if (!size) {
+    editor.value.chain().focus().unsetFontSize().run()
+  } else {
+    editor.value.chain().focus().setFontSize(size).run()
+  }
+}
 
 watch(() => props.modelValue, (val) => {
   if (editor.value && editor.value.getHTML() !== val) {
@@ -79,6 +136,16 @@ onBeforeUnmount(() => {
   font-size: 13px;
   color: #374151;
   transition: all 0.15s;
+}
+.font-size-select {
+  height: 28px;
+  padding: 0 4px;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #374151;
 }
 .rich-toolbar button:hover {
   background: #e2e8f0;

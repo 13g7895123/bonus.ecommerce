@@ -28,6 +28,13 @@ class MileageRewardProductModel extends Model
             ->findAll();
     }
 
+    public function getAllByItemId(int $itemId): array
+    {
+        return $this->where('mileage_item_id', $itemId)
+            ->orderBy('sort_order', 'ASC')
+            ->findAll();
+    }
+
     public function getAll(): array
     {
         return $this->orderBy('sort_order', 'ASC')->findAll();

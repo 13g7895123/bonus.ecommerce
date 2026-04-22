@@ -33,7 +33,7 @@
           v-else
           v-for="item in redemptionItems"
           :key="item.id"
-          class="list-item"
+          :class="['list-item', item.is_active == 0 ? 'list-item--disabled' : '']"
           @click="goToRewards(item)"
         >
           <div class="item-left">
@@ -97,8 +97,29 @@ const mileageCode = ref('')
 const loading = ref(false)
 const loadingItems = ref(false)
 const redemptionItems = ref([])
+const userMiles = ref(0)
+
+const loadUserMiles = async () => {
+  try {
+    const token = localStorage.getItem('token') || ''
+    if (!token) return
+    const res = await fetch('/api/v1/wallet/info', { headers: { Authorization: `Bearer ${token}` } })
+    if (res.ok) {
+      const json = await res.json()
+      userMiles.value = json.data?.miles_balance ?? json.miles_balance ?? 0
+    }
+  } catch {}
+}
 
 const goToRewards = (item) => {
+  if (item.is_active == 0) {
+    toast.error('此項目目前已下架')
+    return
+  }
+  if (userMiles.value <= 0) {
+    toast.error('里程不足，無法使用')
+    return
+  }
   const q = { item_id: item.id, item_name: item.name }
   if (route.query.from) q.from = route.query.from
   router.push({ path: '/mileage-rewards', query: q })
@@ -139,6 +160,7 @@ onMounted(() => {
     activeTab.value = route.query.tab
   }
   loadRedemptionItems()
+  loadUserMiles()
 })
 </script>
 
@@ -204,6 +226,11 @@ onMounted(() => {
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
+}
+
+.list-item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .list-item:last-child {

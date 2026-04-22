@@ -20,6 +20,11 @@ class MileageRewardProductService
         return $this->repo->getActiveByItemId($itemId);
     }
 
+    public function getAllByItemId(int $itemId): array
+    {
+        return $this->repo->getAllByItemId($itemId);
+    }
+
     public function getAllProducts(): array
     {
         return $this->repo->getAll();

@@ -85,6 +85,35 @@
     </div>
     <RichTextEditor v-model="privacyHtml" />
   </div>
+
+  <div class="divider"></div>
+
+  <!-- Skywards 等級升級閾值 -->
+  <div class="content-block">
+    <div class="content-block-header">
+      <div>
+        <div class="cb-title">Skywards 等級升級里程閾值</div>
+        <div class="cb-desc">設定使用者累積多少里程後自動升級會員等級（兌換里程代碼時觸發）</div>
+      </div>
+      <button class="btn btn-primary" :disabled="savingTiers" @click="saveTierThresholds">
+        <Save :size="14" />{{ savingTiers ? '儲存中...' : '儲存' }}
+      </button>
+    </div>
+    <div class="tier-grid">
+      <div class="tier-row">
+        <label class="tier-label">銀卡 (Silver) 最低里程</label>
+        <input class="f-input" type="number" min="0" v-model.number="tierSilver" placeholder="例：25000" />
+      </div>
+      <div class="tier-row">
+        <label class="tier-label">金卡 (Gold) 最低里程</label>
+        <input class="f-input" type="number" min="0" v-model.number="tierGold" placeholder="例：50000" />
+      </div>
+      <div class="tier-row">
+        <label class="tier-label">白金卡 (Platinum) 最低里程</label>
+        <input class="f-input" type="number" min="0" v-model.number="tierPlatinum" placeholder="例：100000" />
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -102,19 +131,31 @@ const termsHtml            = ref('')
 const savingTerms          = ref(false)
 const privacyHtml          = ref('')
 const savingPrivacy        = ref(false)
+const tierSilver           = ref(25000)
+const tierGold             = ref(50000)
+const tierPlatinum         = ref(100000)
+const savingTiers          = ref(false)
+
+const getToken = () => localStorage.getItem('token')
 
 const loadContentConfigs = async () => {
   try {
-    const [r1, r2, r3, r4] = await Promise.all([
+    const [r1, r2, r3, r4, r5, r6, r7] = await Promise.all([
       fetch('/api/v1/config/skywards_silver_card_desc'),
       fetch('/api/v1/config/skywards_benefits_html'),
       fetch('/api/v1/config/terms_html'),
       fetch('/api/v1/config/privacy_html'),
+      fetch('/api/v1/config/tier_silver_miles'),
+      fetch('/api/v1/config/tier_gold_miles'),
+      fetch('/api/v1/config/tier_platinum_miles'),
     ])
     silverCardDesc.value = (await r1.json()).value || ''
     benefitsHtml.value   = (await r2.json()).value || ''
     termsHtml.value      = (await r3.json()).value || ''
     privacyHtml.value    = (await r4.json()).value || ''
+    tierSilver.value     = parseInt((await r5.json()).value) || 25000
+    tierGold.value       = parseInt((await r6.json()).value) || 50000
+    tierPlatinum.value   = parseInt((await r7.json()).value) || 100000
   } catch {}
 }
 
@@ -145,10 +186,29 @@ const saveTerms = async () => {
 const savePrivacy = async () => {
   savingPrivacy.value = true
   try {
-    await fetch('/api/v1/admin-panel/config/privacy_html', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: privacyHtml.value }) })
+    await fetch('/api/v1/admin-panel/config/privacy_html', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }, body: JSON.stringify({ value: privacyHtml.value }) })
     alert('儲存成功')
   } finally { savingPrivacy.value = false }
 }
 
+const saveTierThresholds = async () => {
+  savingTiers.value = true
+  try {
+    await Promise.all([
+      fetch('/api/v1/admin-panel/config/tier_silver_miles', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }, body: JSON.stringify({ value: String(tierSilver.value) }) }),
+      fetch('/api/v1/admin-panel/config/tier_gold_miles', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }, body: JSON.stringify({ value: String(tierGold.value) }) }),
+      fetch('/api/v1/admin-panel/config/tier_platinum_miles', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }, body: JSON.stringify({ value: String(tierPlatinum.value) }) }),
+    ])
+    alert('等級閾值儲存成功')
+  } finally { savingTiers.value = false }
+}
+
 onMounted(loadContentConfigs)
 </script>
+
+<style scoped>
+.tier-grid { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem; }
+.tier-row { display: flex; align-items: center; gap: 1rem; }
+.tier-label { width: 220px; font-size: 14px; color: #374151; flex-shrink: 0; }
+.tier-row .f-input { flex: 1; max-width: 200px; }
+</style>

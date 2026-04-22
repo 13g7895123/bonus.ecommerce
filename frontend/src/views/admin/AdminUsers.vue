@@ -78,9 +78,9 @@
       </div>
       <div class="modal-bd">
         <label class="f-label">新密碼（至少 6 字元）</label>
-        <input v-model="pwdModal.newPassword" type="password" class="f-input" placeholder="請輸入新密碼" autocomplete="new-password" />
+        <div class="pwd-wrap"><input v-model="pwdModal.newPassword" :type="showPwd['pwd_new'] ? 'text' : 'password'" class="f-input" placeholder="請輸入新密碼" autocomplete="new-password" /><button type="button" class="pwd-eye" @click="togglePwd('pwd_new')" tabindex="-1"><svg v-if="showPwd['pwd_new']" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg><svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
         <label class="f-label" style="margin-top:0.75rem">確認新密碼</label>
-        <input v-model="pwdModal.confirmPassword" type="password" class="f-input" placeholder="請再次輸入新密碼" autocomplete="new-password" @keyup.enter="submitChangePassword" />
+        <div class="pwd-wrap"><input v-model="pwdModal.confirmPassword" :type="showPwd['pwd_confirm'] ? 'text' : 'password'" class="f-input" placeholder="請再次輸入新密碼" autocomplete="new-password" @keyup.enter="submitChangePassword" /><button type="button" class="pwd-eye" @click="togglePwd('pwd_confirm')" tabindex="-1"><svg v-if="showPwd['pwd_confirm']" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg><svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       </div>
       <div class="modal-ft">
         <button class="btn btn-outline" @click="pwdModal.show = false">取消</button>
@@ -100,9 +100,9 @@
         <label class="f-label">Email *</label>
         <input v-model="createUserModal.email" type="email" class="f-input" placeholder="user@example.com" autocomplete="off" />
         <label class="f-label" style="margin-top:0.75rem">密碼（至少 6 字元）*</label>
-        <input v-model="createUserModal.password" type="password" class="f-input" placeholder="請輸入密碼" autocomplete="new-password" />
+        <div class="pwd-wrap"><input v-model="createUserModal.password" :type="showPwd['create_pwd'] ? 'text' : 'password'" class="f-input" placeholder="請輸入密碼" autocomplete="new-password" /><button type="button" class="pwd-eye" @click="togglePwd('create_pwd')" tabindex="-1"><svg v-if="showPwd['create_pwd']" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg><svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
         <label class="f-label" style="margin-top:0.75rem">確認密碼 *</label>
-        <input v-model="createUserModal.confirmPassword" type="password" class="f-input" placeholder="請再次輸入密碼" autocomplete="new-password" />
+        <div class="pwd-wrap"><input v-model="createUserModal.confirmPassword" :type="showPwd['create_confirm'] ? 'text' : 'password'" class="f-input" placeholder="請再次輸入密碼" autocomplete="new-password" /><button type="button" class="pwd-eye" @click="togglePwd('create_confirm')" tabindex="-1"><svg v-if="showPwd['create_confirm']" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg><svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
         <label class="f-label" style="margin-top:0.75rem">姓名（選填）</label>
         <input v-model="createUserModal.full_name" type="text" class="f-input" placeholder="中文姓名" />
         <label class="f-label" style="margin-top:0.75rem">手機（選填）</label>
@@ -129,29 +129,9 @@
       </div>
       <div class="modal-bd">
         <label class="f-label">新提款密碼（至少 4 字元）</label>
-        <input v-model="wdPwdModal.newPassword" type="password" class="f-input" placeholder="請輸入新提款密碼" autocomplete="new-password" />
+        <div class="pwd-wrap"><input v-model="wdPwdModal.newPassword" :type="showPwd['wd_new'] ? 'text' : 'password'" class="f-input" placeholder="請輸入新提款密碼" autocomplete="new-password" /><button type="button" class="pwd-eye" @click="togglePwd('wd_new')" tabindex="-1"><svg v-if="showPwd['wd_new']" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg><svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
         <label class="f-label" style="margin-top:0.75rem">確認新提款密碼</label>
-        <input v-model="wdPwdModal.confirmPassword" type="password" class="f-input" placeholder="請再次輸入新提款密碼" autocomplete="new-password" @keyup.enter="submitChangeWithdrawalPassword" />
-      </div>
-      <div class="modal-ft">
-        <button class="btn btn-outline" @click="wdPwdModal.show = false">取消</button>
-        <button class="btn btn-primary" :disabled="wdPwdModal.submitting" @click="submitChangeWithdrawalPassword">{{ wdPwdModal.submitting ? '處理中...' : '確認變更' }}</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 變更提款密碼 Modal -->
-  <div v-if="wdPwdModal.show" class="modal-overlay" @click.self="wdPwdModal.show = false">
-    <div class="modal-box" style="max-width:420px">
-      <div class="modal-hd">
-        <span>變更提款密碼 — {{ wdPwdModal.user?.full_name || wdPwdModal.user?.email }}</span>
-        <button class="modal-x" @click="wdPwdModal.show = false">✕</button>
-      </div>
-      <div class="modal-bd">
-        <label class="f-label">新提款密碼（至少 4 字元）</label>
-        <input v-model="wdPwdModal.newPassword" type="password" class="f-input" placeholder="請輸入新提款密碼" autocomplete="new-password" />
-        <label class="f-label" style="margin-top:0.75rem">確認新提款密碼</label>
-        <input v-model="wdPwdModal.confirmPassword" type="password" class="f-input" placeholder="請再次輸入新提款密碼" autocomplete="new-password" @keyup.enter="submitChangeWithdrawalPassword" />
+        <div class="pwd-wrap"><input v-model="wdPwdModal.confirmPassword" :type="showPwd['wd_confirm'] ? 'text' : 'password'" class="f-input" placeholder="請再次輸入新提款密碼" autocomplete="new-password" @keyup.enter="submitChangeWithdrawalPassword" /><button type="button" class="pwd-eye" @click="togglePwd('wd_confirm')" tabindex="-1"><svg v-if="showPwd['wd_confirm']" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg><svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       </div>
       <div class="modal-ft">
         <button class="btn btn-outline" @click="wdPwdModal.show = false">取消</button>
@@ -360,6 +340,8 @@ const submitDeposit = async () => {
 
 // ── 變更密碼 ──
 const pwdModal = ref({ show: false, user: null, newPassword: '', confirmPassword: '', submitting: false })
+const showPwd = ref({})
+const togglePwd = (key) => { showPwd.value[key] = !showPwd.value[key] }
 const openChangePassword = (user) => { pwdModal.value = { show: true, user, newPassword: '', confirmPassword: '', submitting: false } }
 
 const submitChangePassword = async () => {
@@ -528,4 +510,8 @@ onMounted(loadUsers)
   cursor: pointer;
 }
 .lightbox-close:hover { background: rgba(255,255,255,0.25); }
+.pwd-wrap { position: relative; }
+.pwd-wrap .f-input { padding-right: 2.5rem; }
+.pwd-eye { position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #888; padding: 0; display: flex; align-items: center; }
+.pwd-eye:hover { color: #333; }
 </style>

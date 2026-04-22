@@ -52,8 +52,8 @@
               <span class="amount-value red">{{ totalMiles.toLocaleString() }} 點</span>
             </div>
             <div class="amount-row">
-              <span class="amount-label">回饋 {{ mileagePercent }}%</span>
-              <span class="amount-value green">$ {{ mileageReward.toLocaleString() }}</span>
+              <span class="amount-label">回饋（{{ mileagePercent }}%）</span>
+              <span class="amount-value green">{{ mileageReward.toLocaleString() }}</span>
             </div>
           </div>
 

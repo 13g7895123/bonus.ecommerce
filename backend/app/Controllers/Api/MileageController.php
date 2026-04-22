@@ -40,7 +40,7 @@ class MileageController extends BaseApiController
 
     public function redemptionItems()
     {
-        $items = (new MileageRedemptionItemService())->getActiveItems();
+        $items = (new MileageRedemptionItemService())->getAllItems();
         return $this->success(['items' => $items]);
     }
 
@@ -49,8 +49,8 @@ class MileageController extends BaseApiController
         $itemId = (int) ($this->request->getGet('item_id') ?? 0);
         $svc    = new MileageRewardProductService();
         $items  = $itemId > 0
-            ? $svc->getActiveByItemId($itemId)
-            : $svc->getActiveProducts();
+            ? $svc->getAllByItemId($itemId)
+            : $svc->getAllProducts();
         return $this->success(['items' => $items]);
     }
 

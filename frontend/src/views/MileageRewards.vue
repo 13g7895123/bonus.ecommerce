@@ -8,8 +8,8 @@
       <div
         v-for="item in products"
         :key="item.id"
-        class="product-card"
-        @click="goToDetail(item.id)"
+        :class="['product-card', item.is_active == 0 ? 'product-card--disabled' : '']"
+        @click="goToDetail(item.id, item.is_active)"
       >
         <div class="product-img-wrapper">
           <img :src="item.image_url || '/product-1.png'" :alt="item.name" class="product-img" />
@@ -30,11 +30,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
 
 const { t } = useI18n()
 const router = useRouter()
 const route  = useRoute()
+const toast  = useToast()
 
 const itemId   = computed(() => route.query.item_id ? Number(route.query.item_id) : null)
 const itemName = computed(() => route.query.item_name ? decodeURIComponent(route.query.item_name) : null)
@@ -54,7 +56,11 @@ const pendingOrders = ref([])
 const hasPendingOrder = (productId) =>
   pendingOrders.value.some(o => Number(o.product_id) === Number(productId))
 
-const goToDetail = (productId) => {
+const goToDetail = (productId, isActive) => {
+  if (isActive == 0) {
+    toast.error('此商品目前已售罄')
+    return
+  }
   const q = { product_id: productId }
   if (itemId.value) q.item_id = itemId.value
   if (itemName.value) q.item_name = itemName.value
@@ -136,6 +142,16 @@ onMounted(loadData)
 .product-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.product-card--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.product-card--disabled:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 /* 圖片區 */
