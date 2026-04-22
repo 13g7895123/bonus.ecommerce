@@ -15,7 +15,6 @@
           <img :src="item.image_url || '/product-1.png'" :alt="item.name" class="product-img" />
         </div>
         <div class="product-info">
-          <span v-if="hasPendingOrder(item.id)" class="pending-badge">{{ t('mileageRewards.pendingReview') }}</span>
           <div class="info-row name">{{ item.name }}</div>
           <div class="info-row gray">{{ t('mileageRewards.mileageReward') }}{{ Math.round(Number(item.mileage_amount) / Number(item.price) * 100) }}%(${{ Number(item.mileage_amount).toLocaleString() }})</div>
           <div class="info-row red">${{ Number(item.price).toLocaleString() }}</div>
@@ -40,7 +39,13 @@ const route  = useRoute()
 const itemId   = computed(() => route.query.item_id ? Number(route.query.item_id) : null)
 const itemName = computed(() => route.query.item_name ? decodeURIComponent(route.query.item_name) : null)
 const pageTitle = computed(() => itemName.value || t('mileageRewards.title'))
-const backPath  = computed(() => itemId.value ? '/mileage-redemption' : '/settings')
+const backPath  = computed(() => {
+  if (itemId.value) {
+    const base = '/mileage-redemption'
+    return route.query.from ? `${base}?from=${route.query.from}` : base
+  }
+  return '/settings'
+})
 
 const loading       = ref(true)
 const products      = ref([])
@@ -53,6 +58,7 @@ const goToDetail = (productId) => {
   const q = { product_id: productId }
   if (itemId.value) q.item_id = itemId.value
   if (itemName.value) q.item_name = itemName.value
+  if (route.query.from) q.from = route.query.from
   router.push({ path: '/mileage-reward-detail', query: q })
 }
 

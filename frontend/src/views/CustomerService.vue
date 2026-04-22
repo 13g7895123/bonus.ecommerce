@@ -550,7 +550,7 @@ onUnmounted(() => {
 
 .send-btn {
   padding: 0.55rem 1rem;
-  background-color: #7b2ff7;
+  background-color: #D71921;
   color: #ffffff;
   border: none;
   border-radius: 20px;

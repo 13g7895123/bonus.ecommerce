@@ -1,6 +1,6 @@
 <template>
   <div class="mileage-redemption-page">
-    <PageHeader title="使用Skywards 會員里程" back-to="/skywards" />
+    <PageHeader title="使用Skywards 會員里程" :back-to="backPath" />
     
     <!-- Tab Navigation -->
     <div class="tabs-header">
@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
@@ -90,6 +90,8 @@ const toast = useToast()
 const router = useRouter()
 const route = useRoute()
 const mileageService = new MileageService()
+
+const backPath = computed(() => route.query.from === 'settings' ? '/settings' : '/skywards')
 const activeTab = ref('spending')
 const mileageCode = ref('')
 const loading = ref(false)
@@ -97,7 +99,9 @@ const loadingItems = ref(false)
 const redemptionItems = ref([])
 
 const goToRewards = (item) => {
-  router.push({ path: '/mileage-rewards', query: { item_id: item.id, item_name: item.name } })
+  const q = { item_id: item.id, item_name: item.name }
+  if (route.query.from) q.from = route.query.from
+  router.push({ path: '/mileage-rewards', query: q })
 }
 
 const loadRedemptionItems = async () => {

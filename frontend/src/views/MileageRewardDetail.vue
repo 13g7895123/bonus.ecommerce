@@ -52,9 +52,8 @@
               <span class="amount-value red">{{ totalMiles.toLocaleString() }} 點</span>
             </div>
             <div class="amount-row">
-              <span class="amount-label">回饋</span>
-              <!-- <span class="amount-value green">$ {{ mileageReward.toLocaleString() }}</span> -->
-              <span class="amount-value green"> {{ mileagePercent }}%</span>
+              <span class="amount-label">回饋 {{ mileagePercent }}%</span>
+              <span class="amount-value green">$ {{ mileageReward.toLocaleString() }}</span>
             </div>
           </div>
 
@@ -127,6 +126,7 @@ const backPath = computed(() => {
   const q = new URLSearchParams()
   if (route.query.item_id)   q.set('item_id',   route.query.item_id)
   if (route.query.item_name) q.set('item_name', route.query.item_name)
+  if (route.query.from)      q.set('from',      route.query.from)
   const qs = q.toString()
   return `/mileage-rewards${qs ? '?' + qs : ''}`
 })

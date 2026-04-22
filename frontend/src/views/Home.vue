@@ -29,7 +29,7 @@ onMounted(async () => {
       <img src="/coin.png" alt="Coin" class="coin-image" />
       <h2 class="hero-subtitle">加入阿聯酋航空 Skywards</h2>
       <h1 class="hero-description">成為阿聯酋航空 Skywards 會員，即可享有航班獎勵、升等及其他福利</h1>
-      <router-link to="/register" class="cta-button">立即加入</router-link>
+      <router-link to="/login" class="cta-button">立即加入</router-link>
     </div>
   </main>
 
