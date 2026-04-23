@@ -31,8 +31,13 @@ const loading  = ref(true)
 const errorMsg = ref('')
 
 const TYPE_LABEL = {
-  earn:  '里程兌換',
+  earn:  '里程代碼兌換',
   spend: '里程使用',
+}
+
+const getTypeLabel = (t) => {
+  if (t.type === 'earn' && t.source === 'reward_purchase') return '里程回饋'
+  return TYPE_LABEL[t.type] || t.type || '里程交易'
 }
 
 const formatAmount = (type, amount) => {
@@ -53,7 +58,7 @@ onMounted(async () => {
     const result = await mileageService.getHistory()
     records.value = (result?.items || []).map(t => ({
       id:     t.id,
-      type:   TYPE_LABEL[t.type] || t.type || '里程交易',
+      type:   getTypeLabel(t),
       time:   formatTime(t.created_at),
       amount: formatAmount(t.type, t.amount),
     }))
