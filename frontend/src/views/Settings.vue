@@ -89,7 +89,18 @@ const handleLogout = () => {
 
     <!-- 通告卡片區塊 -->
     <div class="section section-wide" style="background-color: transparent; margin-bottom: 20px;">
-      <img src="/settings/enjoy.png" alt="Enjoy" style="width: 100%; border-radius: 12px; display: block;" />
+      <div class="promo-banner-card">
+        <div class="promo-banner-image-wrap">
+          <img src="/settings/enjoy.png" alt="Enjoy" class="promo-banner-img" />
+          <div class="promo-banner-overlay">
+            <h2 class="promo-enjoy-title">盡情享受</h2>
+            <p class="promo-subtitle">「阿聯酋航空假期」的精彩套餐行程</p>
+          </div>
+        </div>
+        <div class="promo-banner-body">
+          <p class="promo-desc">享受低廉訂金，還有每週7天每天24小時不間斷的支援</p>
+        </div>
+      </div>
     </div>
 
     <!-- 登出按鈕 -->
@@ -317,5 +328,66 @@ const handleLogout = () => {
   outline: none;
   box-sizing: border-box;
   display: flex;
+}
+
+/* 通告卡片 */
+.promo-banner-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.promo-banner-image-wrap {
+  position: relative;
+}
+
+.promo-banner-img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.promo-banner-overlay {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.25rem 1.25rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 70%, transparent 100%);
+}
+
+.promo-enjoy-title {
+  margin: 0 0 0.3rem 0;
+  font-size: 4rem;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.promo-subtitle {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.promo-banner-body {
+  padding: 1rem 1.25rem;
+  background-color: #ffffff;
+}
+
+.promo-desc {
+  margin: 0;
+  margin-top: 0.5rem;
+  margin-bottom: 3rem;
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #333333;
+  line-height: 1.5;
 }
 </style>
