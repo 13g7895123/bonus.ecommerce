@@ -103,9 +103,15 @@ const inputType = computed(() => {
   color: #888;
   display: flex;
   align-items: center;
+  outline: none;
 }
 
 .pwd-toggle:hover {
   color: #333;
+}
+
+.pwd-toggle:focus {
+  outline: none;
+  box-shadow: none;
 }
 </style>

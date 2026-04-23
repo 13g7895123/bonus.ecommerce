@@ -1,6 +1,6 @@
 <template>
   <div class="cs-page">
-    <PageHeader :title="$t('cs.title')" back-to="/settings" />
+    <PageHeader :title="$t('cs.title')" :back-to="backTo" />
 
     <!-- 載入狀態 -->
     <div v-if="initialLoading" class="loading-overlay">
@@ -80,11 +80,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import PageHeader from '../components/PageHeader.vue'
 import { useApi } from '../composables/useApi'
 
 const { t } = useI18n()
 const api = useApi()
+const route = useRoute()
+
+const backTo = computed(() => route.query.from === 'skywards' ? '/skywards' : '/settings')
 
 // 狀態
 const messages = ref([])       // 所有訊息

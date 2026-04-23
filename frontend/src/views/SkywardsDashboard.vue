@@ -31,7 +31,6 @@ const nextTierInfo = computed(() => {
   return {
     key: next,
     name: TIER_NAMES[next],
-    img: TIER_IMAGES[next],
     desc: tierCardDescs.value[next],
   }
 })
@@ -185,12 +184,12 @@ onMounted(async () => {
             <a href="#" class="benefit-link" @click.prevent="$router.push('/mileage-redemption')">探索優惠</a>
           </div>
         </div>
-        <div class="benefit-card" @click="$router.push('/customer-service')">
+        <div class="benefit-card" @click="$router.push('/customer-service?from=skywards')">
           <img src="/make-now.png" alt="Earn" class="benefit-img" />
           <div class="benefit-content">
             <h4 class="benefit-title">立即賺取</h4>
             <p class="benefit-desc">探索透過我們和全球夥伴賺取 Skywards 會員里程數的多種方法</p>
-            <a href="#" class="benefit-link" @click.prevent="$router.push('/customer-service')">開始賺取</a>
+            <a href="#" class="benefit-link" @click.prevent="$router.push('/customer-service?from=skywards')">開始賺取</a>
           </div>
         </div>
       </div>

@@ -512,6 +512,7 @@ onMounted(loadUsers)
 .lightbox-close:hover { background: rgba(255,255,255,0.25); }
 .pwd-wrap { position: relative; }
 .pwd-wrap .f-input { padding-right: 2.5rem; }
-.pwd-eye { position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #888; padding: 0; display: flex; align-items: center; }
+.pwd-eye { position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #888; padding: 0; display: flex; align-items: center; outline: none; }
 .pwd-eye:hover { color: #333; }
+.pwd-eye:focus { outline: none; box-shadow: none; }
 </style>
