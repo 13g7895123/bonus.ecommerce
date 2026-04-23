@@ -10,13 +10,31 @@ const router = useRouter()
 const user = ref(null)
 const activeTab = ref('miles') // 'miles' or 'tier'
 const showModal = ref(false)
-const silverCardDesc = ref('')
+const tierCardDescs = ref({
+  silver: '',
+  gold: '',
+  platinum: '',
+})
 const benefitsHtml = ref('')
 
 const TIER_ORDER = ['blue', 'silver', 'gold', 'platinum']
+const TIER_NAMES = { blue: '藍卡', silver: '銀卡', gold: '金卡', platinum: '白金卡' }
+const TIER_IMAGES = { silver: '/go-silver.png', gold: '/go-gold.png', platinum: '/go-platinum.png' }
+
 const tierIndex = computed(() => {
   const idx = TIER_ORDER.indexOf(user.value?.tier)
   return idx >= 0 ? idx : 0
+})
+
+const nextTierInfo = computed(() => {
+  const next = TIER_ORDER[tierIndex.value + 1]
+  if (!next) return null
+  return {
+    key: next,
+    name: TIER_NAMES[next],
+    img: TIER_IMAGES[next],
+    desc: tierCardDescs.value[next],
+  }
 })
 
 const setTab = (tab) => {
@@ -29,14 +47,17 @@ const closeModal = () => { showModal.value = false }
 
 const loadConfigs = async () => {
   try {
-    const [r1, r2] = await Promise.all([
+    const [r1, r2, r3, r4] = await Promise.all([
       fetch('/api/v1/config/skywards_silver_card_desc'),
+      fetch('/api/v1/config/skywards_gold_card_desc'),
+      fetch('/api/v1/config/skywards_platinum_card_desc'),
       fetch('/api/v1/config/skywards_benefits_html'),
     ])
-    const d1 = await r1.json()
-    const d2 = await r2.json()
-    silverCardDesc.value = d1.value || ''
-    benefitsHtml.value   = d2.value || ''
+    const [d1, d2, d3, d4] = await Promise.all([r1.json(), r2.json(), r3.json(), r4.json()])
+    tierCardDescs.value.silver   = d1.value || ''
+    tierCardDescs.value.gold     = d2.value || ''
+    tierCardDescs.value.platinum = d3.value || ''
+    benefitsHtml.value           = d4.value || ''
   } catch {}
 }
 
@@ -182,11 +203,18 @@ onMounted(async () => {
 
     <section v-if="activeTab === 'tier'" class="cards-section">
       <div class="benefit-cards">
-        <div class="benefit-card no-pointer">
-          <img src="/go-silver.png" alt="Silver Tier" class="benefit-img" />
+        <div v-if="nextTierInfo" class="benefit-card no-pointer">
+          <img :src="nextTierInfo.img" :alt="nextTierInfo.name" class="benefit-img" />
           <div class="benefit-content">
-            <h4 class="benefit-title">達到 <span class="silver-text">銀卡</span></h4>
-            <p class="benefit-desc">{{ silverCardDesc || '在2027年2月28日之前賺取25,000級哩程數,或再搭乘 25 次合格航班' }}</p>
+            <h4 class="benefit-title">達到 <span class="silver-text">{{ nextTierInfo.name }}</span></h4>
+            <p class="benefit-desc">{{ nextTierInfo.desc || '繼續累積里程數以升級至 ' + nextTierInfo.name }}</p>
+          </div>
+        </div>
+        <div v-else class="benefit-card no-pointer">
+          <img src="/go-platinum.png" alt="白金卡" class="benefit-img" />
+          <div class="benefit-content">
+            <h4 class="benefit-title">恭喜！您已達到 <span class="silver-text">白金卡</span> 最高等級</h4>
+            <p class="benefit-desc">{{ tierCardDescs.platinum || '您已享有最頂級的會員權益，感謝您的支持。' }}</p>
           </div>
         </div>
       </div>
