@@ -113,7 +113,7 @@ const loadUserMiles = async () => {
 
 const goToRewards = (item) => {
   if (item.is_active == 0) {
-    toast.error('此項目目前已下架')
+    toast.error('項目商品已售罄')
     return
   }
   if (userMiles.value <= 0) {

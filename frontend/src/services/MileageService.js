@@ -32,4 +32,12 @@ export class MileageService extends BaseService {
     }
     return this._post('/redeem', { code });
   }
+
+  /* 我的里程回饋訂單 — GET /mileage/reward-orders/my */
+  async getMyRewardOrders() {
+    if (this.useMock) {
+      return { items: [] }
+    }
+    return this._get('/reward-orders/my')
+  }
 }

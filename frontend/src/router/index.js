@@ -22,6 +22,7 @@ import MyMail from '../views/MyMail.vue'
 import MileageRewards from '../views/MileageRewards.vue'
 import MileageRewardDetail from '../views/MileageRewardDetail.vue'
 import MileageRecords from '../views/MileageRecords.vue'
+import MileageRewardOrders from '../views/MileageRewardOrders.vue'
 import MileageRedemption from '../views/MileageRedemption.vue'
 import MileageRewardConfirm from '../views/MileageRewardConfirm.vue'
 import AnnouncementDetail from '../views/AnnouncementDetail.vue'
@@ -231,6 +232,12 @@ const routes = [
     path: '/mileage-records',
     name: 'MileageRecords',
     component: MileageRecords,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/mileage-reward-orders',
+    name: 'MileageRewardOrders',
+    component: MileageRewardOrders,
     meta: { requiresAuth: true }
   }
 ]

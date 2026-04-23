@@ -22,22 +22,24 @@ import { ref, onMounted } from 'vue'
 import PageLayout from '../components/PageLayout.vue'
 import ContentList from '../components/ContentList.vue'
 import ContentListItem from '../components/ContentListItem.vue'
-import { WalletService } from '../services/WalletService'
+import { MileageService } from '../services/MileageService'
 import EmptyTransactions from '../components/EmptyTransactions.vue'
 
-const walletService = new WalletService()
+const mileageService = new MileageService()
 const records  = ref([])
 const loading  = ref(true)
 const errorMsg = ref('')
 
 const TYPE_LABEL = {
-  adjustment: '儲值',
-  deposit:    '儲值',
-  withdrawal: '提款申請',
+  earn:  '里程兌換',
+  spend: '里程使用',
 }
 
-const formatAmount = (amount) => {
+const formatAmount = (type, amount) => {
   const n = Number(amount)
+  if (type === 'spend') {
+    return n <= 0 ? n.toLocaleString() : `-${n.toLocaleString()}`
+  }
   return n >= 0 ? `+${n.toLocaleString()}` : n.toLocaleString()
 }
 
@@ -48,14 +50,12 @@ const formatTime = (val) => {
 
 onMounted(async () => {
   try {
-    const result = await walletService.getTransactions()
-    records.value = (result?.items || [])
-      .filter(t => !['adjustment', 'deposit'].includes(t.type))
-      .map(t => ({
+    const result = await mileageService.getHistory()
+    records.value = (result?.items || []).map(t => ({
       id:     t.id,
-      type:   TYPE_LABEL[t.type] || t.type || '交易',
-      time:   formatTime(t.created_at || t.createdAt),
-      amount: formatAmount(t.amount),
+      type:   TYPE_LABEL[t.type] || t.type || '里程交易',
+      time:   formatTime(t.created_at),
+      amount: formatAmount(t.type, t.amount),
     }))
   } catch (e) {
     errorMsg.value = '載入失敗，請稍後再試'

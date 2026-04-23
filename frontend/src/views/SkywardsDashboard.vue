@@ -1,15 +1,28 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import { useToast } from '../composables/useToast'
 
 const api = useApi()
 const toast = useToast()
+const router = useRouter()
 const user = ref(null)
 const activeTab = ref('miles') // 'miles' or 'tier'
 const showModal = ref(false)
 const silverCardDesc = ref('')
 const benefitsHtml = ref('')
+
+const TIER_ORDER = ['blue', 'silver', 'gold', 'platinum']
+const tierIndex = computed(() => {
+  const idx = TIER_ORDER.indexOf(user.value?.tier)
+  return idx >= 0 ? idx : 0
+})
+
+const setTab = (tab) => {
+  activeTab.value = tab
+  router.replace({ hash: '#' + tab })
+}
 
 const openModal = () => { showModal.value = true }
 const closeModal = () => { showModal.value = false }
@@ -38,6 +51,11 @@ const getTierName = (tier) => {
 }
 
 onMounted(async () => {
+  // 從 URL hash 恢復 tab
+  const hash = window.location.hash.replace('#', '')
+  if (hash === 'miles' || hash === 'tier') {
+    activeTab.value = hash
+  }
   try {
     const data = await api.user.getProfile()
     if (data) user.value = data
@@ -84,7 +102,7 @@ onMounted(async () => {
         <div 
           class="stat-box" 
           :class="{ active: activeTab === 'miles' }"
-          @click="activeTab = 'miles'"
+          @click="setTab('miles')"
         >
           <span class="stat-value">{{ user?.miles?.toLocaleString() || '0' }}</span>
           <p class="stat-label">Skywards會員里程數</p>
@@ -95,7 +113,7 @@ onMounted(async () => {
         <div 
           class="stat-box" 
           :class="{ active: activeTab === 'tier' }"
-          @click="activeTab = 'tier'"
+          @click="setTab('tier')"
         >
           <span class="stat-value large">{{ user ? getTierName(user.tier) : '藍卡' }}</span>
           <p class="stat-label small">等級</p>
@@ -106,24 +124,24 @@ onMounted(async () => {
       <div v-if="activeTab === 'tier'" class="tier-content">
         <div class="tier-progress-container">
           <div class="tier-rail">
-            <div class="tier-line active"></div>
-            <div class="tier-line gray"></div>
-            <div class="tier-line gray"></div>
+            <div class="tier-line" :class="tierIndex >= 1 ? 'active' : 'gray'"></div>
+            <div class="tier-line" :class="tierIndex >= 2 ? 'active' : 'gray'"></div>
+            <div class="tier-line" :class="tierIndex >= 3 ? 'active' : 'gray'"></div>
           </div>
           <div class="tier-points">
-            <div class="tier-point active">
+            <div class="tier-point" :class="tierIndex >= 0 ? 'active' : 'gray'">
               <span class="point-dot"></span>
               <span class="point-label">藍卡</span>
             </div>
-            <div class="tier-point gray">
+            <div class="tier-point" :class="tierIndex >= 1 ? 'active' : 'gray'">
               <span class="point-dot"></span>
               <span class="point-label">銀卡</span>
             </div>
-            <div class="tier-point gray">
+            <div class="tier-point" :class="tierIndex >= 2 ? 'active' : 'gray'">
               <span class="point-dot"></span>
               <span class="point-label">金卡</span>
             </div>
-            <div class="tier-point gray">
+            <div class="tier-point" :class="tierIndex >= 3 ? 'active' : 'gray'">
               <span class="point-dot"></span>
               <span class="point-label">白金卡</span>
             </div>
