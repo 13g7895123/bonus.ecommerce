@@ -19,7 +19,6 @@ const benefitsHtml = ref('')
 
 const TIER_ORDER = ['blue', 'silver', 'gold', 'platinum']
 const TIER_NAMES = { blue: '藍卡', silver: '銀卡', gold: '金卡', platinum: '白金卡' }
-const TIER_IMAGES = { silver: '/go-silver.png', gold: '/go-gold.png', platinum: '/go-platinum.png' }
 
 const tierIndex = computed(() => {
   const idx = TIER_ORDER.indexOf(user.value?.tier)
@@ -204,14 +203,14 @@ onMounted(async () => {
     <section v-if="activeTab === 'tier'" class="cards-section">
       <div class="benefit-cards">
         <div v-if="nextTierInfo" class="benefit-card no-pointer">
-          <img :src="nextTierInfo.img" :alt="nextTierInfo.name" class="benefit-img" />
+          <img src="/go-silver.png" alt="Tier" class="benefit-img" />
           <div class="benefit-content">
             <h4 class="benefit-title">達到 <span class="silver-text">{{ nextTierInfo.name }}</span></h4>
             <p class="benefit-desc">{{ nextTierInfo.desc || '繼續累積里程數以升級至 ' + nextTierInfo.name }}</p>
           </div>
         </div>
         <div v-else class="benefit-card no-pointer">
-          <img src="/go-platinum.png" alt="白金卡" class="benefit-img" />
+          <img src="/go-silver.png" alt="白金卡" class="benefit-img" />
           <div class="benefit-content">
             <h4 class="benefit-title">恭喜！您已達到 <span class="silver-text">白金卡</span> 最高等級</h4>
             <p class="benefit-desc">{{ tierCardDescs.platinum || '您已享有最頂級的會員權益，感謝您的支持。' }}</p>
