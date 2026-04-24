@@ -243,6 +243,7 @@ onMounted(async () => {
   min-height: 100vh;
   padding-bottom: 80px;
   color: #333;
+  overflow-x: hidden;
 }
 
 .skywards-header {
@@ -389,7 +390,7 @@ onMounted(async () => {
 .benefit-desc { font-size: 0.95rem; color: #666; line-height: 1.4; margin-bottom: 1rem; word-break: break-word; overflow-wrap: break-word; }
 .benefit-link { display: block; font-weight: 700; color: #000; text-decoration: none; font-size: 1rem; text-transform: uppercase; }
 .section-hint { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; color: #000; }
-.comfortable-banner { position: relative; border-radius: 0; overflow: hidden; margin-left: -1.5rem; margin-right: -1.5rem; }
+.comfortable-banner { position: relative; border-radius: 0; overflow: hidden; width: 100%; }
 .comfortable-img { width: 100%; display: block; }
 .comfortable-text { display: block; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #333; font-size: 1.1rem; font-weight: 700; text-align: left; }
 .silver-text { margin-left: 0rem; color: #000; }
