@@ -320,8 +320,8 @@ onMounted(async () => {
 /* .toggle-btn.active { background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); } */
 .stats-container { display: flex; justify-content: space-between; text-align: center; margin-bottom: 2rem; position: relative; }
 .stat-box { 
-  flex: 0 0 calc(50% - 1px);
-  max-width: calc(50% - 1px);
+  flex: 0 0 50%;
+  max-width: 50%;
   min-width: 0;
   display: flex; 
   flex-direction: column; 
@@ -331,6 +331,7 @@ onMounted(async () => {
   transition: border-color 0.3s;
   justify-content: flex-end;
   overflow: hidden;
+  box-sizing: border-box;
 }
 .stat-box.active {
   border-bottom-color: #E6007E; /* Peach/Pink Highlight */
@@ -340,11 +341,14 @@ onMounted(async () => {
 
 /* .stat-divider { width: 60%; height: 1px; background-color: #ddd; margin: 0 auto 10px; } */
 .stat-divider-vertical {
+  position: absolute;
+  left: 50%;
+  top: 5%;
+  transform: translateX(-50%);
   width: 1px;
   height: 90%; 
   background-color: #ddd;
-  align-self: center; 
-  margin: 0 10px; /* Add margin to avoid touching */
+  pointer-events: none;
 }
 .stat-label { font-size: 0.85rem; color: #666; }
 .stat-label.small { font-size: 0.75rem; }
