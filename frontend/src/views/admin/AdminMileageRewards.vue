@@ -26,7 +26,7 @@
               <span v-else style="color:#94a3b8">—</span>
             </td>
             <td class="td-num">${{ Number(item.price).toLocaleString() }}</td>
-            <td class="td-num">{{ item.mileage_amount }}%</td>
+            <td class="td-num">{{ itemMileageAmount(item.mileage_item_id) }}%</td>
             <td class="td-num">{{ item.miles_points ?? 0 }}</td>
             <td class="td-num">{{ item.stock }}</td>
             <td><span :class="['badge', item.is_active == 1 ? 'badge-green' : 'badge-red']">{{ item.is_active == 1 ? '啟用' : '停用' }}</span></td>
@@ -119,6 +119,11 @@ const rewardProductForm = ref({ show: false, id: null, mileage_item_id: '', name
 const itemName = (id) => {
   const found = mileageItemsList.value.find(mi => Number(mi.id) === Number(id))
   return found ? found.name : ('-')
+}
+
+const itemMileageAmount = (id) => {
+  const found = mileageItemsList.value.find(mi => Number(mi.id) === Number(id))
+  return found ? Number(found.mileage_amount || 0).toFixed(1) : '0.0'
 }
 
 const selectedItemMileageAmount = computed(() => {
