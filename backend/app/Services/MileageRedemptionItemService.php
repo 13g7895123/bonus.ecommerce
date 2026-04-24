@@ -28,7 +28,7 @@ class MileageRedemptionItemService
     public function create(array $data): array
     {
         $allowed = ['name', 'short_desc', 'details', 'logo_letter', 'logo_color', 'logo_url',
-                    'is_featured', 'featured_label', 'is_active', 'sort_order'];
+                    'is_featured', 'featured_label', 'is_active', 'sort_order', 'mileage_amount'];
         $insert  = array_intersect_key($data, array_flip($allowed));
 
         $id = $this->repo->create($insert);
@@ -43,7 +43,7 @@ class MileageRedemptionItemService
         }
 
         $allowed = ['name', 'short_desc', 'details', 'logo_letter', 'logo_color', 'logo_url',
-                    'is_featured', 'featured_label', 'is_active', 'sort_order'];
+                    'is_featured', 'featured_label', 'is_active', 'sort_order', 'mileage_amount'];
         $update  = array_intersect_key($data, array_flip($allowed));
 
         $this->repo->update($id, $update);

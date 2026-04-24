@@ -319,20 +319,23 @@ onMounted(async () => {
 /* .toggle-btn.active { background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); } */
 .stats-container { display: flex; justify-content: space-between; text-align: center; margin-bottom: 2rem; position: relative; }
 .stat-box { 
-  flex: 1; 
+  flex: 0 0 calc(50% - 1px);
+  max-width: calc(50% - 1px);
+  min-width: 0;
   display: flex; 
   flex-direction: column; 
-  padding: 0 1rem 1rem; 
+  padding: 0 0.5rem 1rem; 
   cursor: pointer; 
   border-bottom: 3px solid transparent; 
   transition: border-color 0.3s;
-  justify-content: flex-end; /* Align content to bottom so values align if needed, or use space-between */
+  justify-content: flex-end;
+  overflow: hidden;
 }
 .stat-box.active {
   border-bottom-color: #E6007E; /* Peach/Pink Highlight */
 }
-.stat-value { font-size: 3rem; font-weight: 700; color: #000; margin-bottom: 5px; line-height: 1; min-height: 3rem; display: flex; align-items: flex-end; justify-content: center; } /* Add min-height to ensure alignment */
-.stat-value.large { font-size: 2rem; color: #000; padding-bottom: 0.4rem; } /* Adjust padding to visual align with larger text baseline if needed */
+.stat-value { font-size: clamp(1.5rem, 7vw, 3rem); font-weight: 700; color: #000; margin-bottom: 5px; line-height: 1; min-height: 3rem; display: flex; align-items: flex-end; justify-content: center; word-break: break-all; overflow: hidden; }
+.stat-value.large { font-size: clamp(1.2rem, 5vw, 2rem); color: #000; padding-bottom: 0.4rem; }
 
 /* .stat-divider { width: 60%; height: 1px; background-color: #ddd; margin: 0 auto 10px; } */
 .stat-divider-vertical {
@@ -380,10 +383,10 @@ onMounted(async () => {
   transform: none;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
-.benefit-img { width: 100%; height: 340px; object-fit: cover; }
-.benefit-content { padding: 1.25rem; padding-top: 0; }
-.benefit-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem; }
-.benefit-desc { font-size: 0.95rem; color: #666; line-height: 1.4; margin-bottom: 1rem; }
+.benefit-img { width: 100%; height: auto; max-height: 340px; object-fit: contain; display: block; background-color: #f5f5f5; }
+.benefit-content { padding: 1.25rem; padding-top: 0; overflow: hidden; }
+.benefit-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem; word-break: break-word; }
+.benefit-desc { font-size: 0.95rem; color: #666; line-height: 1.4; margin-bottom: 1rem; word-break: break-word; overflow-wrap: break-word; }
 .benefit-link { display: block; font-weight: 700; color: #000; text-decoration: none; font-size: 1rem; text-transform: uppercase; }
 .section-hint { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; color: #000; }
 .comfortable-banner { position: relative; border-radius: 0; overflow: hidden; margin-left: -1.5rem; margin-right: -1.5rem; }

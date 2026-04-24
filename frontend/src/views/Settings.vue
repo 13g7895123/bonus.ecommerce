@@ -363,7 +363,7 @@ const handleLogout = () => {
 
 .promo-enjoy-title {
   margin: 0 0 0.3rem 0;
-  font-size: 4rem;
+  font-size: clamp(2rem, 8vw, 4rem);
   font-weight: 900;
   color: #ffffff;
   line-height: 1.1;
@@ -371,7 +371,7 @@ const handleLogout = () => {
 
 .promo-subtitle {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: clamp(1rem, 4vw, 1.6rem);
   font-weight: 600;
   color: #ffffff;
 }

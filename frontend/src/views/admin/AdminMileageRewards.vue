@@ -72,7 +72,8 @@
           </div>
           <div style="flex:1">
             <label class="f-label">里程回饋 (%)</label>
-            <input v-model.number="rewardProductForm.mileage_amount" class="f-input" type="number" min="0" max="100" step="0.1" placeholder="10" />
+            <input :value="selectedItemMileageAmount" class="f-input" type="number" readonly
+              style="background:#f8fafc;color:#64748b;cursor:not-allowed" />
           </div>
           <div style="flex:1">
             <label class="f-label">里程點數 <span style="font-size:0.75rem;color:#94a3b8">(自動計算)</span></label>
@@ -104,7 +105,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { RefreshCw, Plus } from 'lucide-vue-next'
 import { fileService } from '../../services/FileService'
 
@@ -119,6 +120,11 @@ const itemName = (id) => {
   const found = mileageItemsList.value.find(mi => Number(mi.id) === Number(id))
   return found ? found.name : ('-')
 }
+
+const selectedItemMileageAmount = computed(() => {
+  const found = mileageItemsList.value.find(mi => Number(mi.id) === Number(rewardProductForm.value.mileage_item_id))
+  return found ? Number(found.mileage_amount || 0) : 0
+})
 
 const loadMileageItems = async () => {
   try {
@@ -183,7 +189,7 @@ const submitRewardProduct = async () => {
   try {
     const url    = f.id ? `/api/v1/admin-panel/mileage-reward-products/${f.id}` : '/api/v1/admin-panel/mileage-reward-products'
     const method = f.id ? 'PUT' : 'POST'
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mileage_item_id: f.mileage_item_id || null, name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: f.mileage_amount, miles_points: f.miles_points, stock: f.stock, is_active: f.is_active, sort_order: f.sort_order }) })
+    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mileage_item_id: f.mileage_item_id || null, name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: selectedItemMileageAmount.value, miles_points: f.miles_points, stock: f.stock, is_active: f.is_active, sort_order: f.sort_order }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
     f.show = false
     await loadRewardProducts()
@@ -198,11 +204,11 @@ const deleteRewardProduct = async (id) => {
 
 // 里程回饋 (%) 輸入時自動計算里程點數
 watch(
-  () => [rewardProductForm.value.price, rewardProductForm.value.mileage_amount],
-  ([price, pct]) => {
+  () => [rewardProductForm.value.price, rewardProductForm.value.mileage_item_id],
+  ([price]) => {
     if (!rewardProductForm.value.show) return
     const p = Number(price)
-    const a = Number(pct)
+    const a = selectedItemMileageAmount.value
     if (p > 0 && a >= 0) {
       rewardProductForm.value.miles_points = Math.round(p * a / 100)
     }

@@ -11,7 +11,7 @@ class MileageRedemptionItemModel extends Model
     protected $useTimestamps = true;
     protected $allowedFields = [
         'name', 'short_desc', 'details', 'logo_letter', 'logo_color', 'logo_url',
-        'is_featured', 'featured_label', 'is_active', 'sort_order',
+        'is_featured', 'featured_label', 'is_active', 'sort_order', 'mileage_amount',
     ];
 
     public function getActive(): array

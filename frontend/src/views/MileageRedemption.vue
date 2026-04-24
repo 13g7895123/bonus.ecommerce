@@ -33,7 +33,7 @@
           v-else
           v-for="item in redemptionItems"
           :key="item.id"
-          :class="['list-item', item.is_active == 0 ? 'list-item--disabled' : '']"
+          :class="['list-item']"
           @click="goToRewards(item)"
         >
           <div class="item-left">
@@ -47,6 +47,7 @@
               </div>
               <h4 class="item-name">{{ item.name }}</h4>
               <p v-if="item.short_desc" class="item-desc">{{ item.short_desc }}</p>
+              <p v-if="item.is_active == 0" class="item-sold-out">已售完</p>
             </div>
           </div>
           <div class="item-right">
@@ -292,6 +293,13 @@ onMounted(() => {
   margin: 4px 0 0;
   font-size: 0.8rem;
   color: #888;
+}
+
+.item-sold-out {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #e53e3e;
+  font-weight: 700;
 }
 
 .arrow-icon {

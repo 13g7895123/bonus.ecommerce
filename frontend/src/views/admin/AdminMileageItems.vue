@@ -11,7 +11,7 @@
       <div v-if="loadingMileageItems" class="state-msg">載入中...</div>
       <div v-else-if="mileageItemsList.length === 0" class="state-msg">尚無項目</div>
       <table v-else class="data-table">
-        <thead><tr><th>名稱</th><th style="text-align:center">Logo</th><th>精選</th><th>狀態</th><th>排序</th><th>操作</th></tr></thead>
+        <thead><tr><th>名稱</th><th style="text-align:center">Logo</th><th>精選</th><th>里程回饋(%)</th><th>狀態</th><th>排序</th><th>操作</th></tr></thead>
         <tbody>
           <tr v-for="item in mileageItemsList" :key="item.id">
             <td>
@@ -23,6 +23,7 @@
               <div v-else class="logo-chip" :style="{ backgroundColor: item.logo_color, margin:'0 auto' }">{{ item.logo_letter }}</div>
             </td>
             <td><span :class="['badge', item.is_featured == 1 ? 'badge-yellow' : 'badge-gray']">{{ item.is_featured == 1 ? '精選' : '-' }}</span></td>
+            <td class="td-num">{{ Number(item.mileage_amount ?? 0).toFixed(1) }}%</td>
             <td><span :class="['badge', item.is_active == 1 ? 'badge-green' : 'badge-red']">{{ item.is_active == 1 ? '啟用' : '停用' }}</span></td>
             <td>{{ item.sort_order }}</td>
             <td class="td-actions">
@@ -115,6 +116,10 @@
             </div>
           </div>
         </div>
+        <div style="margin-top:0.75rem">
+          <label class="f-label">里程回饋 (%)</label>
+          <input v-model.number="mileageForm.mileage_amount" class="f-input" type="number" min="0" max="100" step="0.1" placeholder="10" />
+        </div>
         <div style="display:flex;gap:1rem;margin-top:0.75rem;align-items:flex-end;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
             <input type="checkbox" v-model="mileageForm.is_featured" :true-value="1" :false-value="0" style="width:16px;height:16px" />
@@ -152,7 +157,7 @@ const loadingMileageItems = ref(false)
 const logoUploading       = ref(false)
 const logoGallery         = ref([])
 const logoGalleryLoading  = ref(false)
-const mileageForm = ref({ show: false, id: null, name: '', short_desc: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0, submitting: false })
+const mileageForm = ref({ show: false, id: null, name: '', short_desc: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', mileage_amount: 0, is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0, submitting: false })
 
 const STATIC_LOGO_IMAGES = [
   { id: 'static-logo',     url: '/logo.png',        original_name: 'logo.png' },
@@ -175,9 +180,9 @@ const loadMileageItems = async () => {
 const openMileageForm = (item = null) => {
   logoUploading.value = false
   if (item) {
-    mileageForm.value = { show: true, submitting: false, id: item.id, name: item.name, short_desc: item.short_desc || '', logo_letter: item.logo_letter || 'S', logo_color: item.logo_color || '#ffffff', logo_url: item.logo_url || '', logo_mode: item.logo_url ? 'image' : 'letter', is_featured: Number(item.is_featured), featured_label: item.featured_label || '精選', is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
+    mileageForm.value = { show: true, submitting: false, id: item.id, name: item.name, short_desc: item.short_desc || '', logo_letter: item.logo_letter || 'S', logo_color: item.logo_color || '#ffffff', logo_url: item.logo_url || '', logo_mode: item.logo_url ? 'image' : 'letter', mileage_amount: Number(item.mileage_amount || 0), is_featured: Number(item.is_featured), featured_label: item.featured_label || '精選', is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
   } else {
-    mileageForm.value = { show: true, submitting: false, id: null, name: '', short_desc: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0 }
+    mileageForm.value = { show: true, submitting: false, id: null, name: '', short_desc: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', mileage_amount: 0, is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0 }
   }
 }
 
@@ -217,7 +222,7 @@ const submitMileageItem = async () => {
     const url    = f.id ? `/api/v1/admin-panel/mileage-items/${f.id}` : '/api/v1/admin-panel/mileage-items'
     const method = f.id ? 'PUT' : 'POST'
     const logoUrl = (f.logo_mode === 'image' || f.logo_mode === 'pick') ? (f.logo_url || null) : null
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, short_desc: f.short_desc, logo_letter: f.logo_letter, logo_color: f.logo_color, logo_url: logoUrl, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order }) })
+    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, short_desc: f.short_desc, logo_letter: f.logo_letter, logo_color: f.logo_color, logo_url: logoUrl, mileage_amount: f.mileage_amount, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
     f.show = false
     await loadMileageItems()
