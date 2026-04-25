@@ -1,8 +1,8 @@
 <template>
-  <PageLayout title="里程回饋紀錄" back-to="/settings" theme="white">
-    <div v-if="loading" class="mro-hint">載入中...</div>
+  <PageLayout :title="t('mileageRewardOrders.title')" back-to="/settings" theme="white">
+    <div v-if="loading" class="mro-hint">{{ t('common.loading') }}</div>
     <div v-else-if="errorMsg" class="mro-hint mro-error">{{ errorMsg }}</div>
-    <div v-else-if="orders.length === 0" class="mro-empty">尚無里程回饋紀錄</div>
+    <div v-else-if="orders.length === 0" class="mro-empty">{{ t('mileageRewardOrders.empty') }}</div>
     <div v-else class="mro-list">
       <div v-for="order in orders" :key="order.id" class="mro-card">
         <p class="mro-time">{{ formatTime(order.created_at) }}</p>
@@ -15,7 +15,7 @@
           />
           <div v-else class="mro-img-placeholder"></div>
           <span class="mro-name">{{ order.product_name }}</span>
-          <span class="mro-miles">+{{ Number(order.mileage_reward_amount).toLocaleString() }}</span>
+          <span class="mro-miles">{{ t('mileageRewardOrders.mileageReward') }} +{{ Number(order.mileage_reward_amount).toLocaleString() }}</span>
         </div>
       </div>
     </div>
@@ -24,9 +24,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import PageLayout from '../components/PageLayout.vue'
 import { MileageService } from '../services/MileageService'
 
+const { t, locale } = useI18n()
 const mileageService = new MileageService()
 const orders = ref([])
 const loading = ref(true)
@@ -34,7 +36,7 @@ const errorMsg = ref('')
 
 const formatTime = (val) => {
   if (!val) return ''
-  return new Date(val).toLocaleString('zh-TW', { hour12: false }).slice(0, 19)
+  return new Date(val).toLocaleString(locale.value, { hour12: false }).slice(0, 19)
 }
 
 onMounted(async () => {
@@ -42,7 +44,7 @@ onMounted(async () => {
     const result = await mileageService.getMyRewardOrders()
     orders.value = result?.items || []
   } catch (e) {
-    errorMsg.value = '載入失敗，請稍後再試'
+    errorMsg.value = t('mileageRewardOrders.errorLoad')
   } finally {
     loading.value = false
   }

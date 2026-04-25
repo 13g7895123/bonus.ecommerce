@@ -32,7 +32,7 @@ import { countries, getCountryName } from '../utils/countries'
 import { useI18n } from 'vue-i18n'
 import { firebaseSendOtp } from '../services/FirebaseService'
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const currentLocale = computed(() => locale.value)
 
 const router = useRouter()
@@ -282,7 +282,7 @@ const handleRegister = async () => {
       </div>
     </div>
     <div class="login-page">
-      <AuthHeader title="加入阿聯酋航空 Skywards" description="每次旅行都能享有各種優惠。享受獎勵航班、艙位升等、專屬權益等優惠。" />
+      <AuthHeader :title="t('register.headerTitle')" :description="t('register.headerDesc')" />
       
       <div class="login-form">
         <div class="form-field">

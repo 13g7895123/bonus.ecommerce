@@ -15,6 +15,7 @@ const messages = {
       login: '登入',
       register: '註冊',
       onlineCS: '在線客服',
+      emiratesSkywards: '阿聯酋航空 Skywards',
     },
     // 語言選項
     lang: {
@@ -51,6 +52,11 @@ const messages = {
       moreInfo: '更多資訊',
       aboutUs: '關於我們',
       aboutSubtitle: '瞭解更多關於我們的歷史沿革、企業和永續發展倡議的資訊',
+    },
+    // 註冊頁
+    register: {
+      headerTitle: '加入阿聯酋航空 Skywards',
+      headerDesc: '每次旅行都能享有各種優惠。享受獎勵航班、艙位升等、專屬權益等優惠。',
     },
     // 設定頁
     settings: {
@@ -162,7 +168,15 @@ const messages = {
       totalMilesPoints: '消耗里程點數',
       mileageReward: '里程回饋',
       submit: '送出',
-    },  },
+    },
+    // 里程回饋訂單頁
+    mileageRewardOrders: {
+      title: '里程回饋紀錄',
+      empty: '尚無里程回饋紀錄',
+      errorLoad: '載入失敗，請稍後再試',
+      mileageReward: '里程回饋',
+    },
+  },
   'en': {
     // Navigation
     nav: {
@@ -177,6 +191,7 @@ const messages = {
       login: 'Login',
       register: 'Register',
       onlineCS: 'Customer Service',
+      emiratesSkywards: 'Skywards',
     },
     // Language options
     lang: {
@@ -204,8 +219,8 @@ const messages = {
     },
     // Home
     home: {
-      joinTitle: 'Join Emirates Skywards',
-      joinDesc: 'Become an Emirates Skywards member and enjoy flight rewards, upgrades and more',
+      joinTitle: 'Join Skywards',
+      joinDesc: 'Become a Skywards member and enjoy flight rewards, upgrades and more',
       joinBtn: 'Join Now',
       skywardsPlus: 'SKYWARDS+',
       upgradeTitle: 'Upgrade Your Benefits with Skywards+',
@@ -213,6 +228,11 @@ const messages = {
       moreInfo: 'More Info',
       aboutUs: 'About Us',
       aboutSubtitle: 'Learn more about our history, corporate culture and sustainability initiatives',
+    },
+    // Register page
+    register: {
+      headerTitle: 'Join Skywards',
+      headerDesc: 'Enjoy benefits on every trip. Earn reward flights, cabin upgrades, and exclusive privileges.',
     },
     // Settings
     settings: {
@@ -325,6 +345,13 @@ const messages = {
       totalMilesPoints: 'Miles Points Used',
       mileageReward: 'Mileage Reward',
       submit: 'Submit',
+    },
+    // Mileage Reward Orders page
+    mileageRewardOrders: {
+      title: 'Mileage Reward History',
+      empty: 'No mileage reward records',
+      errorLoad: 'Failed to load, please try again',
+      mileageReward: 'Mileage Reward',
     },
   },
 }

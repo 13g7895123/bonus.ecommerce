@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const isLoggedIn = ref(false)
 const announcements = ref([])
 
@@ -27,9 +29,9 @@ onMounted(async () => {
   <main v-if="!isLoggedIn" class="hero-section">
     <div class="hero-content">
       <img src="/coin.png" alt="Coin" class="coin-image" />
-      <h2 class="hero-subtitle">加入阿聯酋航空 Skywards</h2>
-      <h1 class="hero-description">成為阿聯酋航空 Skywards 會員，即可享有航班獎勵、升等及其他福利</h1>
-      <router-link to="/login" class="cta-button">立即加入</router-link>
+      <h2 class="hero-subtitle">{{ $t('home.joinTitle') }}</h2>
+      <h1 class="hero-description">{{ $t('home.joinDesc') }}</h1>
+      <router-link to="/login" class="cta-button">{{ $t('home.joinBtn') }}</router-link>
     </div>
   </main>
 

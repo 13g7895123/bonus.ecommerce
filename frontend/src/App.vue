@@ -172,7 +172,7 @@ const activeMenuLabel = computed(() => {
               <div v-else class="submenu-content">
                 <ul v-if="activeMenu === 'member'" class="submenu-list">
                   <li v-if="!isLoggedIn">
-                    <router-link to="/register" @click="isMenuOpen = false">{{ $t('nav.register') }} / {{ $t('nav.login') }} 阿聯酋航空 Skywards</router-link>
+                    <router-link to="/login" @click="isMenuOpen = false">{{ $t('nav.register') }} / {{ $t('nav.login') }} {{ $t('nav.emiratesSkywards') }}</router-link>
                   </li>
                   <li v-else>
                      <router-link to="/skywards" @click="isMenuOpen = false">Skywards {{ $t('nav.member') }}</router-link>
