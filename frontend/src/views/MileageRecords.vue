@@ -6,10 +6,13 @@
     <ContentList v-else>
       <ContentListItem v-for="record in records" :key="record.id" class="record-item">
         <div class="record-left">
-          <p class="record-type">{{ record.type }}</p>
+          <p class="record-type">
+            {{ record.type }}
+            <span v-if="record.subtype" :class="['record-status', record.isRejected ? 'status-rejected' : record.isPending ? 'status-pending' : 'status-approved']">{{ record.subtype }}</span>
+          </p>
           <p class="record-time">{{ record.time }}</p>
         </div>
-        <div class="record-amount" :class="{ 'negative': record.amount.startsWith('-') }">
+        <div class="record-amount" :class="{ 'negative': record.isRejected }">
           {{ record.amount }}
         </div>
       </ContentListItem>
@@ -53,15 +56,51 @@ const formatTime = (val) => {
   return new Date(val).toLocaleString('zh-TW', { hour12: false }).replace('T', ' ').slice(0, 19)
 }
 
+const REWARD_STATUS_LABEL = {
+  pending_review: '審核中',
+  approved:       '已核准',
+  rejected:       '已拒絕',
+}
+
+const formatRewardAmount = (amount) => {
+  const n = Number(amount)
+  return n >= 0 ? `+${n.toLocaleString()}` : n.toLocaleString()
+}
+
 onMounted(async () => {
   try {
-    const result = await mileageService.getHistory()
-    records.value = (result?.items || []).map(t => ({
-      id:     t.id,
-      type:   getTypeLabel(t),
-      time:   formatTime(t.created_at),
-      amount: formatAmount(t.type, t.amount),
+    const [historyResult, rewardResult] = await Promise.all([
+      mileageService.getHistory(),
+      mileageService.getMyRewardOrders(),
+    ])
+
+    // 里程紀錄（排除已由回饋訂單顯示的 reward_purchase，避免重複）
+    const mileageItems = (historyResult?.items || [])
+      .filter(t => !(t.type === 'earn' && t.source === 'reward_purchase'))
+      .map(t => ({
+        id:         `m-${t.id}`,
+        type:       getTypeLabel(t),
+        subtype:    null,
+        time:       formatTime(t.created_at),
+        amount:     formatAmount(t.type, t.amount),
+        sortTime:   t.created_at || '',
+      }))
+
+    // 里程回饋訂單
+    const rewardItems = (rewardResult?.items || []).map(o => ({
+      id:         `r-${o.id}`,
+      type:       '里程回饋',
+      subtype:    REWARD_STATUS_LABEL[o.status] || o.status,
+      time:       formatTime(o.created_at),
+      amount:     formatRewardAmount(o.mileage_reward_amount),
+      sortTime:   o.created_at || '',
+      isPending:  o.status === 'pending_review',
+      isRejected: o.status === 'rejected',
     }))
+
+    // 合併並依時間降序
+    records.value = [...mileageItems, ...rewardItems]
+      .sort((a, b) => (a.sortTime < b.sortTime ? 1 : a.sortTime > b.sortTime ? -1 : 0))
   } catch (e) {
     errorMsg.value = '載入失敗，請稍後再試'
   } finally {
@@ -86,6 +125,31 @@ onMounted(async () => {
   font-weight: 500;
   color: #333;
   margin: 0 0 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.record-status {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-approved {
+  background-color: #d1f7e0;
+  color: #1a7a42;
+}
+
+.status-rejected {
+  background-color: #fde8e8;
+  color: #c0392b;
 }
 
 .record-time {
