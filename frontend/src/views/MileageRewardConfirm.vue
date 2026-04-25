@@ -28,7 +28,7 @@
         </div>
         <div class="info-row">
           <span class="info-label">{{ t('mileageRewardConfirm.mileageReward') }}</span>
-          <span class="info-value reward">$ {{ totalMileageReward.toLocaleString() }}</span>
+          <span class="info-value reward">{{ totalMileageReward.toLocaleString() }}</span>
         </div>
       </div>
 
@@ -69,7 +69,9 @@ const totalMilesPoints = computed(() =>
   product.value ? Number(product.value.miles_points || 0) * quantity.value : 0
 )
 const totalMileageReward = computed(() =>
-  product.value ? Number(product.value.mileage_amount) * quantity.value : 0
+  product.value
+    ? Math.round(Number(product.value.price) * Number(product.value.mileage_amount) / 100 * quantity.value)
+    : 0
 )
 
 const submitPurchase = async () => {

@@ -11,8 +11,6 @@
           <!-- 產品圖片 -->
           <div class="product-image-wrap">
             <img :src="product.image_url || '/product-1.png'" :alt="product.name" class="product-image" />
-            <!-- 審核中徽章 -->
-            <span v-if="hasPendingOrder" class="pending-badge">{{ t('mileageRewards.pendingReview') }}</span>
           </div>
 
           <!-- 品名 -->
