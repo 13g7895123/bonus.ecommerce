@@ -46,7 +46,7 @@ const backPath  = computed(() => {
     const base = '/mileage-redemption'
     return route.query.from ? `${base}?from=${route.query.from}` : base
   }
-  return '/settings'
+  return '/skywards'
 })
 
 const loading       = ref(true)

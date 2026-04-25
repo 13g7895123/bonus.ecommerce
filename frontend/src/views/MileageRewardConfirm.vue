@@ -94,7 +94,12 @@ const submitPurchase = async () => {
       return
     }
     // 購買成功，返回里程回饋頁
-    router.replace('/mileage-rewards')
+    const q = new URLSearchParams()
+    if (route.query.item_id)   q.set('item_id',   route.query.item_id)
+    if (route.query.item_name) q.set('item_name', route.query.item_name)
+    if (route.query.from)      q.set('from',      route.query.from)
+    const qs = q.toString()
+    router.replace(`/mileage-rewards${qs ? '?' + qs : ''}`)
   } catch {
     errorMsg.value = t('common.error')
   } finally {

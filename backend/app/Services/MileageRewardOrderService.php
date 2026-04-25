@@ -41,7 +41,7 @@ class MileageRewardOrderService
 
         $totalPrice      = (float) $product['price']         * $quantity;
         $totalMilesPoints = (int)  $product['miles_points']  * $quantity;
-        $mileageReward   = (float) $product['mileage_amount'] * $quantity;
+        $mileageReward   = round((float) $product['price'] * (float) $product['mileage_amount'] / 100 * $quantity);
 
         // 驗證帳戶餘額
         if ((float) $wallet['balance'] < $totalPrice) {

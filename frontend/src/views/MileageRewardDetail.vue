@@ -185,7 +185,13 @@ const confirmPurchase = () => {
 
   router.push({
     path: '/mileage-reward-confirm',
-    query: { product_id: product.value.id, qty: quantity.value },
+    query: {
+      product_id: product.value.id,
+      qty: quantity.value,
+      ...(route.query.item_id   ? { item_id:   route.query.item_id }   : {}),
+      ...(route.query.item_name ? { item_name: route.query.item_name } : {}),
+      ...(route.query.from      ? { from:      route.query.from }      : {}),
+    },
   })
 }
 
