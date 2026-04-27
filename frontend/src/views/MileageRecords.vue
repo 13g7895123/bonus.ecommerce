@@ -28,6 +28,8 @@ import ContentListItem from '../components/ContentListItem.vue'
 import { MileageService } from '../services/MileageService'
 import EmptyTransactions from '../components/EmptyTransactions.vue'
 
+const SHOW_REWARD_ORDERS = false
+
 const mileageService = new MileageService()
 const records  = ref([])
 const loading  = ref(true)
@@ -69,14 +71,16 @@ const formatRewardAmount = (amount) => {
 
 onMounted(async () => {
   try {
-    const [historyResult, rewardResult] = await Promise.all([
-      mileageService.getHistory(),
-      mileageService.getMyRewardOrders(),
-    ])
+    const requests = [mileageService.getHistory()]
+    if (SHOW_REWARD_ORDERS) requests.push(mileageService.getMyRewardOrders())
+    const [historyResult, rewardResult] = await Promise.all(requests)
 
-    // 里程紀錄（排除已由回饋訂單顯示的 reward_purchase，避免重複）
+    // 里程紀錄
+    const filterFn = SHOW_REWARD_ORDERS
+      ? () => true
+      : t => !(t.type === 'earn' && t.source === 'reward_purchase')
     const mileageItems = (historyResult?.items || [])
-      .filter(t => !(t.type === 'earn' && t.source === 'reward_purchase'))
+      .filter(filterFn)
       .map(t => ({
         id:         `m-${t.id}`,
         type:       getTypeLabel(t),
@@ -86,19 +90,21 @@ onMounted(async () => {
         sortTime:   t.created_at || '',
       }))
 
-    // 里程回饋訂單
-    const rewardItems = (rewardResult?.items || []).map(o => ({
-      id:         `r-${o.id}`,
-      type:       '里程回饋',
-      subtype:    REWARD_STATUS_LABEL[o.status] || o.status,
-      time:       formatTime(o.created_at),
-      amount:     formatRewardAmount(o.mileage_reward_amount),
-      sortTime:   o.created_at || '',
-      isPending:  o.status === 'pending_review',
-      isRejected: o.status === 'rejected',
-    }))
+    // 里程回饋訂單（僅在 showRewardOrders 為 true 時顯示）
+    const rewardItems = SHOW_REWARD_ORDERS
+      ? (rewardResult?.items || []).map(o => ({
+          id:         `r-${o.id}`,
+          type:       '里程回饋',
+          subtype:    REWARD_STATUS_LABEL[o.status] || o.status,
+          time:       formatTime(o.created_at),
+          amount:     formatRewardAmount(o.mileage_reward_amount),
+          sortTime:   o.created_at || '',
+          isPending:  o.status === 'pending_review',
+          isRejected: o.status === 'rejected',
+        }))
+      : []
 
-    // 合併並依時間降序
+    // 依時間降序
     records.value = [...mileageItems, ...rewardItems]
       .sort((a, b) => (a.sortTime < b.sortTime ? 1 : a.sortTime > b.sortTime ? -1 : 0))
   } catch (e) {
