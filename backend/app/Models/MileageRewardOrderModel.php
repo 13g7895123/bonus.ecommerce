@@ -12,7 +12,7 @@ class MileageRewardOrderModel extends Model
     protected $allowedFields = [
         'user_id', 'product_id', 'product_name', 'product_image_url',
         'quantity', 'unit_price', 'unit_miles_points',
-        'total_price', 'total_miles_points', 'mileage_reward_amount',
+        'total_price', 'total_miles_points', 'mileage_reward_amount', 'cash_reward_amount',
         'status', 'review_note', 'reviewed_at',
     ];
 

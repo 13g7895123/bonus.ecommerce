@@ -37,7 +37,7 @@ class MileageRewardProductService
 
     public function create(array $data): array
     {
-        $allowed = ['mileage_item_id', 'name', 'image_url', 'price', 'mileage_amount', 'miles_points', 'stock', 'is_active', 'sort_order'];
+        $allowed = ['mileage_item_id', 'name', 'image_url', 'price', 'mileage_amount', 'miles_points', 'stock', 'purchase_target', 'is_active', 'sort_order'];
         $insert  = array_intersect_key($data, array_flip($allowed));
 
         $id = $this->repo->create($insert);
@@ -51,7 +51,7 @@ class MileageRewardProductService
             return ['success' => false, 'message' => 'Product not found'];
         }
 
-        $allowed = ['mileage_item_id', 'name', 'image_url', 'price', 'mileage_amount', 'miles_points', 'stock', 'is_active', 'sort_order'];
+        $allowed = ['mileage_item_id', 'name', 'image_url', 'price', 'mileage_amount', 'miles_points', 'stock', 'purchase_target', 'is_active', 'sort_order'];
         $update  = array_intersect_key($data, array_flip($allowed));
 
         $this->repo->update($id, $update);

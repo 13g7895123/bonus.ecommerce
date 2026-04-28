@@ -17,7 +17,10 @@ class MileageRewardOrderService
     ) {}
 
     /**
-     * 購買驗證 + 建立訂單
+     * 購買驗證 + 建立訂單（pending_review）
+     * 規則：
+     *  - 不在此扣現金、扣里程，僅鎖定庫存
+     *  - 現金與里程的實際異動延後到 reviewOrder() 通過時
      */
     public function purchase(int $userId, int $productId, int $quantity): array
     {
@@ -39,35 +42,17 @@ class MileageRewardOrderService
             return ['success' => false, 'message' => '找不到錢包資訊'];
         }
 
-        $totalPrice      = (float) $product['price']         * $quantity;
-        $totalMilesPoints = (int)  $product['miles_points']  * $quantity;
-        $mileageReward   = round((float) $product['price'] * (float) $product['mileage_amount'] / 100 * $quantity);
+        $totalPrice       = (float) $product['price']        * $quantity;
+        $totalMilesPoints = (int)   $product['miles_points'] * $quantity;
+        // 現金回饋金額 = 售價 × 回饋% × 數量
+        $cashReward       = round((float) $product['price'] * (float) $product['mileage_amount'] / 100 * $quantity, 2);
 
-        // 驗證帳戶餘額
-        if ((float) $wallet['balance'] < $totalPrice) {
-            return ['success' => false, 'message' => '帳戶餘額不足，無法購買', 'code' => 'insufficient_balance'];
-        }
-
-        // 驗證里程點數
-        if ((int) $wallet['miles_balance'] < $totalMilesPoints) {
-            return ['success' => false, 'message' => '里程點數不足，無法購買', 'code' => 'insufficient_miles'];
-        }
-
-        // 扣除餘額與里程點數
-        $newBalance      = (float) $wallet['balance']       - $totalPrice;
-        $newMilesBalance = (int)   $wallet['miles_balance'] - $totalMilesPoints;
-
-        $this->walletRepo->updateByUserId($userId, [
-            'balance'       => $newBalance,
-            'miles_balance' => $newMilesBalance,
-        ]);
-
-        // 減少庫存
+        // 鎖定庫存（避免併發超賣）
         $this->productRepo->update($productId, [
             'stock' => (int) $product['stock'] - $quantity,
         ]);
 
-        // 建立訂單（待審核狀態）
+        // 建立訂單（待審核狀態，現金與里程尚未異動）
         $orderId = $this->orderRepo->create([
             'user_id'              => $userId,
             'product_id'           => $productId,
@@ -78,14 +63,15 @@ class MileageRewardOrderService
             'unit_miles_points'    => $product['miles_points'],
             'total_price'          => $totalPrice,
             'total_miles_points'   => $totalMilesPoints,
-            'mileage_reward_amount'=> $mileageReward,
+            'mileage_reward_amount'=> 0,
+            'cash_reward_amount'   => $cashReward,
             'status'               => 'pending_review',
         ]);
 
         return [
             'success'  => true,
             'order_id' => $orderId,
-            'message'  => '購買成功，等待審核',
+            'message'  => '已送出，訂單審核中',
         ];
     }
 
@@ -117,35 +103,45 @@ class MileageRewardOrderService
 
         $newStatus = $action === 'approve' ? 'approved' : 'rejected';
 
-        // 若審核通過，發放里程回饋
+        // 審核通過：扣里程、入帳「商品金額 + 現金回饋」
         if ($action === 'approve') {
-            $rewardAmount = (int) $order['mileage_reward_amount'];
-            if ($rewardAmount > 0) {
-                $wallet = $this->walletRepo->findByUserId($order['user_id']);
-                if ($wallet) {
-                    $this->walletRepo->updateByUserId($order['user_id'], [
-                        'miles_balance' => (int) $wallet['miles_balance'] + $rewardAmount,
-                    ]);
-                }
+            $wallet = $this->walletRepo->findByUserId($order['user_id']);
+            if (!$wallet) {
+                return ['success' => false, 'message' => '找不到使用者錢包', 'code' => 'wallet_not_found'];
+            }
+
+            $totalMilesPoints = (int)   $order['total_miles_points'];
+            $totalPrice       = (float) $order['total_price'];
+            $cashReward       = (float) ($order['cash_reward_amount'] ?? 0);
+
+            // 里程不足直接擋下，不變更狀態
+            if ((int) $wallet['miles_balance'] < $totalMilesPoints) {
+                return [
+                    'success' => false,
+                    'message' => '使用者里程點數不足，無法核准此訂單',
+                    'code'    => 'insufficient_miles',
+                    'status'  => 422,
+                ];
+            }
+
+            $this->walletRepo->updateByUserId($order['user_id'], [
+                'balance'       => (float) $wallet['balance']       + $totalPrice + $cashReward,
+                'miles_balance' => (int)   $wallet['miles_balance'] - $totalMilesPoints,
+            ]);
+
+            // 紀錄里程扣減
+            if ($totalMilesPoints > 0) {
                 $this->mileageRepo->create([
                     'user_id' => $order['user_id'],
-                    'type'    => 'earn',
-                    'amount'  => $rewardAmount,
+                    'type'    => 'spend',
+                    'amount'  => $totalMilesPoints,
                     'source'  => 'reward_purchase',
                 ]);
             }
         }
 
-        // 若拒絕，退還餘額與里程點數
+        // 拒絕：購買時並未扣現金/里程，只需還回庫存
         if ($action === 'reject') {
-            $wallet = $this->walletRepo->findByUserId($order['user_id']);
-            if ($wallet) {
-                $this->walletRepo->updateByUserId($order['user_id'], [
-                    'balance'       => (float) $wallet['balance']       + (float) $order['total_price'],
-                    'miles_balance' => (int)   $wallet['miles_balance'] + (int)   $order['total_miles_points'],
-                ]);
-            }
-            // 退還庫存
             $product = $this->productRepo->find($order['product_id']);
             if ($product) {
                 $this->productRepo->update($order['product_id'], [
@@ -160,6 +156,6 @@ class MileageRewardOrderService
             'reviewed_at' => date('Y-m-d H:i:s'),
         ]);
 
-        return ['success' => true, 'message' => $action === 'approve' ? '已審核通過' : '已拒絕並退款'];
+        return ['success' => true, 'message' => $action === 'approve' ? '已審核通過並入帳' : '已拒絕'];
     }
 }

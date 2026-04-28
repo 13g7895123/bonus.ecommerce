@@ -359,7 +359,11 @@ class AdminPanelController extends Controller
         $action = $data['action'] ?? '';
         $note   = $data['note'] ?? null;
         $result = (new MileageRewardOrderService())->reviewOrder($id, $action, $note);
-        return $this->json($result, $result['success'] ? 200 : 400);
+        if ($result['success']) {
+            return $this->json($result, 200);
+        }
+        $status = isset($result['status']) ? (int) $result['status'] : 400;
+        return $this->json($result, $status);
     }
 
     // ── Skywards Benefits ─────────────────────────────────────────────────────

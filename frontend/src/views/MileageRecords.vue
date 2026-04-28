@@ -28,7 +28,7 @@ import ContentListItem from '../components/ContentListItem.vue'
 import { MileageService } from '../services/MileageService'
 import EmptyTransactions from '../components/EmptyTransactions.vue'
 
-const SHOW_REWARD_ORDERS = false
+const SHOW_REWARD_ORDERS = true
 
 const mileageService = new MileageService()
 const records  = ref([])

@@ -19,7 +19,7 @@
         <thead>
           <tr>
             <th>#</th><th>用戶 ID</th><th>商品</th><th>數量</th>
-            <th>總金額</th><th>消耗點數</th><th>里程回饋</th>
+            <th>總金額</th><th>消耗里程</th><th>現金回饋</th>
             <th>狀態</th><th>時間</th><th>操作</th>
           </tr>
         </thead>
@@ -31,7 +31,7 @@
             <td class="td-num">{{ order.quantity }}</td>
             <td class="td-num">${{ Number(order.total_price).toLocaleString() }}</td>
             <td class="td-num">{{ Number(order.total_miles_points).toLocaleString() }}</td>
-            <td class="td-num">${{ Number(order.mileage_reward_amount).toLocaleString() }}</td>
+            <td class="td-num">${{ Number(order.cash_reward_amount ?? order.mileage_reward_amount ?? 0).toLocaleString() }}</td>
             <td>
               <span :class="['badge', order.status === 'approved' ? 'badge-green' : order.status === 'rejected' ? 'badge-red' : 'badge-yellow']">
                 {{ order.status === 'approved' ? '已批准' : order.status === 'rejected' ? '已拒絕' : '待審核' }}

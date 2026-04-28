@@ -16,10 +16,11 @@
         </div>
         <div class="product-info">
           <div class="info-row name">{{ item.name }}</div>
-          <div class="info-row gray">{{ t('mileageRewards.mileageReward') }}{{ Math.round(Number(item.mileage_amount) / Number(item.price) * 100) }}%(${{ Number(item.mileage_amount).toLocaleString() }})</div>
+          <div class="info-row gray">{{ t('mileageRewards.mileageReward') }}{{ Number(item.mileage_amount || 0).toFixed(0) }}%(${{ Math.round(Number(item.price) * Number(item.mileage_amount || 0) / 100).toLocaleString() }})</div>
           <div class="info-row red">${{ Number(item.price).toLocaleString() }}</div>
           <div class="info-row red">{{ t('mileageRewards.milesPoints') }}:<span class="red-text">{{ Number(item.miles_points || 0).toLocaleString() }}</span></div>
           <div class="info-row gray">數量：{{ item.stock }}</div>
+          <div v-if="Number(item.purchase_target || 0) > 0" class="info-row gray">已購買人數達 {{ Number(item.purchase_target).toLocaleString() }}</div>
         </div>
       </div>
     </div>

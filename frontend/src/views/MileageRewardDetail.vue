@@ -51,7 +51,7 @@
             </div>
             <div class="amount-row">
               <span class="amount-label">回饋（{{ mileagePercent }}%）</span>
-              <span class="amount-value green">{{ mileageReward.toLocaleString() }}</span>
+              <span class="amount-value green">$ {{ mileageReward.toLocaleString() }}</span>
             </div>
           </div>
 
@@ -171,17 +171,7 @@ const incQty = () => {
 
 const confirmPurchase = () => {
   errorMsg.value = ''
-  const totalPrice = Number(product.value.price) * quantity.value
-  const totalMiles = Number(product.value.miles_points || 0) * quantity.value
-
-  if (balance.value < totalPrice) {
-    errorMsg.value = t('mileageRewards.errInsuffBalance')
-    return
-  }
-  if (milesBalance.value < totalMiles) {
-    errorMsg.value = t('mileageRewards.errInsuffMiles')
-    return
-  }
+  // 規則：購買瞬間不扣現金與里程，於審核通過後才異動，故此處不再前置驗證
 
   router.push({
     path: '/mileage-reward-confirm',

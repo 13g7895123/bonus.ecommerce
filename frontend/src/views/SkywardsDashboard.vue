@@ -8,6 +8,7 @@ const api = useApi()
 const toast = useToast()
 const router = useRouter()
 const user = ref(null)
+const mileageTotal = ref(0)
 const activeTab = ref('miles') // 'miles' or 'tier'
 const showModal = ref(false)
 const tierCardDescs = ref({
@@ -16,6 +17,11 @@ const tierCardDescs = ref({
   platinum: '',
 })
 const benefitsHtml = ref('')
+
+const todayLabel = computed(() => {
+  const d = new Date()
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+})
 
 const TIER_ORDER = ['blue', 'silver', 'gold', 'platinum']
 const TIER_NAMES = { blue: '藍卡', silver: '銀卡', gold: '金卡', platinum: '白金卡' }
@@ -81,6 +87,20 @@ onMounted(async () => {
   } catch (e) {
     toast.error('無法載入使用者資訊')
   }
+  // 計算里程紀錄總和（earn 為正、spend 為負）
+  try {
+    const token = localStorage.getItem('token') || ''
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    const res = await fetch('/api/v1/mileage/history?page=1&limit=1000', { headers })
+    if (res.ok) {
+      const json = await res.json()
+      const items = json.items || json.data?.items || []
+      mileageTotal.value = items.reduce((sum, t) => {
+        const n = Number(t.amount || 0)
+        return sum + (t.type === 'spend' ? -Math.abs(n) : Math.abs(n))
+      }, 0)
+    }
+  } catch {}
   await loadConfigs()
 })
 </script>
@@ -167,7 +187,7 @@ onMounted(async () => {
           </div>
         </div>
         
-        <p class="tier-update-hint">截至2026年2月21日為止,您已擁有0級哩程數</p>
+        <p class="tier-update-hint">截至{{ todayLabel }}為止,您已擁有{{ mileageTotal.toLocaleString() }}哩程數</p>
         <button class="view-benefits-btn" @click="openModal">檢視您的權益</button>
       </div>
     </section>

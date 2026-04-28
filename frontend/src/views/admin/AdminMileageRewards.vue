@@ -16,7 +16,7 @@
       <div v-if="loadingRewardProducts" class="state-msg">載入中...</div>
       <div v-else-if="rewardProductsList.length === 0" class="state-msg">尚無商品</div>
       <table v-else class="data-table">
-        <thead><tr><th>所屬對換項目</th><th>商品名稱</th><th>圖片</th><th>售僳</th><th>里程回饋</th><th>里程點數</th><th>庫存</th><th>狀態</th><th>排序</th><th>操作</th></tr></thead>
+        <thead><tr><th>所屬對換項目</th><th>商品名稱</th><th>圖片</th><th>售價</th><th>現金回饋</th><th>里程點數</th><th>庫存</th><th>已購買門檻</th><th>狀態</th><th>排序</th><th>操作</th></tr></thead>
         <tbody>
           <tr v-for="item in rewardProductsList" :key="item.id">
             <td>{{ itemName(item.mileage_item_id) }}</td>
@@ -29,6 +29,7 @@
             <td class="td-num">{{ itemMileageAmount(item.mileage_item_id) }}%</td>
             <td class="td-num">{{ item.miles_points ?? 0 }}</td>
             <td class="td-num">{{ item.stock }}</td>
+            <td class="td-num">{{ item.purchase_target ?? 0 }}</td>
             <td><span :class="['badge', item.is_active == 1 ? 'badge-green' : 'badge-red']">{{ item.is_active == 1 ? '啟用' : '停用' }}</span></td>
             <td>{{ item.sort_order }}</td>
             <td class="td-actions">
@@ -71,20 +72,23 @@
             <input v-model.number="rewardProductForm.price" class="f-input" type="number" min="0" step="0.01" placeholder="1880" />
           </div>
           <div style="flex:1">
-            <label class="f-label">里程回饋 (%)</label>
+            <label class="f-label">現金回饋 (%)</label>
             <input :value="selectedItemMileageAmount" class="f-input" type="number" readonly
               style="background:#f8fafc;color:#64748b;cursor:not-allowed" />
           </div>
           <div style="flex:1">
-            <label class="f-label">里程點數 <span style="font-size:0.75rem;color:#94a3b8">(自動計算)</span></label>
-            <input :value="rewardProductForm.miles_points" class="f-input" type="number" readonly
-              style="background:#f8fafc;color:#64748b;cursor:not-allowed" />
+            <label class="f-label">里程 <span style="font-size:0.75rem;color:#94a3b8">(購買扣除)</span></label>
+            <input v-model.number="rewardProductForm.miles_points" class="f-input" type="number" min="0" placeholder="0" />
           </div>
         </div>
         <div style="display:flex;gap:1rem;margin-top:0.75rem;align-items:flex-end">
           <div style="flex:1">
             <label class="f-label">庫存數量</label>
             <input v-model.number="rewardProductForm.stock" class="f-input" type="number" min="0" placeholder="100" />
+          </div>
+          <div style="flex:1">
+            <label class="f-label">已購買人數門檻 N</label>
+            <input v-model.number="rewardProductForm.purchase_target" class="f-input" type="number" min="0" placeholder="0" />
           </div>
           <div style="flex:1">
             <label class="f-label">排序</label>
@@ -105,7 +109,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { RefreshCw, Plus } from 'lucide-vue-next'
 import { fileService } from '../../services/FileService'
 
@@ -114,7 +118,7 @@ const rewardProductsList    = ref([])
 const loadingRewardProducts = ref(false)
 const rewardDetailDisplayStyle = ref('default')
 const rewardImgUploading       = ref(false)
-const rewardProductForm = ref({ show: false, id: null, mileage_item_id: '', name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0, submitting: false })
+const rewardProductForm = ref({ show: false, id: null, mileage_item_id: '', name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, purchase_target: 0, is_active: 1, sort_order: 0, submitting: false })
 
 const itemName = (id) => {
   const found = mileageItemsList.value.find(mi => Number(mi.id) === Number(id))
@@ -169,10 +173,10 @@ const saveRewardDisplayStyle = async () => {
 const openRewardProductForm = (item = null) => {
   rewardImgUploading.value = false
   if (item) {
-    rewardProductForm.value = { show: true, submitting: false, id: item.id, mileage_item_id: item.mileage_item_id || '', name: item.name, image_url: item.image_url || '', price: Number(item.price), mileage_amount: Number(item.mileage_amount), miles_points: Number(item.miles_points || 0), stock: Number(item.stock), is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
+    rewardProductForm.value = { show: true, submitting: false, id: item.id, mileage_item_id: item.mileage_item_id || '', name: item.name, image_url: item.image_url || '', price: Number(item.price), mileage_amount: Number(item.mileage_amount), miles_points: Number(item.miles_points || 0), stock: Number(item.stock), purchase_target: Number(item.purchase_target || 0), is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
   } else {
     const defaultItemId = mileageItemsList.value.length > 0 ? mileageItemsList.value[0].id : ''
-    rewardProductForm.value = { show: true, submitting: false, id: null, mileage_item_id: defaultItemId, name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, is_active: 1, sort_order: 0 }
+    rewardProductForm.value = { show: true, submitting: false, id: null, mileage_item_id: defaultItemId, name: '', image_url: '', price: 0, mileage_amount: 0, miles_points: 0, stock: 0, purchase_target: 0, is_active: 1, sort_order: 0 }
   }
 }
 
@@ -194,7 +198,7 @@ const submitRewardProduct = async () => {
   try {
     const url    = f.id ? `/api/v1/admin-panel/mileage-reward-products/${f.id}` : '/api/v1/admin-panel/mileage-reward-products'
     const method = f.id ? 'PUT' : 'POST'
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mileage_item_id: f.mileage_item_id || null, name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: selectedItemMileageAmount.value, miles_points: f.miles_points, stock: f.stock, is_active: f.is_active, sort_order: f.sort_order }) })
+    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mileage_item_id: f.mileage_item_id || null, name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: selectedItemMileageAmount.value, miles_points: f.miles_points, stock: f.stock, purchase_target: f.purchase_target, is_active: f.is_active, sort_order: f.sort_order }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
     f.show = false
     await loadRewardProducts()
@@ -206,19 +210,6 @@ const deleteRewardProduct = async (id) => {
   await fetch(`/api/v1/admin-panel/mileage-reward-products/${id}`, { method: 'DELETE' })
   await loadRewardProducts()
 }
-
-// 里程回饋 (%) 輸入時自動計算里程點數
-watch(
-  () => [rewardProductForm.value.price, rewardProductForm.value.mileage_item_id],
-  ([price]) => {
-    if (!rewardProductForm.value.show) return
-    const p = Number(price)
-    const a = selectedItemMileageAmount.value
-    if (p > 0 && a >= 0) {
-      rewardProductForm.value.miles_points = Math.round(p * a / 100)
-    }
-  }
-)
 
 onMounted(() => {
   loadMileageItems()
