@@ -67,7 +67,7 @@ const messages = {
       myMail: '我的信件',
       transactions: '交易紀錄',
       withdrawal: '提款申請',
-      mileageRewards: '里程回饋',
+      mileageRewards: '現金回饋',
       customerService: '在線客服',
       countryLanguage: '國家/地區和語言',
       logout: '登出',
@@ -171,10 +171,13 @@ const messages = {
     },
     // 里程回饋訂單頁
     mileageRewardOrders: {
-      title: '里程回饋紀錄',
-      empty: '尚無里程回饋紀錄',
+      title: '現金回饋紀錄',
+      empty: '尚無現金回饋紀錄',
       errorLoad: '載入失敗，請稍後再試',
-      mileageReward: '里程回饋',
+      cashReward: '現金回饋',
+      pendingReview: '審核中',
+      approved: '已核准',
+      rejected: '已拒絕',
     },
   },
   'en': {
@@ -243,7 +246,7 @@ const messages = {
       myMail: 'My Mail',
       transactions: 'Transactions',
       withdrawal: 'Withdrawal',
-      mileageRewards: 'Mileage Rewards',
+      mileageRewards: 'Cash Rewards',
       customerService: 'Customer Service',
       countryLanguage: 'Country/Region & Language',
       logout: 'Logout',
@@ -348,10 +351,13 @@ const messages = {
     },
     // Mileage Reward Orders page
     mileageRewardOrders: {
-      title: 'Mileage Reward History',
-      empty: 'No mileage reward records',
+      title: 'Cash Reward History',
+      empty: 'No cash reward records',
       errorLoad: 'Failed to load, please try again',
-      mileageReward: 'Mileage Reward',
+      cashReward: 'Cash Reward',
+      pendingReview: 'Under Review',
+      approved: 'Approved',
+      rejected: 'Rejected',
     },
   },
 }

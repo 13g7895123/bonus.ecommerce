@@ -14,8 +14,11 @@
             alt=""
           />
           <div v-else class="mro-img-placeholder"></div>
-          <span class="mro-name">{{ order.product_name }}</span>
-          <span class="mro-miles">{{ t('mileageRewardOrders.mileageReward') }} +{{ Number(order.mileage_reward_amount).toLocaleString() }}</span>
+          <div class="mro-info">
+            <span class="mro-name">{{ order.product_name }}</span>
+            <span :class="['mro-status', `mro-status--${order.status}`]">{{ statusLabel(order.status) }}</span>
+          </div>
+          <span class="mro-cash">{{ t('mileageRewardOrders.cashReward') }} +${{ Number(order.cash_reward_amount).toLocaleString() }}</span>
         </div>
       </div>
     </div>
@@ -39,10 +42,16 @@ const formatTime = (val) => {
   return new Date(val).toLocaleString(locale.value, { hour12: false }).slice(0, 19)
 }
 
+const statusLabel = (status) => {
+  const key = status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'pendingReview'
+  return t(`mileageRewardOrders.${key}`)
+}
+
 onMounted(async () => {
   try {
     const result = await mileageService.getMyRewardOrders()
-    orders.value = result?.items || []
+    orders.value = (result?.items || [])
+      .filter(order => Number(order.cash_reward_amount || 0) > 0)
   } catch (e) {
     errorMsg.value = t('mileageRewardOrders.errorLoad')
   } finally {
@@ -104,14 +113,39 @@ onMounted(async () => {
   background: #f0f0f0;
   flex-shrink: 0;
 }
-.mro-name {
+.mro-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.mro-name {
   font-size: 0.9rem;
   font-weight: 500;
   color: #333;
   line-height: 1.3;
 }
-.mro-miles {
+.mro-status {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.mro-status--pending_review {
+  background: #fff3cd;
+  color: #856404;
+}
+.mro-status--approved {
+  background: #d1f7e0;
+  color: #1a7a42;
+}
+.mro-status--rejected {
+  background: #fde8e8;
+  color: #c0392b;
+}
+.mro-cash {
   font-size: 0.95rem;
   font-weight: 700;
   color: #27ae60;

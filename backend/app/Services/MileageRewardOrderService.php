@@ -19,8 +19,8 @@ class MileageRewardOrderService
     /**
      * 購買驗證 + 建立訂單（pending_review）
      * 規則：
-     *  - 不在此扣現金、扣里程，僅鎖定庫存
-     *  - 現金與里程的實際異動延後到 reviewOrder() 通過時
+      *  - 此時先扣商品金額並鎖定庫存
+      *  - 里程扣除與現金回饋延後到 reviewOrder() 通過時
      */
     public function purchase(int $userId, int $productId, int $quantity): array
     {
@@ -47,12 +47,20 @@ class MileageRewardOrderService
         // 現金回饋金額 = 售價 × 回饋% × 數量
         $cashReward       = round((float) $product['price'] * (float) $product['mileage_amount'] / 100 * $quantity, 2);
 
+        if ((float) $wallet['balance'] < $totalPrice) {
+            return ['success' => false, 'message' => '帳戶餘額不足，無法購買', 'code' => 'insufficient_balance'];
+        }
+
+        $this->walletRepo->updateByUserId($userId, [
+            'balance' => (float) $wallet['balance'] - $totalPrice,
+        ]);
+
         // 鎖定庫存（避免併發超賣）
         $this->productRepo->update($productId, [
             'stock' => (int) $product['stock'] - $quantity,
         ]);
 
-        // 建立訂單（待審核狀態，現金與里程尚未異動）
+        // 建立訂單（待審核狀態，現金已先扣，里程尚未異動）
         $orderId = $this->orderRepo->create([
             'user_id'              => $userId,
             'product_id'           => $productId,
@@ -103,7 +111,7 @@ class MileageRewardOrderService
 
         $newStatus = $action === 'approve' ? 'approved' : 'rejected';
 
-        // 審核通過：扣里程、入帳「商品金額 + 現金回饋」
+        // 審核通過：扣里程、加回「商品金額 + 現金回饋」
         if ($action === 'approve') {
             $wallet = $this->walletRepo->findByUserId($order['user_id']);
             if (!$wallet) {
@@ -140,8 +148,17 @@ class MileageRewardOrderService
             }
         }
 
-        // 拒絕：購買時並未扣現金/里程，只需還回庫存
+        // 拒絕：退回購買時先扣的商品金額，並還回庫存
         if ($action === 'reject') {
+            $wallet = $this->walletRepo->findByUserId($order['user_id']);
+            if (!$wallet) {
+                return ['success' => false, 'message' => '找不到使用者錢包', 'code' => 'wallet_not_found'];
+            }
+
+            $this->walletRepo->updateByUserId($order['user_id'], [
+                'balance' => (float) $wallet['balance'] + (float) $order['total_price'],
+            ]);
+
             $product = $this->productRepo->find($order['product_id']);
             if ($product) {
                 $this->productRepo->update($order['product_id'], [
@@ -156,6 +173,6 @@ class MileageRewardOrderService
             'reviewed_at' => date('Y-m-d H:i:s'),
         ]);
 
-        return ['success' => true, 'message' => $action === 'approve' ? '已審核通過並入帳' : '已拒絕'];
+        return ['success' => true, 'message' => $action === 'approve' ? '已審核通過並入帳' : '已拒絕並退款'];
     }
 }

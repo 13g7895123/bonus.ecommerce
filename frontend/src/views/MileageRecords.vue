@@ -28,8 +28,6 @@ import ContentListItem from '../components/ContentListItem.vue'
 import { MileageService } from '../services/MileageService'
 import EmptyTransactions from '../components/EmptyTransactions.vue'
 
-const SHOW_REWARD_ORDERS = true
-
 const mileageService = new MileageService()
 const records  = ref([])
 const loading  = ref(true)
@@ -37,11 +35,9 @@ const errorMsg = ref('')
 
 const TYPE_LABEL = {
   earn:  '里程代碼兌換',
-  spend: '里程使用',
 }
 
 const getTypeLabel = (t) => {
-  if (t.type === 'earn' && t.source === 'reward_purchase') return '里程回饋'
   return TYPE_LABEL[t.type] || t.type || '里程交易'
 }
 
@@ -58,29 +54,13 @@ const formatTime = (val) => {
   return new Date(val).toLocaleString('zh-TW', { hour12: false }).replace('T', ' ').slice(0, 19)
 }
 
-const REWARD_STATUS_LABEL = {
-  pending_review: '審核中',
-  approved:       '已核准',
-  rejected:       '已拒絕',
-}
-
-const formatRewardAmount = (amount) => {
-  const n = Number(amount)
-  return n >= 0 ? `+${n.toLocaleString()}` : n.toLocaleString()
-}
-
 onMounted(async () => {
   try {
-    const requests = [mileageService.getHistory()]
-    if (SHOW_REWARD_ORDERS) requests.push(mileageService.getMyRewardOrders())
-    const [historyResult, rewardResult] = await Promise.all(requests)
+    const historyResult = await mileageService.getHistory({ limit: 1000 })
 
-    // 里程紀錄
-    const filterFn = SHOW_REWARD_ORDERS
-      ? () => true
-      : t => !(t.type === 'earn' && t.source === 'reward_purchase')
+    // 僅顯示里程代碼兌換紀錄
     const mileageItems = (historyResult?.items || [])
-      .filter(filterFn)
+      .filter(t => t.type === 'earn' && t.source === 'code_redeem')
       .map(t => ({
         id:         `m-${t.id}`,
         type:       getTypeLabel(t),
@@ -90,22 +70,8 @@ onMounted(async () => {
         sortTime:   t.created_at || '',
       }))
 
-    // 里程回饋訂單（僅在 showRewardOrders 為 true 時顯示）
-    const rewardItems = SHOW_REWARD_ORDERS
-      ? (rewardResult?.items || []).map(o => ({
-          id:         `r-${o.id}`,
-          type:       '里程回饋',
-          subtype:    REWARD_STATUS_LABEL[o.status] || o.status,
-          time:       formatTime(o.created_at),
-          amount:     formatRewardAmount(o.mileage_reward_amount),
-          sortTime:   o.created_at || '',
-          isPending:  o.status === 'pending_review',
-          isRejected: o.status === 'rejected',
-        }))
-      : []
-
     // 依時間降序
-    records.value = [...mileageItems, ...rewardItems]
+    records.value = mileageItems
       .sort((a, b) => (a.sortTime < b.sortTime ? 1 : a.sortTime > b.sortTime ? -1 : 0))
   } catch (e) {
     errorMsg.value = '載入失敗，請稍後再試'

@@ -171,7 +171,12 @@ const incQty = () => {
 
 const confirmPurchase = () => {
   errorMsg.value = ''
-  // 規則：購買瞬間不扣現金與里程，於審核通過後才異動，故此處不再前置驗證
+  const totalPrice = Number(product.value.price) * quantity.value
+
+  if (balance.value < totalPrice) {
+    errorMsg.value = t('mileageRewards.errInsuffBalance')
+    return
+  }
 
   router.push({
     path: '/mileage-reward-confirm',
