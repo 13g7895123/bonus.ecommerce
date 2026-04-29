@@ -232,7 +232,7 @@ onMounted(loadData)
   font-size: 0.75rem;
   font-weight: 700;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: 999px;
   line-height: 1.4;
   letter-spacing: 0.01em;
   box-shadow: 0 1px 4px rgba(255,107,53,0.35);
