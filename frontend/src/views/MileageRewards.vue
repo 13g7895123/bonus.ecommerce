@@ -224,16 +224,19 @@ onMounted(loadData)
 }
 
 .purchase-target-badge {
-  display: inline-block;
+  display: block;
+  width: 100%;
   margin-top: 0.35rem;
   background: linear-gradient(135deg, #ff6b35, #f7c59f);
   color: #7a2400;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 3px 8px;
-  border-radius: 999px;
+  border-radius: 6px;
   line-height: 1.4;
   letter-spacing: 0.01em;
   box-shadow: 0 1px 4px rgba(255,107,53,0.35);
+  text-align: center;
+  box-sizing: border-box;
 }
 </style>
