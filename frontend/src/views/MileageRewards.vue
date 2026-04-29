@@ -20,7 +20,9 @@
           <div class="info-row red">${{ Number(item.price).toLocaleString() }}</div>
           <div class="info-row red">{{ t('mileageRewards.milesPoints') }}:<span class="red-text">{{ Number(item.miles_points || 0).toLocaleString() }}</span></div>
           <div class="info-row gray">數量：{{ item.stock }}</div>
-          <div v-if="Number(item.purchase_target || 0) > 0" class="info-row gray">已購買人數達 {{ Number(item.purchase_target).toLocaleString() }}</div>
+          <div v-if="Number(item.purchase_target || 0) > 0" class="purchase-target-badge">
+            🔥 已購買人數達 {{ Number(item.purchase_target).toLocaleString() }}
+          </div>
         </div>
       </div>
     </div>
@@ -219,5 +221,19 @@ onMounted(loadData)
 .red-text {
   color: #d71921;
   font-weight: 600;
+}
+
+.purchase-target-badge {
+  display: inline-block;
+  margin-top: 0.35rem;
+  background: linear-gradient(135deg, #ff6b35, #f7c59f);
+  color: #7a2400;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 4px rgba(255,107,53,0.35);
 }
 </style>

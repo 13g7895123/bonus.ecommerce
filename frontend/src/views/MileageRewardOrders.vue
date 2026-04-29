@@ -18,7 +18,7 @@
             <span class="mro-name">{{ order.product_name }}</span>
             <span :class="['mro-status', `mro-status--${order.status}`]">{{ statusLabel(order.status) }}</span>
           </div>
-          <span class="mro-cash">{{ t('mileageRewardOrders.cashReward') }} +${{ Number(order.cash_reward_amount).toLocaleString() }}</span>
+          <span class="mro-cash">{{ t('mileageRewardOrders.cashReward') }}{{ cashPercent(order) }}% +${{ Number(order.cash_reward_amount).toLocaleString() }}</span>
         </div>
       </div>
     </div>
@@ -45,6 +45,13 @@ const formatTime = (val) => {
 const statusLabel = (status) => {
   const key = status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'pendingReview'
   return t(`mileageRewardOrders.${key}`)
+}
+
+const cashPercent = (order) => {
+  const price = Number(order.total_price)
+  const reward = Number(order.cash_reward_amount)
+  if (!price || !reward) return ''
+  return Math.round(reward / price * 100)
 }
 
 onMounted(async () => {
