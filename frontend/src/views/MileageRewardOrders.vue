@@ -16,10 +16,12 @@
           <div v-else class="mro-img-placeholder"></div>
           <div class="mro-info">
             <span class="mro-name">{{ order.product_name }}</span>
-            <span class="mro-price">{{ t('mileageRewardOrders.productPrice') }} {{ formatProductPrice(order) }}</span>
             <span :class="['mro-status', `mro-status--${order.status}`]">{{ statusLabel(order.status) }}</span>
           </div>
-          <span class="mro-cash">{{ t('mileageRewardOrders.cashReward') }}{{ cashPercent(order) }}% +${{ Number(order.cash_reward_amount).toLocaleString() }}</span>
+          <div class="mro-right-col">
+            <span class="mro-price">{{ t('mileageRewardOrders.productPrice') }} {{ formatProductPrice(order) }}</span>
+            <span class="mro-cash">{{ t('mileageRewardOrders.cashReward') }}{{ cashPercent(order) }}% +${{ Number(order.cash_reward_amount).toLocaleString() }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -165,6 +167,14 @@ onMounted(async () => {
   background: #fde8e8;
   color: #c0392b;
 }
+.mro-right-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
 .mro-price {
   display: inline-flex;
   align-items: center;
@@ -175,7 +185,7 @@ onMounted(async () => {
   background: #f5f5f7;
   border-radius: 4px;
   padding: 1px 6px;
-  width: fit-content;
+  white-space: nowrap;
   letter-spacing: 0.01em;
 }
 .mro-cash {
@@ -183,6 +193,5 @@ onMounted(async () => {
   font-weight: 700;
   color: #27ae60;
   white-space: nowrap;
-  margin-left: 0.5rem;
 }
 </style>
