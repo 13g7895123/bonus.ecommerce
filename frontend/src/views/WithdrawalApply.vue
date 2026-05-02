@@ -101,7 +101,7 @@ const handleWithdraw = async () => {
         toast.success(t('withdrawal.successMsg'));
         router.push('/settings');
     } catch(err) {
-        toast.error(err.message || '申請失敗');
+        toast.error(err?.response?.data?.message || err.message || '申請失敗');
     } finally {
         loading.value = false;
     }

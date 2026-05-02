@@ -37,6 +37,13 @@ class WalletService
 
     public function setWithdrawalPassword(int $userId, string $password, ?string $oldPassword = null): array
     {
+        $password = trim($password);
+        $oldPassword = $oldPassword !== null ? trim($oldPassword) : null;
+
+        if (strlen($password) < 4) {
+            return ['success' => false, 'message' => '提款密碼至少需要 4 個字元'];
+        }
+
         $wallet = $this->walletRepo->findByUserId($userId);
         if (!$wallet) {
             return ['success' => false, 'message' => '找不到錢包'];
@@ -77,6 +84,8 @@ class WalletService
 
     public function withdraw(int $userId, float $amount, string $withdrawalPassword): array
     {
+        $withdrawalPassword = trim($withdrawalPassword);
+
         $wallet = $this->walletRepo->findByUserId($userId);
         if (!$wallet) {
             return ['success' => false, 'message' => '找不到錢包'];

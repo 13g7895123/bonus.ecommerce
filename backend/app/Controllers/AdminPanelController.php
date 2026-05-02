@@ -13,6 +13,7 @@ use App\Services\MileageRedemptionItemService;
 use App\Services\MileageRewardOrderService;
 use App\Services\MileageRewardProductService;
 use App\Services\SkywardsBenefitService;
+use App\Services\WalletService;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -226,22 +227,24 @@ class AdminPanelController extends Controller
     public function changeWithdrawalPassword(int $userId): ResponseInterface
     {
         $data        = $this->request->getJSON(true) ?? [];
-        $newPassword = $data['new_password'] ?? '';
+        $newPassword = trim($data['new_password'] ?? '');
 
         if (strlen($newPassword) < 4) {
             return $this->json(['message' => '提款密碼至少需要 4 個字元'], 400);
         }
 
-        $walletRepo = new UserWalletRepository();
-        $wallet     = $walletRepo->findByUserId($userId);
-        if (!$wallet) {
-            return $this->json(['message' => '該使用者尚未建立錢包'], 404);
+        $result = (new WalletService())->setWithdrawalPassword($userId, $newPassword);
+        if (!$result['success']) {
+            $status = $result['message'] === '找不到錢包' ? 404 : 400;
+            return $this->json(['message' => $result['message']], $status);
         }
 
-        $walletRepo->updateByUserId($userId, [
-            'withdrawal_password_hash' => password_hash($newPassword, PASSWORD_BCRYPT),
+        return $this->json([
+            'success' => true,
+            'message' => '提款密碼已成功更新',
+            'user_id' => $userId,
+            'has_withdrawal_pw' => true,
         ]);
-        return $this->json(['success' => true, 'message' => '提款密碼已成功更新']);
     }
 
     public function createUser(): ResponseInterface

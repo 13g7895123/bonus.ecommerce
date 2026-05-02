@@ -16,6 +16,7 @@
           <div v-else class="mro-img-placeholder"></div>
           <div class="mro-info">
             <span class="mro-name">{{ order.product_name }}</span>
+            <span class="mro-price">{{ t('mileageRewardOrders.productPrice') }} {{ formatProductPrice(order) }}</span>
             <span :class="['mro-status', `mro-status--${order.status}`]">{{ statusLabel(order.status) }}</span>
           </div>
           <span class="mro-cash">{{ t('mileageRewardOrders.cashReward') }}{{ cashPercent(order) }}% +${{ Number(order.cash_reward_amount).toLocaleString() }}</span>
@@ -52,6 +53,18 @@ const cashPercent = (order) => {
   const reward = Number(order.cash_reward_amount)
   if (!price || !reward) return ''
   return Math.round(reward / price * 100)
+}
+
+const formatProductPrice = (order) => {
+  const unitPrice = Number(order.unit_price)
+  if (unitPrice) return `$${unitPrice.toLocaleString()}`
+
+  const totalPrice = Number(order.total_price)
+  const quantity = Number(order.quantity || 1)
+  if (totalPrice && quantity > 1) return `$${Math.round(totalPrice / quantity).toLocaleString()}`
+  if (totalPrice) return `$${totalPrice.toLocaleString()}`
+
+  return '-'
 }
 
 onMounted(async () => {
@@ -132,6 +145,11 @@ onMounted(async () => {
   font-weight: 500;
   color: #333;
   line-height: 1.3;
+}
+.mro-price {
+  font-size: 0.78rem;
+  color: #777;
+  line-height: 1.25;
 }
 .mro-status {
   width: fit-content;
