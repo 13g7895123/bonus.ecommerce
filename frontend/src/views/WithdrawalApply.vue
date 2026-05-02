@@ -30,7 +30,7 @@
       <AppInput v-model="password" type="password" :placeholder="$t('withdrawal.passwordPlaceholder')" />
 
       <div class="forgot-pwd-link">
-        <router-link :to="{ path: '/transactions/withdrawal', query: { reset: 'true' }}" class="link-text">{{ $t('withdrawal.forgotPwd') }}</router-link>
+        <router-link :to="{ path: '/withdrawal/set-password', query: { reset: 'true' }}" class="link-text">{{ $t('withdrawal.forgotPwd') }}</router-link>
       </div>
 
       <!-- 提款申請按鈕 -->

@@ -15,6 +15,7 @@ import IdentityVerificationComplete from '../views/IdentityVerificationComplete.
 import CustomerService from '../views/CustomerService.vue'
 import Transactions from '../views/Transactions.vue'
 import TopUpRecords from '../views/TopUpRecords.vue'
+import WithdrawalRecords from '../views/WithdrawalRecords.vue'
 import WithdrawalSetPassword from '../views/WithdrawalSetPassword.vue'
 import WithdrawalSetup from '../views/WithdrawalSetup.vue'
 import WithdrawalApply from '../views/WithdrawalApply.vue'
@@ -182,8 +183,8 @@ const routes = [
   },
   {
     path: '/transactions/withdrawal',
-    name: 'WithdrawalSetPassword',
-    component: WithdrawalSetPassword,
+    name: 'WithdrawalRecords',
+    component: WithdrawalRecords,
     meta: { requiresAuth: true }
   },
   {
