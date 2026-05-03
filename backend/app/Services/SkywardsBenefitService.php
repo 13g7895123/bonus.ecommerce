@@ -10,9 +10,15 @@ class SkywardsBenefitService
         private readonly SkywardsBenefitRepository $repo = new SkywardsBenefitRepository(),
     ) {}
 
-    public function getActiveItems(): array
+    public function getActiveItems(?string $tier = null): array
     {
-        return $this->repo->getActive();
+        return $this->repo->getActive($this->normalizeTier($tier));
+    }
+
+    public function getActiveItemForTier(?string $tier): ?array
+    {
+        $items = $this->getActiveItems($tier);
+        return $items[0] ?? null;
     }
 
     public function getAllItems(): array
@@ -27,8 +33,10 @@ class SkywardsBenefitService
 
     public function create(array $data): array
     {
-        $allowed = ['type', 'label', 'image_url', 'content', 'sort_order', 'is_active'];
+        $allowed = ['tier', 'label', 'image_url', 'content', 'sort_order', 'is_active'];
         $insert  = array_intersect_key($data, array_flip($allowed));
+        $insert['tier'] = $this->normalizeTier($insert['tier'] ?? null) ?? 'regular';
+        $insert['type'] = 'rule';
 
         $id = $this->repo->create($insert);
         return ['success' => true, 'id' => $id];
@@ -41,8 +49,12 @@ class SkywardsBenefitService
             return ['success' => false, 'message' => 'Item not found'];
         }
 
-        $allowed = ['type', 'label', 'image_url', 'content', 'sort_order', 'is_active'];
+        $allowed = ['tier', 'label', 'image_url', 'content', 'sort_order', 'is_active'];
         $update  = array_intersect_key($data, array_flip($allowed));
+        if (array_key_exists('tier', $update)) {
+            $update['tier'] = $this->normalizeTier($update['tier']) ?? 'regular';
+        }
+        $update['type'] = 'rule';
 
         $this->repo->update($id, $update);
         return ['success' => true];
@@ -56,5 +68,18 @@ class SkywardsBenefitService
         }
         $this->repo->delete($id);
         return ['success' => true];
+    }
+
+    private function normalizeTier(?string $tier): ?string
+    {
+        if ($tier === null || $tier === '') {
+            return null;
+        }
+
+        if ($tier === 'blue') {
+            return 'regular';
+        }
+
+        return in_array($tier, ['regular', 'silver', 'gold', 'platinum'], true) ? $tier : 'regular';
     }
 }

@@ -6,7 +6,7 @@
         <RefreshCw :size="14" />{{ loading ? '載入中...' : '重新整理' }}
       </button>
       <button class="btn btn-primary" @click="openForm()">
-        <Plus :size="14" />新增區塊
+        <Plus :size="14" />新增等級內容
       </button>
     </div>
 
@@ -17,8 +17,8 @@
         <thead>
           <tr>
             <th style="width:76px">圖片</th>
+            <th>適用等級</th>
             <th>標題</th>
-            <th>類型</th>
             <th>內容摘要</th>
             <th class="td-num">排序</th>
             <th>狀態</th>
@@ -33,8 +33,8 @@
                 <ImageIcon v-else :size="18" />
               </div>
             </td>
+            <td><span class="badge badge-blue">{{ tierLabel(item.tier) }}</span></td>
             <td class="td-name">{{ item.label || '未命名區塊' }}</td>
-            <td><span class="badge badge-blue">{{ typeLabel(item.type) }}</span></td>
             <td class="summary-cell">{{ contentText(item.content) || '尚無文字內容' }}</td>
             <td class="td-num">{{ Number(item.sort_order || 0) }}</td>
             <td>
@@ -57,20 +57,20 @@
   <div v-if="form.show" class="modal-overlay" @click.self="closeForm">
     <div class="modal-box sky-benefit-modal">
       <div class="modal-hd">
-        <span>{{ form.id ? '編輯 Skywards 權益區塊' : '新增 Skywards 權益區塊' }}</span>
+        <span>{{ form.id ? '編輯 Skywards 等級權益' : '新增 Skywards 等級權益' }}</span>
         <button class="modal-x" @click="closeForm">×</button>
       </div>
       <div class="modal-bd">
         <div class="form-grid">
           <div>
-            <label class="f-label">標題</label>
-            <input v-model="form.label" class="f-input" placeholder="例：銀卡權益" />
+            <label class="f-label">適用等級</label>
+            <select v-model="form.tier" class="f-input">
+              <option v-for="option in tierOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+            </select>
           </div>
           <div>
-            <label class="f-label">類型</label>
-            <select v-model="form.type" class="f-input">
-              <option v-for="option in typeOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-            </select>
+            <label class="f-label">標題</label>
+            <input v-model="form.label" class="f-input" placeholder="例：銀卡權益" />
           </div>
           <div>
             <label class="f-label">排序</label>
@@ -139,16 +139,17 @@ const items = ref([])
 const loading = ref(false)
 const uploading = ref(false)
 
-const typeOptions = [
-  { value: 'hint', label: '提示' },
-  { value: 'rule', label: '規則' },
-  { value: 'note', label: '備註' },
+const tierOptions = [
+  { value: 'regular', label: '藍卡' },
+  { value: 'silver', label: '銀卡' },
+  { value: 'gold', label: '金卡' },
+  { value: 'platinum', label: '白金卡' },
 ]
 
 const blankForm = () => ({
   show: false,
   id: null,
-  type: 'rule',
+  tier: 'regular',
   label: '',
   image_url: '',
   content: '',
@@ -159,7 +160,7 @@ const blankForm = () => ({
 
 const form = ref(blankForm())
 
-const typeLabel = (type) => typeOptions.find(option => option.value === type)?.label || type || '規則'
+const tierLabel = (tier) => tierOptions.find(option => option.value === tier)?.label || '未設定'
 
 const contentText = (html) => {
   if (!html) return ''
@@ -169,6 +170,7 @@ const contentText = (html) => {
 
 const normalizeItem = (item) => ({
   ...item,
+  tier: item.tier || 'regular',
   image_url: item.image_url || '',
   sort_order: Number(item.sort_order || 0),
   is_active: Number(item.is_active ?? 1),
@@ -193,7 +195,7 @@ const openForm = (item = null) => {
     ? {
         show: true,
         id: item.id,
-        type: item.type || 'rule',
+        tier: item.tier || 'regular',
         label: item.label || '',
         image_url: item.image_url || '',
         content: item.content || '',
@@ -228,7 +230,7 @@ const saveItem = async () => {
   form.value.submitting = true
   try {
     const payload = {
-      type: form.value.type || 'rule',
+      tier: form.value.tier || 'regular',
       label: form.value.label || null,
       image_url: form.value.image_url || null,
       content: form.value.content || '',

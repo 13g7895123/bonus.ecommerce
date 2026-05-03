@@ -13,9 +13,9 @@ class SkywardsBenefitRepository
         return $this->model->find($id);
     }
 
-    public function getActive(): array
+    public function getActive(?string $tier = null): array
     {
-        return $this->model->getActive();
+        return $this->model->getActive($tier);
     }
 
     public function getAll(): array

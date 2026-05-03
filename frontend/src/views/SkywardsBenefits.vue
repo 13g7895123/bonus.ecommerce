@@ -4,7 +4,16 @@ import PageLayout from '../components/PageLayout.vue'
 
 const loading = ref(true)
 const errorMsg = ref('')
-const items = ref([])
+const benefit = ref(null)
+const currentTier = ref('regular')
+
+const tierNames = {
+  regular: '藍卡',
+  blue: '藍卡',
+  silver: '銀卡',
+  gold: '金卡',
+  platinum: '白金卡',
+}
 
 const loadBenefits = async () => {
   loading.value = true
@@ -15,13 +24,16 @@ const loadBenefits = async () => {
     const response = await fetch('/api/v1/skywards/benefits', { headers })
     if (!response.ok) throw new Error('load failed')
     const data = await response.json()
-    items.value = (data.items || data.data?.items || [])
-      .map(item => ({
-        ...item,
-        image_url: item.image_url || '',
-        sort_order: Number(item.sort_order || 0),
-      }))
-      .sort((left, right) => left.sort_order - right.sort_order)
+    const payload = data.data || data
+    currentTier.value = payload.tier || 'regular'
+    const item = payload.item || payload.items?.[0] || null
+    benefit.value = item
+      ? {
+          ...item,
+          image_url: item.image_url || '',
+          sort_order: Number(item.sort_order || 0),
+        }
+      : null
   } catch {
     errorMsg.value = '載入失敗，請稍後再試'
   } finally {
@@ -37,14 +49,14 @@ onMounted(loadBenefits)
     <div class="benefits-page-content">
       <div v-if="loading" class="state-message">載入中...</div>
       <div v-else-if="errorMsg" class="state-message state-error">{{ errorMsg }}</div>
-      <div v-else-if="items.length === 0" class="state-message">目前尚無權益說明</div>
-      <article v-else v-for="item in items" :key="item.id" class="benefit-section">
-        <div v-if="item.image_url" class="benefit-image-wrap">
-          <img :src="item.image_url" :alt="item.label || 'Skywards 權益圖片'" class="benefit-image" />
+      <div v-else-if="!benefit" class="state-message">目前尚無{{ tierNames[currentTier] || '此等級' }}權益說明</div>
+      <article v-else class="benefit-section">
+        <div v-if="benefit.image_url" class="benefit-image-wrap">
+          <img :src="benefit.image_url" :alt="benefit.label || 'Skywards 權益圖片'" class="benefit-image" />
         </div>
         <div class="benefit-text">
-          <h1 v-if="item.label" class="benefit-title">{{ item.label }}</h1>
-          <div v-if="item.content" class="benefit-rich-content" v-html="item.content"></div>
+          <h1 v-if="benefit.label" class="benefit-title">{{ benefit.label }}</h1>
+          <div v-if="benefit.content" class="benefit-rich-content" v-html="benefit.content"></div>
         </div>
       </article>
     </div>
