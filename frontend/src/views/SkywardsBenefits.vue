@@ -55,7 +55,6 @@ onMounted(loadBenefits)
           <img :src="benefit.image_url" :alt="benefit.label || 'Skywards 權益圖片'" class="benefit-image" />
         </div>
         <div class="benefit-text">
-          <h1 v-if="benefit.label" class="benefit-title">{{ benefit.label }}</h1>
           <div v-if="benefit.content" class="benefit-rich-content" v-html="benefit.content"></div>
         </div>
       </article>
@@ -133,8 +132,19 @@ onMounted(loadBenefits)
 .benefit-rich-content :deep(p) { margin: 0 0 0.85rem; }
 .benefit-rich-content :deep(ul) { padding-left: 1.5em; list-style: disc; margin: 0.75rem 0; }
 .benefit-rich-content :deep(ol) { padding-left: 1.5em; list-style: decimal; margin: 0.75rem 0; }
+.benefit-rich-content :deep(li) { margin-bottom: 0.35rem; }
 .benefit-rich-content :deep(strong) { font-weight: 700; }
-.benefit-rich-content :deep(img) { max-width: 100%; height: auto; }
+.benefit-rich-content :deep(em) { font-style: italic; }
+.benefit-rich-content :deep(u) { text-decoration: underline; }
+.benefit-rich-content :deep(s) { text-decoration: line-through; }
+.benefit-rich-content :deep(h1), .benefit-rich-content :deep(h2), .benefit-rich-content :deep(h3) { font-weight: 700; line-height: 1.3; margin: 1.25rem 0 0.5rem; }
+.benefit-rich-content :deep(h1) { font-size: 1.5rem; }
+.benefit-rich-content :deep(h2) { font-size: 1.25rem; }
+.benefit-rich-content :deep(h3) { font-size: 1.1rem; }
+.benefit-rich-content :deep(blockquote) { border-left: 3px solid #ccc; padding-left: 1em; color: #666; margin: 0.75rem 0; }
+.benefit-rich-content :deep(a) { color: #d71921; text-decoration: underline; }
+.benefit-rich-content :deep(img) { max-width: 100%; height: auto; border-radius: 4px; }
+.benefit-rich-content :deep(hr) { border: none; border-top: 1px solid #e0e0e0; margin: 1rem 0; }
 
 @media (min-width: 768px) {
   .benefits-page-content {

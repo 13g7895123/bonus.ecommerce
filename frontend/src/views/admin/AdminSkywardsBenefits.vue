@@ -18,9 +18,7 @@
           <tr>
             <th style="width:76px">圖片</th>
             <th>適用等級</th>
-            <th>標題</th>
             <th>內容摘要</th>
-            <th class="td-num">排序</th>
             <th>狀態</th>
             <th>操作</th>
           </tr>
@@ -34,9 +32,7 @@
               </div>
             </td>
             <td><span class="badge badge-blue">{{ tierLabel(item.tier) }}</span></td>
-            <td class="td-name">{{ item.label || '未命名區塊' }}</td>
             <td class="summary-cell">{{ contentText(item.content) || '尚無文字內容' }}</td>
-            <td class="td-num">{{ Number(item.sort_order || 0) }}</td>
             <td>
               <span :class="['badge', Number(item.is_active) ? 'badge-green' : 'badge-gray']">
                 {{ Number(item.is_active) ? '顯示' : '隱藏' }}
@@ -67,14 +63,6 @@
             <select v-model="form.tier" class="f-input">
               <option v-for="option in tierOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
-          </div>
-          <div>
-            <label class="f-label">標題</label>
-            <input v-model="form.label" class="f-input" placeholder="例：銀卡權益" />
-          </div>
-          <div>
-            <label class="f-label">排序</label>
-            <input v-model.number="form.sort_order" class="f-input" type="number" min="0" />
           </div>
           <div>
             <label class="f-label">狀態</label>
@@ -112,7 +100,6 @@
           <div class="benefit-page-preview">
             <img v-if="form.image_url" :src="form.image_url" alt="Skywards 權益圖片預覽" class="preview-hero-img" />
             <div class="preview-copy">
-              <h3 v-if="form.label">{{ form.label }}</h3>
               <div v-if="form.content" v-html="form.content" class="preview-rich-content"></div>
               <p v-else class="preview-empty">尚無文字內容</p>
             </div>
@@ -176,12 +163,16 @@ const normalizeItem = (item) => ({
   is_active: Number(item.is_active ?? 1),
 })
 
+const tierOrder = { regular: 0, silver: 1, gold: 2, platinum: 3 }
+
 const loadItems = async () => {
   loading.value = true
   try {
     const response = await fetch('/api/v1/admin-panel/skywards-benefits')
     const data = await response.json()
-    items.value = (data.items || data.data?.items || []).map(normalizeItem)
+    const list = (data.items || data.data?.items || []).map(normalizeItem)
+    list.sort((a, b) => (tierOrder[a.tier] ?? 9) - (tierOrder[b.tier] ?? 9))
+    items.value = list
   } catch {
     alert('載入失敗，請稍後再試')
   } finally {
@@ -258,7 +249,7 @@ const saveItem = async () => {
 }
 
 const deleteItem = async (item) => {
-  if (!confirm(`確定要刪除「${item.label || '未命名區塊'}」嗎？`)) return
+  if (!confirm(`確定要刪除「${tierLabel(item.tier)}」的權益內容嗎？`)) return
   try {
     const response = await fetch(`/api/v1/admin-panel/skywards-benefits/${item.id}`, { method: 'DELETE' })
     if (!response.ok) throw new Error('delete failed')
