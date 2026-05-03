@@ -7,6 +7,7 @@ import Register from '../views/Register.vue'
 import ForgotPassword from '../views/ForgotPassword.vue'
 import Settings from '../views/Settings.vue'
 import SkywardsDashboard from '../views/SkywardsDashboard.vue'
+import SkywardsBenefits from '../views/SkywardsBenefits.vue'
 import Profile from '../views/Profile.vue'
 import ProfileDetails from '../views/ProfileDetails.vue'
 import ChangePassword from '../views/ChangePassword.vue'
@@ -35,6 +36,7 @@ import AdminMileageRewards from '../views/admin/AdminMileageRewards.vue'
 import AdminRewardOrders from '../views/admin/AdminRewardOrders.vue'
 import AdminMileageCodes from '../views/admin/AdminMileageCodes.vue'
 import AdminContent from '../views/admin/AdminContent.vue'
+import AdminSkywardsBenefits from '../views/admin/AdminSkywardsBenefits.vue'
 import AdminCustomerService from '../views/admin/AdminCustomerService.vue'
 import AdminPhoneVerifications from '../views/admin/AdminPhoneVerifications.vue'
 import AdminSmsLogs from '../views/admin/AdminSmsLogs.vue'
@@ -75,6 +77,7 @@ const routes = [
       { path: 'reward-orders',   name: 'AdminRewardOrders',   component: AdminRewardOrders },
       { path: 'mileage-codes',   name: 'AdminMileageCodes',   component: AdminMileageCodes },
       { path: 'content',              name: 'AdminContent',             component: AdminContent },
+      { path: 'skywards-benefits',    name: 'AdminSkywardsBenefits',    component: AdminSkywardsBenefits },
       { path: 'customer-service',     name: 'AdminCustomerService',    component: AdminCustomerService },
       { path: 'phone-verifications',  name: 'AdminPhoneVerifications',  component: AdminPhoneVerifications },
       { path: 'sms-logs',             name: 'AdminSmsLogs',             component: AdminSmsLogs },
@@ -131,6 +134,12 @@ const routes = [
     path: '/skywards',
     name: 'Skywards',
     component: SkywardsDashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/skywards/benefits',
+    name: 'SkywardsBenefits',
+    component: SkywardsBenefits,
     meta: { requiresAuth: true }
   },
   {

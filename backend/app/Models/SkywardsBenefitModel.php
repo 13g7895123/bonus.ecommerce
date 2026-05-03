@@ -9,7 +9,7 @@ class SkywardsBenefitModel extends Model
     protected $table         = 'skywards_benefits';
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
-    protected $allowedFields = ['type', 'label', 'content', 'sort_order', 'is_active'];
+    protected $allowedFields = ['type', 'label', 'image_url', 'content', 'sort_order', 'is_active'];
 
     public function getActive(): array
     {

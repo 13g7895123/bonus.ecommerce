@@ -27,7 +27,7 @@ class SkywardsBenefitService
 
     public function create(array $data): array
     {
-        $allowed = ['type', 'label', 'content', 'sort_order', 'is_active'];
+        $allowed = ['type', 'label', 'image_url', 'content', 'sort_order', 'is_active'];
         $insert  = array_intersect_key($data, array_flip($allowed));
 
         $id = $this->repo->create($insert);
@@ -41,7 +41,7 @@ class SkywardsBenefitService
             return ['success' => false, 'message' => 'Item not found'];
         }
 
-        $allowed = ['type', 'label', 'content', 'sort_order', 'is_active'];
+        $allowed = ['type', 'label', 'image_url', 'content', 'sort_order', 'is_active'];
         $update  = array_intersect_key($data, array_flip($allowed));
 
         $this->repo->update($id, $update);

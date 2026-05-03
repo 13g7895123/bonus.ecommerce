@@ -10,13 +10,11 @@ const router = useRouter()
 const user = ref(null)
 const mileageTotal = ref(0)
 const activeTab = ref('miles') // 'miles' or 'tier'
-const showModal = ref(false)
 const tierCardDescs = ref({
   silver: '',
   gold: '',
   platinum: '',
 })
-const benefitsHtml = ref('')
 
 const todayLabel = computed(() => {
   const d = new Date()
@@ -46,22 +44,17 @@ const setTab = (tab) => {
   router.replace({ hash: '#' + tab })
 }
 
-const openModal = () => { showModal.value = true }
-const closeModal = () => { showModal.value = false }
-
 const loadConfigs = async () => {
   try {
-    const [r1, r2, r3, r4] = await Promise.all([
+    const [r1, r2, r3] = await Promise.all([
       fetch('/api/v1/config/skywards_silver_card_desc'),
       fetch('/api/v1/config/skywards_gold_card_desc'),
       fetch('/api/v1/config/skywards_platinum_card_desc'),
-      fetch('/api/v1/config/skywards_benefits_html'),
     ])
-    const [d1, d2, d3, d4] = await Promise.all([r1.json(), r2.json(), r3.json(), r4.json()])
+    const [d1, d2, d3] = await Promise.all([r1.json(), r2.json(), r3.json()])
     tierCardDescs.value.silver   = d1.value || ''
     tierCardDescs.value.gold     = d2.value || ''
     tierCardDescs.value.platinum = d3.value || ''
-    benefitsHtml.value           = d4.value || ''
   } catch {}
 }
 
@@ -188,7 +181,7 @@ onMounted(async () => {
         </div>
         
         <p class="tier-update-hint">截至{{ todayLabel }}為止,您已擁有{{ mileageTotal.toLocaleString() }}哩程數</p>
-        <button class="view-benefits-btn" @click="openModal">檢視您的權益</button>
+        <button class="view-benefits-btn" @click="$router.push('/skywards/benefits')">檢視您的權益</button>
       </div>
     </section>
 
@@ -237,23 +230,6 @@ onMounted(async () => {
         </div>
       </div>
     </section>
-
-    <!-- 彈窗組件 -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <transition name="pop">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3 class="modal-title" style="text-align:center">升級規則</h3>
-            <button class="modal-close" @click="closeModal">✕</button>
-          </div>
-          <div class="modal-body">
-            <div v-if="benefitsHtml" v-html="benefitsHtml" class="benefits-rich-content"></div>
-            <div v-else class="modal-empty">目前尚無升級規則說明</div>
-          </div>
-          <button class="modal-confirm-btn" @click="closeModal">我知道了</button>
-        </div>
-      </transition>
-    </div>
   </div>
 </template>
 
@@ -418,49 +394,4 @@ onMounted(async () => {
 .comfortable-img { width: 100%; display: block; }
 .comfortable-text { display: block; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #333; font-size: 1.1rem; font-weight: 700; text-align: left; }
 .silver-text { margin-left: 0rem; color: #000; }
-
-/* 彈窗樣式 */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex; justify-content: center; align-items: center;
-  z-index: 2000;
-}
-
-.modal-content {
-  background: white;
-  width: 90%; max-width: 400px;
-  border-radius: 12px;
-  padding: 2rem;
-  position: relative;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  box-sizing: border-box;
-  max-height: 90vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.modal-header { position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
-.modal-title { font-size: 1.25rem; font-weight: 800; margin: 0; text-align: center; }
-.modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
-.benefits-rich-content { text-align: left; overflow-x: hidden; word-break: break-word; overflow-wrap: break-word; }
-.benefits-rich-content :deep(ul) { padding-left: 1.5em; list-style: disc; margin: 0.5rem 0; }
-.benefits-rich-content :deep(ol) { padding-left: 1.5em; list-style: decimal; margin: 0.5rem 0; }
-.benefits-rich-content :deep(p) { margin: 0 0 0.5rem 0; }
-.benefits-rich-content :deep(strong) { font-weight: 700; }
-.rule-hint { font-weight: 700; margin-bottom: 1rem; }
-.rule-list { padding-left: 1.25rem; margin-bottom: 1.5rem; }
-.rule-list li { margin-bottom: 0.75rem; font-size: 0.95rem; line-height: 1.4; }
-.rule-note { font-size: 0.8rem; color: #888; border-top: 1px solid #eee; padding-top: 1rem; }
-.modal-loading { text-align: center; color: #999; padding: 1.5rem 0; font-size: 0.9rem; }
-.modal-empty { text-align: center; color: #bbb; padding: 1.5rem 0; font-size: 0.9rem; }
-.modal-confirm-btn {
-  width: 100%; background-color: #d71921; color: white; border: none;
-  padding: 1rem; border-radius: 4px; font-weight: 700; margin-top: 1.5rem; cursor: pointer;
-}
-
-/* 動畫 */
-.pop-enter-active, .pop-leave-active { transition: all 0.3s ease; }
-.pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.9); }
 </style>

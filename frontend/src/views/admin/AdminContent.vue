@@ -26,35 +26,7 @@
       </div>
     </div>
 
-    <div class="divider"></div>
-
-    <div class="content-block">
-      <div class="content-block-header">
-        <div>
-          <div class="cb-title">升級規則 Modal 內容（富文本）</div>
-          <div class="cb-desc">點擊「檢視您的權益」後彈出的 Modal 內容</div>
-        </div>
-        <div style="display:flex;gap:0.5rem">
-          <button class="btn btn-outline" @click="benefitsModalPreview = !benefitsModalPreview"><Eye :size="14" />{{ benefitsModalPreview ? '隱藏預覽' : '預覽Modal' }}</button>
-          <button class="btn btn-primary" :disabled="savingBenefitsHtml" @click="saveBenefitsHtml"><Save :size="14" />{{ savingBenefitsHtml ? '儲存中...' : '儲存' }}</button>
-        </div>
-      </div>
-      <RichTextEditor v-model="benefitsHtml" />
-      <div v-if="benefitsModalPreview" class="preview-box" style="margin-top:1rem">
-        <div class="preview-label">Modal 預覽</div>
-        <div class="mock-modal">
-          <div class="mock-modal-header">
-            <h3 class="mock-modal-title">升級規則</h3>
-            <button class="mock-modal-close">✕</button>
-          </div>
-          <div class="mock-modal-body" v-html="benefitsHtml || '<p style=\'color:#999\'>(尚無內容)</p>'"></div>
-          <button class="mock-modal-confirm">我知道了</button>
-        </div>
-      </div>
-    </div>
   </div>
-
-  <div class="divider"></div>
 
   <!-- 網站條款 -->
   <div class="content-block">
@@ -124,9 +96,6 @@ import RichTextEditor from '../../components/admin/RichTextEditor.vue'
 const silverCardDesc       = ref('')
 const silverCardPreview    = ref(false)
 const savingSilver         = ref(false)
-const benefitsHtml         = ref('')
-const benefitsModalPreview = ref(false)
-const savingBenefitsHtml   = ref(false)
 const termsHtml            = ref('')
 const savingTerms          = ref(false)
 const privacyHtml          = ref('')
@@ -140,9 +109,8 @@ const getToken = () => localStorage.getItem('token')
 
 const loadContentConfigs = async () => {
   try {
-    const [r1, r2, r3, r4, r5, r6, r7] = await Promise.all([
+    const [r1, r2, r3, r4, r5, r6] = await Promise.all([
       fetch('/api/v1/config/skywards_silver_card_desc'),
-      fetch('/api/v1/config/skywards_benefits_html'),
       fetch('/api/v1/config/terms_html'),
       fetch('/api/v1/config/privacy_html'),
       fetch('/api/v1/config/tier_silver_miles'),
@@ -150,12 +118,11 @@ const loadContentConfigs = async () => {
       fetch('/api/v1/config/tier_platinum_miles'),
     ])
     silverCardDesc.value = (await r1.json()).value || ''
-    benefitsHtml.value   = (await r2.json()).value || ''
-    termsHtml.value      = (await r3.json()).value || ''
-    privacyHtml.value    = (await r4.json()).value || ''
-    tierSilver.value     = parseInt((await r5.json()).value) || 25000
-    tierGold.value       = parseInt((await r6.json()).value) || 50000
-    tierPlatinum.value   = parseInt((await r7.json()).value) || 100000
+    termsHtml.value      = (await r2.json()).value || ''
+    privacyHtml.value    = (await r3.json()).value || ''
+    tierSilver.value     = parseInt((await r4.json()).value) || 25000
+    tierGold.value       = parseInt((await r5.json()).value) || 50000
+    tierPlatinum.value   = parseInt((await r6.json()).value) || 100000
   } catch {}
 }
 
@@ -165,14 +132,6 @@ const saveSilverCard = async () => {
     await fetch('/api/v1/admin-panel/config/skywards_silver_card_desc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: silverCardDesc.value }) })
     alert('儲存成功')
   } finally { savingSilver.value = false }
-}
-
-const saveBenefitsHtml = async () => {
-  savingBenefitsHtml.value = true
-  try {
-    await fetch('/api/v1/admin-panel/config/skywards_benefits_html', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: benefitsHtml.value }) })
-    alert('儲存成功')
-  } finally { savingBenefitsHtml.value = false }
 }
 
 const saveTerms = async () => {

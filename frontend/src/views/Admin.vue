@@ -42,7 +42,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Users, ShieldCheck, Coins, FileEdit, Gift, ShoppingBag, TicketPercent, Home, ChevronLeft, ChevronRight, Smartphone, MessageSquare, Building2, Mail, Megaphone } from 'lucide-vue-next'
+import { Users, ShieldCheck, Coins, FileEdit, Gift, ShoppingBag, TicketPercent, Home, ChevronLeft, ChevronRight, Smartphone, MessageSquare, Building2, Mail, Megaphone, BadgeCheck } from 'lucide-vue-next'
 
 const router = useRouter()
 const route  = useRoute()
@@ -57,6 +57,7 @@ const navItems = [
   { key: 'reward-orders',   label: '里程回饋訂單', icon: ShoppingBag },
   { key: 'mileage-codes',   label: '里程代碼管理', icon: TicketPercent },
   { key: 'content',         label: '內容管理',      icon: FileEdit },
+  { key: 'skywards-benefits', label: 'Skywards 權益頁', icon: BadgeCheck },
   { key: 'customer-service', label: '在線客服對話',  icon: MessageSquare },
   { key: 'banks',            label: '銀行清單管理',  icon: Building2 },
   { key: 'mails',            label: '信件管理',      icon: Mail },
