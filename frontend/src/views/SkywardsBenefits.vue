@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import PageHeader from '../components/PageHeader.vue'
 
 const loading = ref(true)
 const errorMsg = ref('')
@@ -50,6 +51,7 @@ onMounted(loadBenefits)
 </script>
 
 <template>
+  <PageHeader title="我的權益" back-to="/skywards#tier" :bordered="false" />
   <main class="benefits-page-content">
     <div v-if="loading" class="state-message">載入中...</div>
     <div v-else-if="errorMsg" class="state-message state-error">{{ errorMsg }}</div>

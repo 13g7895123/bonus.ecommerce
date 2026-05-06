@@ -105,6 +105,11 @@
         <div class="preview-box page-preview">
           <div class="preview-label">前台顯示預覽</div>
           <div class="benefit-page-preview">
+            <div class="preview-page-header">
+              <span class="preview-back-icon"></span>
+              <span class="preview-header-title">我的權益</span>
+              <span class="preview-header-spacer"></span>
+            </div>
             <img v-if="form.image_url" :src="form.image_url" alt="Skywards 權益圖片預覽" class="preview-hero-img" />
             <div class="preview-copy-card">
               <h3>{{ form.label || defaultTitle(form.tier) }}</h3>
@@ -370,6 +375,33 @@ onMounted(loadItems)
   background: #f5f5f5;
   padding-bottom: 1rem;
   overflow: hidden;
+}
+
+.preview-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.1rem;
+  background: #fff;
+}
+
+.preview-back-icon {
+  width: 12px;
+  height: 12px;
+  border-left: 2px solid #333;
+  border-bottom: 2px solid #333;
+  transform: rotate(45deg);
+}
+
+.preview-header-title {
+  color: #111;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.preview-header-spacer {
+  width: 14px;
 }
 
 .preview-hero-img {

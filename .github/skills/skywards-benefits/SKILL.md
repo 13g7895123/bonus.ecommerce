@@ -33,9 +33,10 @@ Do not add a new `title` database column for normal title display work. The exis
 
 ## Member Page Requirements
 The `/skywards/benefits` page should match the reference card layout:
-- Render this page as a standalone full-bleed content page; do not wrap it in `PageLayout` or show the standard `PageHeader` unless the design changes again.
+- Render the existing top navigation/header with `PageHeader` using title `我的權益` and `back-to="/skywards#tier"`.
+- Keep the page body as a standalone full-bleed content area; do not wrap the body in `PageLayout` unless the design changes again.
 - Use a light gray page background behind the content card.
-- Render `image_url` from the very top of the viewport/page content with no header gap above it.
+- Render `image_url` directly below the top header with no extra gap between the header and image.
 - Render `image_url` as a full-width hero image from left edge to right edge of the page content.
 - Use `object-fit: cover` for the hero image so it fills the width cleanly.
 - Render the text area below the image as a centered white card with subtle shadow, attached directly below the image.
@@ -50,7 +51,7 @@ The admin Skywards benefits page must let operators manage the same fields that 
 - Provide an `上方圖片` URL input and upload button mapped to `image_url`.
 - Provide a rich-text editor mapped to `content`.
 - Keep the tier selector and active/hidden state selector.
-- Preview must mirror the member page structure: no standard header, full-width top image, white card with shadow, title, then rich content.
+- Preview must mirror the member page structure: top header/navigation, full-width top image, white card with shadow, title, then rich content.
 - When saving, trim `label`; send `null` when it is empty.
 - Keep the existing upload path through `fileService.upload(file, 'general')` unless the file service contract changes.
 
