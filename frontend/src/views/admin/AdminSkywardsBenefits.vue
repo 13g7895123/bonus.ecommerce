@@ -18,6 +18,7 @@
           <tr>
             <th style="width:76px">圖片</th>
             <th>適用等級</th>
+            <th>標題</th>
             <th>內容摘要</th>
             <th>狀態</th>
             <th>操作</th>
@@ -32,6 +33,7 @@
               </div>
             </td>
             <td><span class="badge badge-blue">{{ tierLabel(item.tier) }}</span></td>
+            <td class="title-cell">{{ item.label || defaultTitle(item.tier) }}</td>
             <td class="summary-cell">{{ contentText(item.content) || '尚無文字內容' }}</td>
             <td>
               <span :class="['badge', Number(item.is_active) ? 'badge-green' : 'badge-gray']">
@@ -74,6 +76,11 @@
         </div>
 
         <div>
+          <label class="f-label">標題</label>
+          <input v-model.trim="form.label" class="f-input" placeholder="例如：阿聯酋航空 Skywards 藍卡" />
+        </div>
+
+        <div>
           <label class="f-label">上方圖片</label>
           <div class="image-control-row">
             <input v-model="form.image_url" class="f-input" placeholder="圖片 URL，或使用右側按鈕上傳" />
@@ -99,7 +106,8 @@
           <div class="preview-label">前台顯示預覽</div>
           <div class="benefit-page-preview">
             <img v-if="form.image_url" :src="form.image_url" alt="Skywards 權益圖片預覽" class="preview-hero-img" />
-            <div class="preview-copy">
+            <div class="preview-copy-card">
+              <h3>{{ form.label || defaultTitle(form.tier) }}</h3>
               <div v-if="form.content" v-html="form.content" class="preview-rich-content"></div>
               <p v-else class="preview-empty">尚無文字內容</p>
             </div>
@@ -149,6 +157,8 @@ const form = ref(blankForm())
 
 const tierLabel = (tier) => tierOptions.find(option => option.value === tier)?.label || '未設定'
 
+const defaultTitle = (tier) => `${tierLabel(tier)}權益`
+
 const contentText = (html) => {
   if (!html) return ''
   const parsed = new DOMParser().parseFromString(html, 'text/html')
@@ -158,6 +168,7 @@ const contentText = (html) => {
 const normalizeItem = (item) => ({
   ...item,
   tier: item.tier || 'regular',
+  label: item.label || '',
   image_url: item.image_url || '',
   sort_order: Number(item.sort_order || 0),
   is_active: Number(item.is_active ?? 1),
@@ -222,7 +233,7 @@ const saveItem = async () => {
   try {
     const payload = {
       tier: form.value.tier || 'regular',
-      label: form.value.label || null,
+      label: form.value.label?.trim() || null,
       image_url: form.value.image_url || null,
       content: form.value.content || '',
       sort_order: Number(form.value.sort_order || 0),
@@ -291,6 +302,15 @@ onMounted(loadItems)
   text-overflow: ellipsis;
 }
 
+.title-cell {
+  max-width: 220px;
+  color: #1e293b;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .sky-benefit-modal {
   max-width: 880px;
 }
@@ -347,20 +367,31 @@ onMounted(loadItems)
   max-width: 520px;
   margin: 0 auto;
   text-align: left;
+  background: #f1f5f9;
+  padding-bottom: 1rem;
+  overflow: hidden;
 }
 
 .preview-hero-img {
   width: 100%;
-  max-width: 520px;
-  max-height: 280px;
-  object-fit: contain;
+  height: 250px;
+  object-fit: cover;
   display: block;
-  margin: 0 auto 1rem;
+  margin: 0;
   background: #f1f5f9;
-  border-radius: 8px;
 }
 
-.preview-copy h3 {
+.preview-copy-card {
+  width: calc(100% - 2rem);
+  margin: 0 auto;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.14);
+  box-sizing: border-box;
+}
+
+.preview-copy-card h3 {
   margin: 0 0 0.75rem;
   font-size: 1.1rem;
   color: #1e293b;

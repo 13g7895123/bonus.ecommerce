@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import PageLayout from '../components/PageLayout.vue'
 
 const loading = ref(true)
@@ -41,6 +41,12 @@ const loadBenefits = async () => {
   }
 }
 
+const benefitTitle = computed(() => {
+  const title = benefit.value?.label?.trim()
+  if (title) return title
+  return `${tierNames[currentTier.value] || 'Skywards'}權益`
+})
+
 onMounted(loadBenefits)
 </script>
 
@@ -52,9 +58,10 @@ onMounted(loadBenefits)
       <div v-else-if="!benefit" class="state-message">目前尚無{{ tierNames[currentTier] || '此等級' }}權益說明</div>
       <article v-else class="benefit-section">
         <div v-if="benefit.image_url" class="benefit-image-wrap">
-          <img :src="benefit.image_url" :alt="benefit.label || 'Skywards 權益圖片'" class="benefit-image" />
+          <img :src="benefit.image_url" :alt="benefitTitle" class="benefit-image" />
         </div>
-        <div class="benefit-text">
+        <div class="benefit-text-card">
+          <h1 class="benefit-title">{{ benefitTitle }}</h1>
           <div v-if="benefit.content" class="benefit-rich-content" v-html="benefit.content"></div>
         </div>
       </article>
@@ -65,9 +72,10 @@ onMounted(loadBenefits)
 <style scoped>
 .benefits-page-content {
   width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 1rem 1rem 2rem;
+  min-height: 100%;
+  margin: 0;
+  padding: 0 0 2.5rem;
+  background: #f5f5f5;
   box-sizing: border-box;
 }
 
@@ -93,33 +101,37 @@ onMounted(loadBenefits)
 
 .benefit-image-wrap {
   width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1.25rem;
-  background: #f7f7f7;
-  border-radius: 8px;
+  margin: 0;
+  background: #e5e7eb;
   overflow: hidden;
 }
 
 .benefit-image {
   width: 100%;
-  max-width: 720px;
-  max-height: 420px;
-  object-fit: contain;
+  height: clamp(240px, 52vw, 520px);
+  object-fit: cover;
   display: block;
 }
 
-.benefit-text {
+.benefit-text-card {
+  width: calc(100% - 2.5rem);
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 1.35rem 1.25rem 1.45rem;
   color: #333;
+  background: #fff;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.16);
+  box-sizing: border-box;
   word-break: break-word;
   overflow-wrap: break-word;
 }
 
 .benefit-title {
-  font-size: 1.35rem;
-  line-height: 1.35;
-  font-weight: 800;
-  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  line-height: 1.45;
+  font-weight: 900;
+  margin: 0 0 1rem;
   color: #111;
 }
 
@@ -147,18 +159,19 @@ onMounted(loadBenefits)
 .benefit-rich-content :deep(hr) { border: none; border-top: 1px solid #e0e0e0; margin: 1rem 0; }
 
 @media (min-width: 768px) {
-  .benefits-page-content {
-    padding: 1.5rem 1.25rem 3rem;
-  }
-
   .benefit-title {
-    font-size: 1.5rem;
+    font-size: 1.08rem;
   }
 }
 
 @media (max-width: 480px) {
   .benefit-image {
-    max-height: 260px;
+    height: 260px;
+  }
+
+  .benefit-text-card {
+    width: calc(100% - 2rem);
+    padding: 1.15rem 1rem 1.25rem;
   }
 }
 </style>
