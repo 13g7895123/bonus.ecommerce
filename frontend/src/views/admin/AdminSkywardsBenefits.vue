@@ -367,46 +367,51 @@ onMounted(loadItems)
   max-width: 520px;
   margin: 0 auto;
   text-align: left;
-  background: #f1f5f9;
+  background: #f5f5f5;
   padding-bottom: 1rem;
   overflow: hidden;
 }
 
 .preview-hero-img {
   width: 100%;
-  height: 250px;
+  height: 328px;
   object-fit: cover;
   display: block;
   margin: 0;
-  background: #f1f5f9;
+  background: #e5e7eb;
 }
 
 .preview-copy-card {
   width: calc(100% - 2rem);
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1rem 1.1rem 1.1rem;
   background: #fff;
   border-radius: 0 0 4px 4px;
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.14);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.16);
   box-sizing: border-box;
 }
 
 .preview-copy-card h3 {
-  margin: 0 0 0.75rem;
-  font-size: 1.1rem;
-  color: #1e293b;
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #111827;
+  font-weight: 800;
 }
 
 .preview-rich-content {
-  color: #334155;
-  line-height: 1.65;
+  color: #6b7280;
+  font-size: 0.92rem;
+  line-height: 1.68;
   word-break: break-word;
   overflow-wrap: break-word;
 }
 
 .preview-rich-content :deep(p) { margin: 0 0 0.75rem; }
+.preview-rich-content :deep(p:last-child) { margin-bottom: 0; }
 .preview-rich-content :deep(ul) { padding-left: 1.5em; list-style: disc; }
 .preview-rich-content :deep(ol) { padding-left: 1.5em; list-style: decimal; }
+.preview-rich-content :deep(strong) { color: #111827; font-weight: 800; }
 
 .preview-empty {
   color: #94a3b8;

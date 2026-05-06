@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import PageLayout from '../components/PageLayout.vue'
 
 const loading = ref(true)
 const errorMsg = ref('')
@@ -51,30 +50,28 @@ onMounted(loadBenefits)
 </script>
 
 <template>
-  <PageLayout title="我的權益" back-to="/skywards#tier" theme="white">
-    <div class="benefits-page-content">
-      <div v-if="loading" class="state-message">載入中...</div>
-      <div v-else-if="errorMsg" class="state-message state-error">{{ errorMsg }}</div>
-      <div v-else-if="!benefit" class="state-message">目前尚無{{ tierNames[currentTier] || '此等級' }}權益說明</div>
-      <article v-else class="benefit-section">
-        <div v-if="benefit.image_url" class="benefit-image-wrap">
-          <img :src="benefit.image_url" :alt="benefitTitle" class="benefit-image" />
-        </div>
-        <div class="benefit-text-card">
-          <h1 class="benefit-title">{{ benefitTitle }}</h1>
-          <div v-if="benefit.content" class="benefit-rich-content" v-html="benefit.content"></div>
-        </div>
-      </article>
-    </div>
-  </PageLayout>
+  <main class="benefits-page-content">
+    <div v-if="loading" class="state-message">載入中...</div>
+    <div v-else-if="errorMsg" class="state-message state-error">{{ errorMsg }}</div>
+    <div v-else-if="!benefit" class="state-message">目前尚無{{ tierNames[currentTier] || '此等級' }}權益說明</div>
+    <article v-else class="benefit-section" :class="{ 'benefit-section-no-image': !benefit.image_url }">
+      <div v-if="benefit.image_url" class="benefit-image-wrap">
+        <img :src="benefit.image_url" :alt="benefitTitle" class="benefit-image" />
+      </div>
+      <div class="benefit-text-card">
+        <h1 class="benefit-title">{{ benefitTitle }}</h1>
+        <div v-if="benefit.content" class="benefit-rich-content" v-html="benefit.content"></div>
+      </div>
+    </article>
+  </main>
 </template>
 
 <style scoped>
 .benefits-page-content {
   width: 100%;
-  min-height: 100%;
+  min-height: 100vh;
   margin: 0;
-  padding: 0 0 2.5rem;
+  padding: 0 0 2rem;
   background: #f5f5f5;
   box-sizing: border-box;
 }
@@ -82,7 +79,7 @@ onMounted(loadBenefits)
 .state-message {
   color: #999;
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 4rem 1rem;
   font-size: 0.95rem;
 }
 
@@ -91,12 +88,12 @@ onMounted(loadBenefits)
 }
 
 .benefit-section {
-  margin-bottom: 2rem;
+  margin: 0;
   text-align: left;
 }
 
-.benefit-section:last-child {
-  margin-bottom: 0;
+.benefit-section-no-image {
+  padding-top: 1.25rem;
 }
 
 .benefit-image-wrap {
@@ -108,7 +105,7 @@ onMounted(loadBenefits)
 
 .benefit-image {
   width: 100%;
-  height: clamp(240px, 52vw, 520px);
+  height: clamp(240px, 63vw, 520px);
   object-fit: cover;
   display: block;
 }
@@ -117,35 +114,36 @@ onMounted(loadBenefits)
   width: calc(100% - 2.5rem);
   max-width: 760px;
   margin: 0 auto;
-  padding: 1.35rem 1.25rem 1.45rem;
+  padding: 1.15rem 1.2rem 1.25rem;
   color: #333;
   background: #fff;
   border-radius: 0 0 4px 4px;
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.16);
   box-sizing: border-box;
   word-break: break-word;
   overflow-wrap: break-word;
 }
 
 .benefit-title {
-  font-size: 1rem;
+  font-size: 0.92rem;
   line-height: 1.45;
-  font-weight: 900;
-  margin: 0 0 1rem;
+  font-weight: 800;
+  margin: 0 0 1.1rem;
   color: #111;
 }
 
 .benefit-rich-content {
-  font-size: 1rem;
-  line-height: 1.75;
-  color: #444;
+  font-size: 0.92rem;
+  line-height: 1.68;
+  color: #6b7280;
 }
 
 .benefit-rich-content :deep(p) { margin: 0 0 0.85rem; }
+.benefit-rich-content :deep(p:last-child) { margin-bottom: 0; }
 .benefit-rich-content :deep(ul) { padding-left: 1.5em; list-style: disc; margin: 0.75rem 0; }
 .benefit-rich-content :deep(ol) { padding-left: 1.5em; list-style: decimal; margin: 0.75rem 0; }
 .benefit-rich-content :deep(li) { margin-bottom: 0.35rem; }
-.benefit-rich-content :deep(strong) { font-weight: 700; }
+.benefit-rich-content :deep(strong) { color: #111827; font-weight: 800; }
 .benefit-rich-content :deep(em) { font-style: italic; }
 .benefit-rich-content :deep(u) { text-decoration: underline; }
 .benefit-rich-content :deep(s) { text-decoration: line-through; }
@@ -160,18 +158,14 @@ onMounted(loadBenefits)
 
 @media (min-width: 768px) {
   .benefit-title {
-    font-size: 1.08rem;
+    font-size: 0.95rem;
   }
 }
 
 @media (max-width: 480px) {
-  .benefit-image {
-    height: 260px;
-  }
-
   .benefit-text-card {
     width: calc(100% - 2rem);
-    padding: 1.15rem 1rem 1.25rem;
+    padding: 1rem 1rem 1.15rem;
   }
 }
 </style>
