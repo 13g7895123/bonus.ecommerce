@@ -62,6 +62,7 @@ onMounted(loadBenefits)
       </div>
       <div class="benefit-text-card">
         <h1 class="benefit-title">{{ benefitTitle }}</h1>
+        <div class="benefit-title-divider" aria-hidden="true"></div>
         <div v-if="benefit.content" class="benefit-rich-content" v-html="benefit.content"></div>
       </div>
     </article>
@@ -130,8 +131,15 @@ onMounted(loadBenefits)
   font-size: 0.92rem;
   line-height: 1.45;
   font-weight: 800;
-  margin: 0 0 1.1rem;
+  margin: 0 0 0.55rem;
   color: #111;
+}
+
+.benefit-title-divider {
+  width: 42px;
+  height: 2px;
+  margin: 0 0 1rem;
+  background: #d71921;
 }
 
 .benefit-rich-content {

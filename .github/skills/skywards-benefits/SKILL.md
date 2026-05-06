@@ -41,6 +41,7 @@ The `/skywards/benefits` page should match the reference card layout:
 - Use `object-fit: cover` for the hero image so it fills the width cleanly.
 - Render the text area below the image as a centered white card with subtle shadow, attached directly below the image.
 - Render the title above rich content. The title comes from `label`; fallback should be the tier label plus `權益`.
+- Render a short 2px magenta divider below the title before the rich content.
 - Preserve rich-text HTML formatting from `content`, including paragraphs, lists, headings, links, inline formatting, blockquotes, images, and horizontal rules.
 - Loading, error, and empty states must remain readable.
 

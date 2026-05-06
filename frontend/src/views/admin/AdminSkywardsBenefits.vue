@@ -113,6 +113,7 @@
             <img v-if="form.image_url" :src="form.image_url" alt="Skywards 權益圖片預覽" class="preview-hero-img" />
             <div class="preview-copy-card">
               <h3>{{ form.label || defaultTitle(form.tier) }}</h3>
+              <div class="preview-title-divider" aria-hidden="true"></div>
               <div v-if="form.content" v-html="form.content" class="preview-rich-content"></div>
               <p v-else class="preview-empty">尚無文字內容</p>
             </div>
@@ -424,11 +425,18 @@ onMounted(loadItems)
 }
 
 .preview-copy-card h3 {
-  margin: 0 0 1rem;
+  margin: 0 0 0.55rem;
   font-size: 0.95rem;
   line-height: 1.45;
   color: #111827;
   font-weight: 800;
+}
+
+.preview-title-divider {
+  width: 42px;
+  height: 2px;
+  margin: 0 0 1rem;
+  background: #d71921;
 }
 
 .preview-rich-content {
