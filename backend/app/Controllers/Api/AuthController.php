@@ -23,10 +23,12 @@ class AuthController extends BaseApiController
         }
 
         $result = (new AuthService())->register([
-            'email'     => $email,
-            'password'  => $password,
-            'full_name' => $data['full_name'] ?? null,
-            'phone'     => $data['phone'] ?? null,
+            'email'           => $email,
+            'password'        => $password,
+            'full_name'       => $data['full_name'] ?? null,
+            'phone'           => $data['phone'] ?? null,
+            'register_ip'     => $this->request->getIPAddress(),
+            'register_device' => $this->request->getUserAgent()->getAgentString(),
         ]);
 
         if (!$result['success']) {

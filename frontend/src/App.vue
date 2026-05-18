@@ -12,6 +12,7 @@ const toast = useToast()
 const isMenuOpen = ref(false)
 const isLoggedIn = ref(false)
 const activeMenu = ref(null)
+const showDeviceUnboundDialog = ref(false)
 
 // 切換語言
 const setLocale = (lang) => {
@@ -51,6 +52,10 @@ onMounted(() => {
     isLoggedIn.value = false
     toast.warning(t('auth.sessionExpired') || '登入已過期，請重新登入')
     router.push('/')
+  })
+  // 監聽設備未綁定事件
+  window.addEventListener('device:unbound', () => {
+    showDeviceUnboundDialog.value = true
   })
 })
 
@@ -232,6 +237,18 @@ const activeMenuLabel = computed(() => {
         <span class="nav-label">{{ $t('nav.settings') }}</span>
       </a>
     </footer>
+
+    <!-- 設備未綁定提示 Dialog -->
+    <Teleport to="body">
+      <div v-if="showDeviceUnboundDialog" class="device-dialog-overlay" @click.self="showDeviceUnboundDialog = false">
+        <div class="device-dialog">
+          <div class="device-dialog-icon">⚠️</div>
+          <h3 class="device-dialog-title">尚未綁定設備</h3>
+          <p class="device-dialog-body">此操作需要先完成設備綁定。如需解除綁定或重新綁定，請聯繫客服人員協助處理。</p>
+          <button class="device-dialog-btn" @click="showDeviceUnboundDialog = false">我知道了</button>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -639,5 +656,58 @@ const activeMenuLabel = computed(() => {
   .nav-label {
     font-size: 0.65rem;
   }
+}
+
+/* Device Unbound Dialog */
+.device-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.device-dialog {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
+.device-dialog-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.device-dialog-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.75rem;
+}
+
+.device-dialog-body {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.device-dialog-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: #d71921;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 </style>

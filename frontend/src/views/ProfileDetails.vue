@@ -51,6 +51,24 @@
         </div>
       </div>
 
+      <!-- 裝置綁定資訊子區塊 -->
+      <div class="sub-section">
+        <h4 class="sub-title">裝置綁定資訊</h4>
+        <div class="form-group">
+          <label>註冊時間</label>
+          <div class="field-value">{{ user?.created_at ?? '—' }}</div>
+        </div>
+        <div class="form-group">
+          <label>註冊 IP</label>
+          <div class="field-value">{{ user?.register_ip ?? '—' }}</div>
+        </div>
+        <div class="form-group">
+          <label>綁定設備</label>
+          <div v-if="user?.register_device" class="field-value device-value">{{ user.register_device }}</div>
+          <div v-else class="field-value unbound-hint">尚未綁定設備，如需解除綁定請聯繫客服</div>
+        </div>
+      </div>
+
       <!-- 電子郵件子區塊 -->
       <div class="sub-section">
         <h4 class="sub-title">電子郵件</h4>
@@ -484,6 +502,17 @@ const saveChanges = async () => {
   text-align: center;
   color: #bbb;
   padding: 2rem;
+  font-size: 0.9rem;
+}
+
+.device-value {
+  word-break: break-all;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.unbound-hint {
+  color: #e65100;
   font-size: 0.9rem;
 }
 </style>

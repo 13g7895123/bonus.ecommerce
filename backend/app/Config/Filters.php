@@ -37,6 +37,7 @@ class Filters extends BaseFilters
         'jwt'           => \App\Filters\JwtFilter::class,
         'apicors'       => \App\Filters\CorsFilter::class,
         'apilog'        => \App\Filters\ApiLogFilter::class,
+        'devicebinding' => \App\Filters\DeviceBindingFilter::class,
     ];
 
     /**

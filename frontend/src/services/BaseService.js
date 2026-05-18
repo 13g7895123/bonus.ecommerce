@@ -41,6 +41,10 @@ http.interceptors.response.use(
         window.dispatchEvent(new CustomEvent('auth:expired'));
       }
     }
+    // 設備未綁定 → 發送全域事件讓 App 顯示提示
+    if (status === 403 && message.includes('尚未綁定設備')) {
+      window.dispatchEvent(new CustomEvent('device:unbound', { detail: { message } }));
+    }
     return Promise.reject({ response: { data: { message }, status } });
   }
 );

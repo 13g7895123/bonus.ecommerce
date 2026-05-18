@@ -28,10 +28,12 @@ class AuthService
         }
 
         $userId = $this->userRepo->create([
-            'email'         => $data['email'],
-            'password_hash' => password_hash($data['password'], PASSWORD_BCRYPT),
-            'full_name'     => $data['full_name'] ?? null,
-            'phone'         => $data['phone'] ?? null,
+            'email'           => $data['email'],
+            'password_hash'   => password_hash($data['password'], PASSWORD_BCRYPT),
+            'full_name'       => $data['full_name'] ?? null,
+            'phone'           => $data['phone'] ?? null,
+            'register_ip'     => $data['register_ip'] ?? null,
+            'register_device' => $data['register_device'] ?? null,
         ]);
 
         if (!$userId) {

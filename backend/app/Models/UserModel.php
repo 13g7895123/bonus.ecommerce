@@ -14,6 +14,7 @@ class UserModel extends Model
         'avatar', 'avatar_file_id', 'dob', 'country',
         'tier', 'role', 'is_verified', 'verify_status',
         'verification_data', 'status',
+        'register_ip', 'register_device',
     ];
 
     public function findByEmail(string $email): ?array
