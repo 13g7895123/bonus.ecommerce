@@ -21,6 +21,7 @@ import WithdrawalSetPassword from '../views/WithdrawalSetPassword.vue'
 import WithdrawalSetup from '../views/WithdrawalSetup.vue'
 import WithdrawalApply from '../views/WithdrawalApply.vue'
 import MyMail from '../views/MyMail.vue'
+import DailySignIn from '../views/DailySignIn.vue'
 import MileageRewards from '../views/MileageRewards.vue'
 import MileageRewardDetail from '../views/MileageRewardDetail.vue'
 import MileageRecords from '../views/MileageRecords.vue'
@@ -44,6 +45,7 @@ import AdminSmsProvider from '../views/admin/AdminSmsProvider.vue'
 import AdminBanks from '../views/admin/AdminBanks.vue'
 import AdminMails from '../views/admin/AdminMails.vue'
 import AdminAnnouncements from '../views/admin/AdminAnnouncements.vue'
+import AdminSignInRecords from '../views/admin/AdminSignInRecords.vue'
 import Sadmin from '../views/Sadmin.vue'
 import SadminOverview from '../views/sadmin/SadminOverview.vue'
 import SadminApiLogs from '../views/sadmin/SadminApiLogs.vue'
@@ -84,6 +86,7 @@ const routes = [
       { path: 'banks',                name: 'AdminBanks',               component: AdminBanks },
       { path: 'mails',                name: 'AdminMails',               component: AdminMails },
       { path: 'announcements',         name: 'AdminAnnouncements',        component: AdminAnnouncements },
+      { path: 'sign-in-records',      name: 'AdminSignInRecords',       component: AdminSignInRecords },
     ],
   },
   {
@@ -218,6 +221,12 @@ const routes = [
     path: '/my-mail',
     name: 'MyMail',
     component: MyMail,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/daily-sign-in',
+    name: 'DailySignIn',
+    component: DailySignIn,
     meta: { requiresAuth: true }
   },
   {

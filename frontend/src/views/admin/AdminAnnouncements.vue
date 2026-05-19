@@ -15,6 +15,7 @@
           <tr>
             <th>標題</th>
             <th style="width:160px">發布時間</th>
+            <th style="width:80px;text-align:center">置頂</th>
             <th style="width:80px;text-align:center">狀態</th>
             <th style="width:120px;text-align:center">操作</th>
           </tr>
@@ -23,6 +24,11 @@
           <tr v-for="item in list" :key="item.id">
             <td class="td-name">{{ item.title }}</td>
             <td>{{ formatDate(item.published_at) }}</td>
+            <td style="text-align:center">
+              <span :class="['badge', item.is_pinned == 1 ? 'badge-red' : 'badge-gray']">
+                {{ item.is_pinned == 1 ? '置頂' : '一般' }}
+              </span>
+            </td>
             <td style="text-align:center">
               <span :class="['badge', item.is_published == 1 ? 'badge-green' : 'badge-gray']">
                 {{ item.is_published == 1 ? '已發布' : '草稿' }}
@@ -58,6 +64,10 @@
             <input v-model="form.published_at" class="f-input" type="datetime-local" />
           </div>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding-bottom:0.5rem">
+            <input type="checkbox" v-model="form.is_pinned" :true-value="1" :false-value="0" style="width:16px;height:16px" />
+            <span class="f-label" style="margin:0">置頂公告</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding-bottom:0.5rem">
             <input type="checkbox" v-model="form.is_published" :true-value="1" :false-value="0" style="width:16px;height:16px" />
             <span class="f-label" style="margin:0">立即發布</span>
           </label>
@@ -79,7 +89,7 @@ import { RefreshCw, Plus } from 'lucide-vue-next'
 
 const list    = ref([])
 const loading = ref(false)
-const form    = ref({ show: false, id: null, title: '', content: '', is_published: 1, published_at: '', submitting: false })
+const form    = ref({ show: false, id: null, title: '', content: '', is_published: 1, is_pinned: 0, published_at: '', submitting: false })
 
 const formatDate = (dt) => {
   if (!dt) return '—'
@@ -110,12 +120,13 @@ const openForm = (item = null) => {
       title: item.title,
       content: item.content || '',
       is_published: Number(item.is_published),
+      is_pinned: Number(item.is_pinned || 0),
       published_at: toLocalDatetimeInput(item.published_at),
     }
   } else {
     const now = new Date()
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().substring(0, 16)
-    form.value = { show: true, submitting: false, id: null, title: '', content: '', is_published: 1, published_at: local }
+    form.value = { show: true, submitting: false, id: null, title: '', content: '', is_published: 1, is_pinned: 0, published_at: local }
   }
 }
 
@@ -133,6 +144,7 @@ const submitForm = async () => {
         title:        f.title,
         content:      f.content,
         is_published: f.is_published,
+        is_pinned:    f.is_pinned,
         published_at: f.published_at ? f.published_at.replace('T', ' ') + ':00' : null,
       }),
     })

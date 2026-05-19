@@ -842,7 +842,7 @@ class AdminPanelController extends Controller
         $limit = min((int) ($this->request->getGet('limit') ?? 50), 100);
         $model = model(\App\Models\AnnouncementModel::class);
         $total = $model->countAll();
-        $items = $model->orderBy('published_at', 'DESC')->paginate($limit, 'default', $page);
+        $items = $model->orderBy('is_pinned', 'DESC')->orderBy('published_at', 'DESC')->paginate($limit, 'default', $page);
         return $this->json(['items' => $items ?? [], 'total' => $total]);
     }
 
@@ -858,8 +858,12 @@ class AdminPanelController extends Controller
             'title'        => $title,
             'content'      => $data['content'] ?? '',
             'is_published' => isset($data['is_published']) ? (int) $data['is_published'] : 1,
+            'is_pinned'    => isset($data['is_pinned']) ? (int) $data['is_pinned'] : 0,
             'published_at' => $data['published_at'] ?? date('Y-m-d H:i:s'),
         ], true);
+        if ((int) ($data['is_pinned'] ?? 0) === 1) {
+            $model->where('id !=', $id)->set(['is_pinned' => 0])->update();
+        }
         return $this->json(['success' => true, 'id' => $id], 201);
     }
 
@@ -874,8 +878,12 @@ class AdminPanelController extends Controller
         if (isset($data['title']))        $payload['title']        = trim($data['title']);
         if (isset($data['content']))      $payload['content']      = $data['content'];
         if (isset($data['is_published'])) $payload['is_published'] = (int) $data['is_published'];
+        if (isset($data['is_pinned']))    $payload['is_pinned']    = (int) $data['is_pinned'];
         if (isset($data['published_at'])) $payload['published_at'] = $data['published_at'] ?: date('Y-m-d H:i:s');
         $model->update($id, $payload);
+        if ((int) ($payload['is_pinned'] ?? 0) === 1) {
+            $model->where('id !=', $id)->set(['is_pinned' => 0])->update();
+        }
         return $this->json(['success' => true]);
     }
 
@@ -887,6 +895,33 @@ class AdminPanelController extends Controller
         }
         $model->delete($id);
         return $this->json(['success' => true]);
+    }
+
+    public function signInRecords(): ResponseInterface
+    {
+        $year    = (int) ($this->request->getGet('year') ?? date('Y'));
+        $month   = (int) ($this->request->getGet('month') ?? date('n'));
+        $keyword = trim((string) ($this->request->getGet('keyword') ?? ''));
+
+        $db = \Config\Database::connect();
+        $builder = $db->table('user_sign_ins usi')
+            ->select('usi.id, usi.user_id, usi.campaign_id, usi.sign_in_date, usi.created_at, u.email, u.full_name, sic.title')
+            ->join('users u', 'u.id = usi.user_id', 'left')
+            ->join('sign_in_campaigns sic', 'sic.id = usi.campaign_id', 'left')
+            ->where('sic.year', $year)
+            ->where('sic.month', $month)
+            ->orderBy('usi.sign_in_date', 'DESC')
+            ->orderBy('usi.created_at', 'DESC');
+
+        if ($keyword !== '') {
+            $builder->groupStart()
+                ->like('u.email', $keyword)
+                ->orLike('u.full_name', $keyword)
+                ->groupEnd();
+        }
+
+        $items = $builder->get()->getResultArray();
+        return $this->json(['items' => $items, 'total' => count($items)]);
     }
 
     public function index(): ResponseInterface

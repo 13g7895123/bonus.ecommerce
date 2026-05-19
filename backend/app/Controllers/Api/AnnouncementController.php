@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Api;
 
+use App\Libraries\Auth;
 use App\Services\AnnouncementService;
 
 class AnnouncementController extends BaseApiController
@@ -17,7 +18,16 @@ class AnnouncementController extends BaseApiController
 
     public function show(int $id)
     {
-        $item = (new AnnouncementService())->getById($id);
+        $userId = null;
+        try {
+            if ($this->request->getHeaderLine('Authorization')) {
+                $userId = Auth::id();
+            }
+        } catch (\Throwable) {
+            $userId = null;
+        }
+
+        $item = (new AnnouncementService())->getById($id, $userId);
         if (!$item) {
             return $this->error('找不到公告', 404);
         }

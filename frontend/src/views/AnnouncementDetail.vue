@@ -13,6 +13,12 @@ onMounted(async () => {
   try {
     const token   = localStorage.getItem('token') || ''
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    if (token) {
+      fetch(`/api/v1/me/announcements/${id.value}`, {
+        method: 'PATCH',
+        headers,
+      }).catch(() => {})
+    }
     const res     = await fetch(`/api/v1/announcements/${id.value}`, { headers })
     if (res.ok) {
       const data = await res.json()
@@ -31,12 +37,7 @@ onMounted(async () => {
     <div v-else-if="news" class="content-container">
       <h1 class="news-title">{{ news.title }}</h1>
       <p class="news-date">{{ (news.published_at || news.date || '').substring(0, 16) }}</p>
-      <div class="news-body">
-        <template v-for="(line, index) in (news.content || '').split('\n')" :key="index">
-          {{ line }}
-          <br />
-        </template>
-      </div>
+      <div class="news-body" v-html="news.content || ''"></div>
     </div>
     <div v-else class="content-container not-found">
       <p>找不到該公告。</p>

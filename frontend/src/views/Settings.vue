@@ -33,13 +33,13 @@ const handleLogout = () => {
           </div>
           <p class="card-text">{{ $t('settings.idVerification') }}</p>
         </router-link>
-        <router-link to="/my-mail" class="essential-card">
+        <router-link to="/daily-sign-in" class="essential-card">
           <div class="icon-circle">
             <svg width="31" height="23" viewBox="0 0 31 23" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M30.4127 7.59479C30.6488 7.40911 31 7.58281 31 7.8763V20.125C31 21.7122 29.6982 23 28.0938 23H2.90625C1.30176 23 0 21.7122 0 20.125V7.88229C0 7.58281 0.345117 7.4151 0.587305 7.60078C1.94355 8.64297 3.7418 9.96667 9.91758 14.4049C11.1951 15.3273 13.3506 17.268 15.5 17.256C17.6615 17.274 19.8594 15.2914 21.0885 14.4049C27.2643 9.96667 29.0564 8.63698 30.4127 7.59479ZM15.5 15.3333C16.9047 15.3573 18.927 13.5844 19.9441 12.8536C27.9787 7.08568 28.5902 6.58255 30.443 5.14505C30.7941 4.87552 31 4.45625 31 4.01302V2.875C31 1.28776 29.6982 0 28.0938 0H2.90625C1.30176 0 0 1.28776 0 2.875V4.01302C0 4.45625 0.205859 4.86953 0.557031 5.14505C2.40977 6.57656 3.02129 7.08568 11.0559 12.8536C12.073 13.5844 14.0953 15.3573 15.5 15.3333Z" fill="#D71921"/>
             </svg>
           </div>
-          <p class="card-text">{{ $t('settings.myMail') }}</p>
+          <p class="card-text">{{ $t('settings.dailySignIn') }}</p>
         </router-link>
         <router-link to="/transactions" class="essential-card">
           <div class="icon-circle">

@@ -104,6 +104,7 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('announcements',             'AdminPanelController::createAnnouncement');
         $routes->put('announcements/(:num)',        'AdminPanelController::updateAnnouncement/$1');
         $routes->delete('announcements/(:num)',     'AdminPanelController::deleteAnnouncement/$1');
+        $routes->get('sign-in-records',            'AdminPanelController::signInRecords');
     });
 
     // ── Auth (Public) ──
@@ -179,6 +180,10 @@ $routes->group('api/v1', static function ($routes) {
     $routes->group('me', ['filter' => ['jwt', 'devicebinding']], static function ($routes) {
         $routes->get('mails',           'Api\UserController::myMails');
         $routes->patch('mails/(:num)',   'Api\UserController::markMailRead/$1');
+        $routes->get('notifications',   'Api\UserController::notifications');
+        $routes->patch('announcements/(:num)', 'Api\UserController::markAnnouncementRead/$1');
+        $routes->get('sign-in',         'Api\UserController::signInStatus');
+        $routes->post('sign-in',        'Api\UserController::signInToday');
     });
 
     // ── Customer Service (JWT required) ──

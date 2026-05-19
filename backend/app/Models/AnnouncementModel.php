@@ -9,7 +9,7 @@ class AnnouncementModel extends Model
     protected $table         = 'announcements';
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
-    protected $allowedFields = ['title', 'content', 'is_published', 'published_at'];
+    protected $allowedFields = ['title', 'content', 'is_published', 'is_pinned', 'published_at'];
 
     /**
      * @return array{items: array, total: int}
@@ -18,6 +18,7 @@ class AnnouncementModel extends Model
     {
         $total = $this->where('is_published', 1)->countAllResults(false);
         $items = $this->where('is_published', 1)
+            ->orderBy('is_pinned', 'DESC')
             ->orderBy('published_at', 'DESC')
             ->limit($limit, ($page - 1) * $limit)
             ->findAll();

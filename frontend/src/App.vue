@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ToastNotification from '@/components/ToastNotification.vue'
@@ -9,107 +9,204 @@ const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
 const toast = useToast()
+
 const isMenuOpen = ref(false)
 const isLoggedIn = ref(false)
 const activeMenu = ref(null)
 const showDeviceUnboundDialog = ref(false)
+const activeNotificationTab = ref('announcements')
+const topAnnouncement = ref(null)
+const announcements = ref([])
+const notificationData = ref({
+  announcements: { items: [], unread_count: 0 },
+  mails: { items: [], unread_count: 0 },
+})
+const selectedMail = ref(null)
 
-// 切換語言
+const isHomePage = computed(() => route.path === '/')
+const isSettingsPage = computed(() => route.path === '/settings')
+const isSkywardsPage = computed(() => route.path === '/skywards')
+
+const notificationAnnouncements = computed(() => {
+  if (isLoggedIn.value) return notificationData.value.announcements.items
+  return announcements.value.map(item => ({ ...item, is_read: 1 }))
+})
+
+const notificationMails = computed(() => notificationData.value.mails.items)
+
 const setLocale = (lang) => {
   locale.value = lang
   localStorage.setItem('app_locale', lang)
   activeMenu.value = null
 }
 
-// 檢查登入狀態
 const checkLoginStatus = () => {
-  const token = localStorage.getItem('token')
-  isLoggedIn.value = !!token
+  isLoggedIn.value = !!localStorage.getItem('token')
 }
 
-// 監聽路由變更以更新狀態
-watch(route, (newRoute) => {
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+const formatDateTime = (value) => {
+  if (!value) return ''
+  return String(value).replace('T', ' ').substring(0, 16)
+}
+
+const badgeText = (count) => {
+  const value = Number(count || 0)
+  if (value <= 0) return ''
+  return value > 99 ? '99+' : String(value)
+}
+
+const loadAnnouncements = async () => {
+  try {
+    const res = await fetch('/api/v1/announcements?limit=20')
+    if (!res.ok) return
+
+    const json = await res.json()
+    const items = json.data?.items || []
+    announcements.value = items.map(a => ({
+      id: a.id,
+      title: a.title,
+      content: a.content,
+      content_text: a.content_text || '',
+      is_pinned: Number(a.is_pinned || 0),
+      date: a.published_at || '',
+      published_at: a.published_at || '',
+    }))
+    topAnnouncement.value = json.data?.top_announcement || announcements.value[0] || null
+  } catch {}
+}
+
+const loadNotifications = async () => {
+  if (!isLoggedIn.value) {
+    notificationData.value = {
+      announcements: { items: [], unread_count: 0 },
+      mails: { items: [], unread_count: 0 },
+    }
+    return
+  }
+
+  try {
+    const res = await fetch('/api/v1/me/notifications', {
+      headers: getAuthHeaders(),
+    })
+    if (!res.ok) return
+    const json = await res.json()
+    notificationData.value = json.data || notificationData.value
+  } catch {}
+}
+
+const syncMenuState = async (newRoute = route) => {
   checkLoginStatus()
   if (newRoute.query.openMenu === 'news') {
     isMenuOpen.value = true
     activeMenu.value = 'news'
+    activeNotificationTab.value = 'announcements'
+    await loadNotifications()
   } else {
     isMenuOpen.value = false
     activeMenu.value = null
   }
-})
+}
 
-onMounted(() => {
+watch(route, syncMenuState)
+
+onMounted(async () => {
   checkLoginStatus()
-  loadAnnouncements()
-  // 處理重新整理頁面時的狀態
-  if (route.query.openMenu === 'news') {
-    isMenuOpen.value = true
-    activeMenu.value = 'news'
-  }
-  // 監聽 API 401（登入過期）事件
+  await loadAnnouncements()
+  await syncMenuState(route)
+
   window.addEventListener('auth:expired', () => {
     isLoggedIn.value = false
     toast.warning(t('auth.sessionExpired') || '登入已過期，請重新登入')
     router.push('/')
   })
-  // 監聽設備未綁定事件
+
   window.addEventListener('device:unbound', () => {
     showDeviceUnboundDialog.value = true
   })
 })
 
-// 登出處理
 const handleLogout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
   isLoggedIn.value = false
   isMenuOpen.value = false
+  activeMenu.value = null
   router.push('/login')
 }
 
-// 判斷當前頁面
-const isHomePage = computed(() => route.path === '/')
-const isSettingsPage = computed(() => route.path === '/settings')
-const isSkywardsPage = computed(() => route.path === '/skywards')
-
-const announcements = ref([])
-
-const loadAnnouncements = async () => {
-  try {
-    const res  = await fetch('/api/v1/announcements?limit=20')
-    if (res.ok) {
-      const json = await res.json()
-      const items = json.data?.items || []
-      announcements.value = items.map(a => ({
-        id:    a.id,
-        date:  a.published_at || '',
-        title: a.title,
-      }))
-    }
-  } catch {}
+const toggleMenu = async () => {
+  isMenuOpen.value = !isMenuOpen.value
+  if (isMenuOpen.value) {
+    activeMenu.value = null
+    await loadNotifications()
+  } else {
+    activeMenu.value = null
+    selectedMail.value = null
+  }
 }
 
-const toggleMenu = () => {
-  isMenuOpen.value = !isMenuOpen.value
-  activeMenu.value = null
+const openMenuSection = async (menu) => {
+  activeMenu.value = menu
+  if (menu === 'news') {
+    activeNotificationTab.value = 'announcements'
+    await loadNotifications()
+  }
 }
 
 const goBack = () => {
   activeMenu.value = null
+  selectedMail.value = null
 }
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// 需要登入才能進入的頁面，未登入時顯示提示
-const navigateIfLoggedIn = (path) => {
-  if (isLoggedIn.value) {
-    router.push(path)
-  } else {
+const openMailModal = async (mail) => {
+  if (!isLoggedIn.value) {
     toast.warning(t('auth.loginRequired'))
+    return
   }
+
+  selectedMail.value = mail
+  if (Number(mail.is_read) === 1) return
+
+  try {
+    await fetch(`/api/v1/me/mails/${mail.id}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+    })
+  } catch {}
+
+  mail.is_read = 1
+  notificationData.value.mails.unread_count = Math.max(0, Number(notificationData.value.mails.unread_count || 0) - 1)
+}
+
+const closeMailModal = () => {
+  selectedMail.value = null
+}
+
+const openAnnouncement = async (item) => {
+  if (isLoggedIn.value && Number(item.is_read) === 0) {
+    try {
+      await fetch(`/api/v1/me/announcements/${item.id}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+      })
+    } catch {}
+
+    item.is_read = 1
+    notificationData.value.announcements.unread_count = Math.max(0, Number(notificationData.value.announcements.unread_count || 0) - 1)
+  }
+
+  isMenuOpen.value = false
+  activeMenu.value = null
+  router.push(`/announcement/${item.id}`)
 }
 
 const activeMenuLabel = computed(() => {
@@ -126,12 +223,17 @@ const activeMenuLabel = computed(() => {
 <template>
   <div class="app-container" :class="{ 'menu-active': isMenuOpen, 'white-bg': !isHomePage && !isSkywardsPage }">
     <ToastNotification />
-    <!-- Navbar 僅在首頁顯示 -->
+
     <nav v-if="isHomePage" class="navbar">
       <div class="logo">
         <router-link to="/" @click="scrollToTop">
           <img src="/logo.png" alt="Logo" class="logo-image" />
         </router-link>
+      </div>
+      <div class="marquee-wrap">
+        <div class="marquee-track" :class="{ moving: topAnnouncement?.content_text }">
+          <span class="marquee-text">{{ topAnnouncement?.content_text || '' }}</span>
+        </div>
       </div>
       <div class="menu-button">
         <button class="hamburger" @click="toggleMenu" :class="{ 'is-active': isMenuOpen }">
@@ -140,10 +242,8 @@ const activeMenuLabel = computed(() => {
       </div>
     </nav>
 
-    <!-- 主內容區 -->
     <router-view v-if="!isMenuOpen"></router-view>
 
-    <!-- 全螢幕選單 (限制最大寬度防止滿版) -->
     <template v-if="isHomePage">
       <transition name="slide">
         <div v-if="isMenuOpen" class="full-menu-overlay">
@@ -156,9 +256,7 @@ const activeMenuLabel = computed(() => {
                       <span class="arrow-left-icon"></span>
                     </button>
                   </div>
-                  <h2 v-if="activeMenu" class="menu-header-title">
-                    {{ activeMenuLabel }}
-                  </h2>
+                  <h2 v-if="activeMenu" class="menu-header-title">{{ activeMenuLabel }}</h2>
                   <div class="header-right-area">
                     <button class="close-button" @click="toggleMenu">
                       <span class="cross-icon"></span>
@@ -167,55 +265,123 @@ const activeMenuLabel = computed(() => {
                 </div>
 
                 <ul v-if="!activeMenu" class="menu-list">
-                <li><a href="#" @click.prevent="activeMenu = 'member'">{{ $t('nav.member') }}</a></li>
-                <li><a href="#" @click.prevent="activeMenu = 'help'">{{ $t('nav.help') }}</a></li>
-                <li><a href="#" @click.prevent="activeMenu = 'news'">{{ $t('nav.news') }}</a></li>
-                <li><a href="#" @click.prevent="activeMenu = 'lang'">{{ $t('nav.language') }}</a></li>
-                <li v-if="isLoggedIn"><a href="#" @click.prevent="handleLogout" class="logout-link">{{ $t('nav.logout') }}</a></li>
-              </ul>
+                  <li><a href="#" @click.prevent="openMenuSection('member')">{{ $t('nav.member') }}</a></li>
+                  <li><a href="#" @click.prevent="openMenuSection('help')">{{ $t('nav.help') }}</a></li>
+                  <li>
+                    <a href="#" class="menu-link-with-badge" @click.prevent="openMenuSection('news')">
+                      <span>{{ $t('nav.news') }}</span>
+                      <span
+                        v-if="isLoggedIn && (notificationData.announcements.unread_count + notificationData.mails.unread_count) > 0"
+                        class="tab-badge"
+                      >
+                        {{ badgeText(notificationData.announcements.unread_count + notificationData.mails.unread_count) }}
+                      </span>
+                    </a>
+                  </li>
+                  <li><a href="#" @click.prevent="openMenuSection('lang')">{{ $t('nav.language') }}</a></li>
+                  <li v-if="isLoggedIn"><a href="#" @click.prevent="handleLogout" class="logout-link">{{ $t('nav.logout') }}</a></li>
+                </ul>
 
-              <div v-else class="submenu-content">
-                <ul v-if="activeMenu === 'member'" class="submenu-list">
-                  <li v-if="!isLoggedIn">
-                    <router-link to="/login" @click="isMenuOpen = false">{{ $t('nav.register') }} / {{ $t('nav.login') }} {{ $t('nav.emiratesSkywards') }}</router-link>
-                  </li>
-                  <li v-else>
-                     <router-link to="/skywards" @click="isMenuOpen = false">Skywards {{ $t('nav.member') }}</router-link>
-                  </li>
-                </ul>
-                <ul v-if="activeMenu === 'help'" class="submenu-list">
-                  <li>
-                    <router-link to="/customer-service" @click="isMenuOpen = false">{{ $t('nav.onlineCS') }}</router-link>
-                  </li>
-                </ul>
-                <ul v-if="activeMenu === 'lang'" class="submenu-list lang-list">
-                  <li>
-                    <a href="#" :class="{ active: $i18n.locale === 'zh-TW' }" @click.prevent="setLocale('zh-TW')">
-                      {{ $t('lang.zhTW') }}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" :class="{ active: $i18n.locale === 'en' }" @click.prevent="setLocale('en')">
-                      {{ $t('lang.en') }}
-                    </a>
-                  </li>
-                </ul>
-                <div v-if="activeMenu === 'news'" class="announcements-page">
-                  <div v-for="news in announcements" :key="news.id" class="news-card" @click="router.push(`/announcement/${news.id}`)">
-                    
-                    <h3 class="news-title">{{ news.title }}</h3>
-                    <p class="news-date">{{ news.date }}</p>
+                <div v-else class="submenu-content">
+                  <ul v-if="activeMenu === 'member'" class="submenu-list">
+                    <li v-if="!isLoggedIn">
+                      <router-link to="/login" @click="isMenuOpen = false">{{ $t('nav.register') }} / {{ $t('nav.login') }} {{ $t('nav.emiratesSkywards') }}</router-link>
+                    </li>
+                    <li v-else>
+                      <router-link to="/skywards" @click="isMenuOpen = false">Skywards {{ $t('nav.member') }}</router-link>
+                    </li>
+                  </ul>
+
+                  <ul v-if="activeMenu === 'help'" class="submenu-list">
+                    <li>
+                      <router-link to="/customer-service" @click="isMenuOpen = false">{{ $t('nav.onlineCS') }}</router-link>
+                    </li>
+                  </ul>
+
+                  <ul v-if="activeMenu === 'lang'" class="submenu-list lang-list">
+                    <li>
+                      <a href="#" :class="{ active: $i18n.locale === 'zh-TW' }" @click.prevent="setLocale('zh-TW')">{{ $t('lang.zhTW') }}</a>
+                    </li>
+                    <li>
+                      <a href="#" :class="{ active: $i18n.locale === 'en' }" @click.prevent="setLocale('en')">{{ $t('lang.en') }}</a>
+                    </li>
+                  </ul>
+
+                  <div v-if="activeMenu === 'news'" class="announcements-page">
+                    <div class="notification-tabs">
+                      <button
+                        class="notification-tab"
+                        :class="{ active: activeNotificationTab === 'announcements' }"
+                        @click="activeNotificationTab = 'announcements'"
+                      >
+                        <span>{{ $t('notifications.latest') }}</span>
+                        <span
+                          v-if="isLoggedIn && notificationData.announcements.unread_count > 0"
+                          class="tab-badge"
+                        >
+                          {{ badgeText(notificationData.announcements.unread_count) }}
+                        </span>
+                      </button>
+                      <button
+                        class="notification-tab"
+                        :class="{ active: activeNotificationTab === 'mails' }"
+                        @click="activeNotificationTab = 'mails'"
+                      >
+                        <span>{{ $t('notifications.personal') }}</span>
+                        <span
+                          v-if="isLoggedIn && notificationData.mails.unread_count > 0"
+                          class="tab-badge"
+                        >
+                          {{ badgeText(notificationData.mails.unread_count) }}
+                        </span>
+                      </button>
+                    </div>
+
+                    <div v-if="activeNotificationTab === 'announcements'">
+                      <div
+                        v-for="news in notificationAnnouncements"
+                        :key="news.id"
+                        class="news-card"
+                        :class="{ unread: Number(news.is_read) === 0 }"
+                        @click="openAnnouncement(news)"
+                      >
+                        <div class="card-topline">
+                          <h3 class="news-title">{{ news.title }}</h3>
+                          <span v-if="Number(news.is_read) === 0" class="unread-dot"></span>
+                        </div>
+                        <p class="news-date">{{ formatDateTime(news.published_at || news.date) }}</p>
+                      </div>
+                      <div v-if="notificationAnnouncements.length === 0" class="empty-state">{{ $t('notifications.emptyAnnouncements') }}</div>
+                    </div>
+
+                    <div v-else>
+                      <div v-if="!isLoggedIn" class="empty-state">{{ $t('auth.loginRequired') }}</div>
+                      <template v-else>
+                        <div
+                          v-for="mail in notificationMails"
+                          :key="mail.id"
+                          class="news-card"
+                          :class="{ unread: Number(mail.is_read) === 0 }"
+                          @click="openMailModal(mail)"
+                        >
+                          <div class="card-topline">
+                            <h3 class="news-title">{{ mail.subject }}</h3>
+                            <span v-if="Number(mail.is_read) === 0" class="unread-dot"></span>
+                          </div>
+                          <p class="news-date">{{ formatDateTime(mail.created_at) }}</p>
+                        </div>
+                        <div v-if="notificationMails.length === 0" class="empty-state">{{ $t('notifications.emptyMails') }}</div>
+                      </template>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
       </transition>
     </template>
 
-    <!-- 底部導覽 (在首頁、設定頁、Skywards 頁顯示) -->
     <footer v-if="isHomePage || isSettingsPage || isSkywardsPage" class="bottom-nav">
       <router-link to="/" class="nav-item">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -238,7 +404,19 @@ const activeMenuLabel = computed(() => {
       </a>
     </footer>
 
-    <!-- 設備未綁定提示 Dialog -->
+    <Teleport to="body">
+      <div v-if="selectedMail" class="mail-modal" @click="closeMailModal">
+        <div class="mail-modal-content" @click.stop>
+          <div class="mail-modal-header">
+            <h3 class="mail-modal-title">{{ selectedMail.subject }}</h3>
+            <button class="mail-modal-close" @click="closeMailModal">&times;</button>
+          </div>
+          <p class="mail-modal-time">{{ formatDateTime(selectedMail.created_at) }}</p>
+          <div class="mail-modal-body">{{ selectedMail.content }}</div>
+        </div>
+      </div>
+    </Teleport>
+
     <Teleport to="body">
       <div v-if="showDeviceUnboundDialog" class="device-dialog-overlay" @click.self="showDeviceUnboundDialog = false">
         <div class="device-dialog">
@@ -255,21 +433,22 @@ const activeMenuLabel = computed(() => {
 <style scoped>
 .app-container {
   min-height: 100vh;
-  background-color: #000000;
+  background-color: #000;
   margin: 0;
   padding: 0;
 }
 
 .app-container.white-bg {
-  background-color: #ffffff;
+  background-color: #fff;
 }
 
 .navbar {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
   align-items: center;
   padding: 1rem 1.5rem;
-  background-color: white;
+  background-color: #fff;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -280,6 +459,35 @@ const activeMenuLabel = computed(() => {
   display: block;
 }
 
+.marquee-wrap {
+  height: 42px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fff1f1 0%, #f8f8f8 100%);
+  border: 1px solid #f0d0d0;
+  overflow: hidden;
+  position: relative;
+}
+
+.marquee-track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-left: 1rem;
+  white-space: nowrap;
+}
+
+.marquee-track.moving .marquee-text {
+  display: inline-block;
+  padding-right: 3rem;
+  animation: marquee 18s linear infinite;
+}
+
+.marquee-text {
+  color: #8e1117;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
 .hamburger {
   background-color: #f0f0f0;
   border-radius: 50%;
@@ -287,7 +495,7 @@ const activeMenuLabel = computed(() => {
   cursor: pointer;
   width: 44px;
   height: 44px;
-  padding: 0; 
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -299,11 +507,13 @@ const activeMenuLabel = computed(() => {
   background-color: #d0d0d0;
 }
 
-.hamburger .icon {
+.hamburger .icon,
+.hamburger .icon::before,
+.hamburger .icon::after {
   display: block;
   width: 24px;
   height: 2px;
-  background-color: #000000;
+  background-color: #000;
   position: relative;
 }
 
@@ -311,72 +521,57 @@ const activeMenuLabel = computed(() => {
 .hamburger .icon::after {
   content: '';
   position: absolute;
-  width: 24px;
-  height: 2px;
-  background-color: #000000;
   left: 0;
 }
 
 .hamburger .icon::before { top: -8px; }
-.hamburger .icon::after { 
-  bottom: -8px; 
-  width: 16px;
-}
+.hamburger .icon::after { bottom: -8px; width: 16px; }
 
-/* 菜單覆蓋層 */
 .full-menu-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.5);
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: flex;
-  justify-content: center; /* Center the constrained area */
-  align-items: flex-start; /* Ensure top alignment */
+  justify-content: center;
+  align-items: flex-start;
   overflow: hidden;
 }
 
+.menu-clipper,
 .menu-container-outer {
   width: 100%;
   max-width: var(--app-max-width);
   height: 100%;
-  background-color: #ffffff; 
-  overflow-y: auto;
-  position: relative;
-}
-
-/* 主選單 (Main Menu) 黑色風格 */
-.menu-container-outer.is-main-menu {
-  background-color: #333333;
-  color: #ffffff;
-}
-
-.menu-container-outer.is-main-menu .menu-list a {
-  background-color: #333333;
-  color: #ffffff;
-  text-align: center;
-}
-
-.menu-container-outer.is-main-menu .menu-list li {
-  border-bottom: 1px solid #777777; /* Light grey separator for dark theme */
-}
-
-.menu-container-outer.is-main-menu .menu-header {
-  border-bottom: 1px solid #333333;
 }
 
 .menu-clipper {
-  width: 100%;
-  max-width: var(--app-max-width);
-  height: 100%;
   overflow: hidden;
   position: relative;
 }
 
+.menu-container-outer {
+  background-color: #fff;
+  overflow-y: auto;
+  position: relative;
+}
+
+.menu-container-outer.is-main-menu {
+  background-color: #333;
+  color: #fff;
+}
+
+.menu-container-outer.is-main-menu .menu-list a {
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+}
+
+.menu-container-outer.is-main-menu .menu-list li {
+  border-bottom: 1px solid #777;
+}
+
 .menu-container {
-  padding: 0;
   color: #333;
   width: 100%;
   height: 100%;
@@ -386,17 +581,18 @@ const activeMenuLabel = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0;
   padding: 1rem 1.5rem;
-  background-color: #333333;
-  color: #ffffff;
+  background-color: #333;
+  color: #fff;
 }
 
-.header-left-area, .header-right-area {
-  flex: 0 0 44px; /* fixed width ensure title is centered relative to container */
+.header-left-area,
+.header-right-area {
+  flex: 0 0 44px;
   display: flex;
   align-items: center;
 }
+
 .header-right-area {
   justify-content: flex-end;
 }
@@ -407,10 +603,10 @@ const activeMenuLabel = computed(() => {
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
-  color: #ffffff;
 }
 
-.close-button, .back-button {
+.close-button,
+.back-button {
   background: none;
   border: none;
   cursor: pointer;
@@ -430,7 +626,7 @@ const activeMenuLabel = computed(() => {
   position: absolute;
   width: 20px;
   height: 2px;
-  background-color: #ffffff;
+  background-color: #fff;
   top: 50%;
   left: 0;
 }
@@ -442,48 +638,13 @@ const activeMenuLabel = computed(() => {
   display: block;
   width: 12px;
   height: 12px;
-  border-left: 2px solid #ffffff;
-  border-bottom: 2px solid #ffffff;
-  transform: rotate(45deg); /* Originally 45deg makes a < when left/bottom borders used. Wait.
-  border-left lines up |, border-bottom lines up _. 45deg rotates it.
-  Original: border-left, border-bottom.
-  If square is:
-    |
-   _
-  Rotate 45deg clockwise:
-    \
-     \
-  That's a down-left arrow? Or V shape pointing down?
-  Let's verify: 
-  Unrotated: L shape (bottom-left corner).
-  Rotate 45: The corner points Down.
-  So original code made a Down arrow?
-  Wait, previous code was:
-  border-left: 2px solid #333;
-  border-bottom: 2px solid #333;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
   transform: rotate(45deg);
-  
-  If I want a DOWN arrow (chevron), I need the corner to point DOWN.
-  An L shape rotated 45deg... 
-  Let's just use CSS transform to be sure.
-  If I want `v`, I need border-right and border-bottom, rotated 45deg.
-  (`_` `|` -> `v`)
-  
-  User asked for "向下的'>'". This is confusing. "Downwards >".
-  Maybe they mean a chevron that points down `v`.
-  So I will ensure it's a `v` shape.
-  border-right + border-bottom + rotate(45deg) -> v.
-  
-  Let's assume "向下的'>'" means "Chevron that points down".
-  */
-  border: 0; /* Reset */
-  border-right: 2px solid #ffffff;
-  border-bottom: 2px solid #ffffff;
-  transform: rotate(45deg); 
-  margin-top: -5px; /* Adjust alignment */
 }
 
-.menu-list, .submenu-list {
+.menu-list,
+.submenu-list {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -494,22 +655,31 @@ const activeMenuLabel = computed(() => {
 }
 
 .menu-container-outer.is-main-menu .menu-list li:first-child {
-  border-top: 1px solid #777777;
+  border-top: 1px solid #777;
 }
 
-.menu-list li, .submenu-list li {
+.menu-list li,
+.submenu-list li {
   border-bottom: 1px solid #f0f0f0;
 }
 
-.menu-list a, .submenu-list a {
+.menu-list a,
+.submenu-list a {
   display: block;
-  padding: 1.25rem 1.5rem; /* Add padding here since container lost it */
-  color: #333333;
-  text-align: left; /* Ensure text aligns left */
+  padding: 1.25rem 1.5rem;
+  color: #333;
+  text-align: left;
   text-decoration: none;
   font-size: 1.25rem;
   font-weight: 500;
-  background-color: #ffffff;
+  background-color: #fff;
+}
+
+.menu-link-with-badge {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .lang-list a.active {
@@ -517,7 +687,113 @@ const activeMenuLabel = computed(() => {
   font-weight: 700;
 }
 
-/* Slide Transition */
+.submenu-content {
+  background: #fff;
+  min-height: calc(100vh - 72px);
+}
+
+.notification-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid #ececec;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.notification-tab {
+  border: none;
+  background: transparent;
+  padding: 1rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #737373;
+  cursor: pointer;
+}
+
+.notification-tab.active {
+  color: #d71921;
+  box-shadow: inset 0 -3px 0 #d71921;
+}
+
+.tab-badge {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #df1b24;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.announcements-page {
+  background-color: #fff;
+}
+
+.news-card {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #ddd;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.news-card.unread {
+  background: #fff8f8;
+}
+
+.news-card:hover {
+  background-color: #f9f9f9;
+}
+
+.card-topline {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.news-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: #333;
+  line-height: 1.4;
+}
+
+.news-date {
+  font-size: 0.8rem;
+  color: #999;
+  margin: 0;
+}
+
+.unread-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #df1b24;
+  flex-shrink: 0;
+}
+
+.empty-state {
+  padding: 2rem 1.5rem;
+  color: #888;
+  text-align: center;
+}
+
 .slide-enter-active,
 .slide-leave-active {
   transition: background-color 0.3s ease;
@@ -542,7 +818,6 @@ const activeMenuLabel = computed(() => {
   color: #ff4d4f !important;
 }
 
-/* 底部導覽 */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -551,19 +826,19 @@ const activeMenuLabel = computed(() => {
   width: 100%;
   max-width: var(--app-max-width);
   height: 60px;
-  background-color: #ffffff;
+  background-color: #fff;
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 100;
-  border-top: 1px solid #dddddd;
+  border-top: 1px solid #ddd;
 }
 
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #333333;
+  color: #333;
   text-decoration: none;
 }
 
@@ -581,84 +856,59 @@ const activeMenuLabel = computed(() => {
   color: #d71921;
 }
 
-
-/* 動畫 */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-
-/* 公告樣式調整 */
-.announcements-page {
-  background-color: #fff;
-}
-
-.news-card {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #ddd;
-  background-color: #ffffff;
+.mail-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  flex-direction: column;
-  align-items: flex-start; /* Left align */
-  cursor: pointer;
-  transition: background-color 0.2s;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 1rem;
 }
 
-.news-card:hover {
-  background-color: #f9f9f9;
+.mail-modal-content {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 1.25rem;
 }
 
-.news-title {
-  font-size: 1.1rem;
-  font-weight: 500;
-  margin: 0 0 0.5rem 0;
-  color: #333;
-  line-height: 1.4;
-  text-align: left;
+.mail-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
 }
 
-.news-date {
-  font-size: 0.8rem;
-  color: #999; /* Grey color */
+.mail-modal-title {
   margin: 0;
-  align-self: flex-start;
+  font-size: 1.1rem;
+  color: #222;
 }
 
-/* ================================================
- * 手機版 Navbar / Bottom Nav（≤ 767px）
- * ================================================ */
-@media (max-width: 767px) {
-  .navbar {
-    padding: 0.5rem 1rem;
-  }
-
-  .logo-image {
-    height: 40px;
-  }
-
-  .hamburger {
-    width: 36px;
-    height: 36px;
-  }
-
-  .bottom-nav {
-    height: 50px;
-  }
-
-  .nav-icon {
-    width: 20px;
-    height: 20px;
-    margin-bottom: 2px;
-  }
-
-  .nav-label {
-    font-size: 0.65rem;
-  }
+.mail-modal-close {
+  border: none;
+  background: transparent;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #999;
 }
 
-/* Device Unbound Dialog */
+.mail-modal-time {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.82rem;
+  color: #999;
+}
+
+.mail-modal-body {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  color: #444;
+}
+
 .device-dialog-overlay {
   position: fixed;
   inset: 0;
@@ -677,7 +927,7 @@ const activeMenuLabel = computed(() => {
   max-width: 360px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
 }
 
 .device-dialog-icon {
@@ -709,5 +959,48 @@ const activeMenuLabel = computed(() => {
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+@media (max-width: 767px) {
+  .navbar {
+    grid-template-columns: auto 1fr auto;
+    padding: 0.5rem 1rem;
+  }
+
+  .logo-image {
+    height: 40px;
+  }
+
+  .marquee-wrap {
+    height: 34px;
+  }
+
+  .marquee-text {
+    font-size: 0.78rem;
+  }
+
+  .hamburger {
+    width: 36px;
+    height: 36px;
+  }
+
+  .bottom-nav {
+    height: 50px;
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+    margin-bottom: 2px;
+  }
+
+  .nav-label {
+    font-size: 0.65rem;
+  }
 }
 </style>

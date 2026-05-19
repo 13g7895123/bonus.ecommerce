@@ -42,7 +42,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Users, ShieldCheck, Coins, FileEdit, Gift, ShoppingBag, TicketPercent, Home, ChevronLeft, ChevronRight, Smartphone, MessageSquare, Building2, Mail, Megaphone, BadgeCheck } from 'lucide-vue-next'
+import { Users, ShieldCheck, Coins, FileEdit, Gift, ShoppingBag, TicketPercent, Home, ChevronLeft, ChevronRight, Smartphone, MessageSquare, Building2, Mail, Megaphone, BadgeCheck, CalendarCheck2 } from 'lucide-vue-next'
 
 const router = useRouter()
 const route  = useRoute()
@@ -62,6 +62,7 @@ const navItems = [
   { key: 'banks',            label: '銀行清單管理',  icon: Building2 },
   { key: 'mails',            label: '信件管理',      icon: Mail },
   { key: 'announcements',    label: '公告管理',      icon: Megaphone },
+  { key: 'sign-in-records',  label: '每日簽到紀錄',  icon: CalendarCheck2 },
   // { key: 'phone-verifications', label: '手機驗證管理', icon: Smartphone },
   // { key: 'sms-logs',            label: 'SMS 簡訊紀錄',    icon: MessageSquare },
 ]
