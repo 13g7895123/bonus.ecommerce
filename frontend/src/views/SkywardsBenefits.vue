@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import PageHeader from '../components/PageHeader.vue'
+import { apiFetch } from '../utils/apiFetch'
 
 const loading = ref(true)
 const errorMsg = ref('')
@@ -19,9 +20,7 @@ const loadBenefits = async () => {
   loading.value = true
   errorMsg.value = ''
   try {
-    const token = localStorage.getItem('token') || ''
-    const headers = token ? { Authorization: `Bearer ${token}` } : {}
-    const response = await fetch('/api/v1/skywards/benefits', { headers })
+    const response = await apiFetch('/api/v1/skywards/benefits', { auth: true })
     if (!response.ok) throw new Error('load failed')
     const data = await response.json()
     const payload = data.data || data

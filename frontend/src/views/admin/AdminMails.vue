@@ -190,6 +190,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { Plus, RefreshCw } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 const loading = ref(false)
 const mails   = ref([])
@@ -226,7 +227,7 @@ const loadRecords = async () => {
     const url = mailId
       ? `/api/v1/admin-panel/mails/${mailId}/records`
       : '/api/v1/admin-panel/mails/records'
-    const res = await fetch(url)
+    const res = await apiFetch(url, { auth: true })
     if (res.ok) {
       const data = await res.json()
       records.value.items = data.items || []
@@ -260,7 +261,7 @@ const isIndeterminate = computed(() =>
 const loadMails = async () => {
   loading.value = true
   try {
-    const res = await fetch('/api/v1/admin-panel/mails')
+    const res = await apiFetch('/api/v1/admin-panel/mails', { auth: true })
     if (res.ok) {
       const data = await res.json()
       mails.value = data.items || []
@@ -291,8 +292,9 @@ const submitForm = async () => {
   try {
     const url    = form.value.id ? `/api/v1/admin-panel/mails/${form.value.id}` : '/api/v1/admin-panel/mails'
     const method = form.value.id ? 'PUT' : 'POST'
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method,
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         subject:    form.value.subject,
@@ -315,7 +317,7 @@ const submitForm = async () => {
 
 const deleteMail = async (id) => {
   if (!confirm('確定要刪除此信件？')) return
-  const res = await fetch(`/api/v1/admin-panel/mails/${id}`, { method: 'DELETE' })
+  const res = await apiFetch(`/api/v1/admin-panel/mails/${id}`, { method: 'DELETE', auth: true })
   if (res.ok) {
     await loadMails()
   } else {
@@ -325,7 +327,7 @@ const deleteMail = async (id) => {
 
 const loadUsers = async () => {
   try {
-    const res = await fetch('/api/v1/admin-panel/users?limit=500')
+    const res = await apiFetch('/api/v1/admin-panel/users?limit=500', { auth: true })
     if (res.ok) {
       const data = await res.json()
       allUsers.value = data.items || []
@@ -392,8 +394,9 @@ const submitSend = async () => {
   if (!send.value.selectedUsers.length) return
   send.value.submitting = true
   try {
-    const res = await fetch(`/api/v1/admin-panel/mails/${send.value.mailId}/send`, {
+    const res = await apiFetch(`/api/v1/admin-panel/mails/${send.value.mailId}/send`, {
       method: 'POST',
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_ids: send.value.selectedUsers.map(u => u.id) }),
     })

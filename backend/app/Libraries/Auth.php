@@ -20,6 +20,14 @@ class Auth
         return self::$user;
     }
 
+    /**
+     * Backward-compatible alias for older callers.
+     */
+    public static function user(): ?array
+    {
+        return self::getUser();
+    }
+
     public static function id(): ?int
     {
         return self::$user['id'] ?? null;

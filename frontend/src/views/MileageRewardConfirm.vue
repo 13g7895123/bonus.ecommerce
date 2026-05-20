@@ -66,6 +66,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/PageHeader.vue'
 import AppButton from '../components/AppButton.vue'
+import { apiFetch } from '../utils/apiFetch'
 
 const { t } = useI18n()
 const route   = useRoute()
@@ -105,12 +106,11 @@ const submitPurchase = async () => {
   submitting.value = true
   errorMsg.value   = ''
   try {
-    const token = localStorage.getItem('token') || ''
-    const res = await fetch(`/api/v1/mileage/reward-products/${product.value.id}/purchase`, {
+    const res = await apiFetch(`/api/v1/mileage/reward-products/${product.value.id}/purchase`, {
       method:  'POST',
+      auth: true,
       headers: {
-        'Content-Type':  'application/json',
-        Authorization:   `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ quantity: quantity.value }),
     })
@@ -138,10 +138,7 @@ onMounted(async () => {
   }
 
   try {
-    const token = localStorage.getItem('token') || ''
-    const res = await fetch('/api/v1/mileage/reward-products', {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    const res = await apiFetch('/api/v1/mileage/reward-products', { auth: true })
     if (res.ok) {
       const data = await res.json()
       const items = data.items || data.data?.items || []

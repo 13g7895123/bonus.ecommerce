@@ -138,6 +138,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { Save, RefreshCw } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 const form = ref({ enabled: true, window: 10, max: 3, block: 30 })
 const saving        = ref(false)
@@ -147,7 +148,7 @@ const clearing      = ref(false)
 
 const load = async () => {
   try {
-    const res  = await fetch('/api/v1/sadmin/sms-security')
+    const res  = await apiFetch('/api/v1/sadmin/sms-security', { auth: true })
     const data = await res.json()
     form.value = {
       enabled: !!data.enabled,
@@ -163,7 +164,7 @@ const load = async () => {
 const loadBlocked = async () => {
   loadingBlocked.value = true
   try {
-    const res  = await fetch('/api/v1/sadmin/sms-security/blocked-ips')
+    const res  = await apiFetch('/api/v1/sadmin/sms-security/blocked-ips', { auth: true })
     const data = await res.json()
     blockedIps.value = data.items || []
   } finally {
@@ -174,8 +175,9 @@ const loadBlocked = async () => {
 const save = async () => {
   saving.value = true
   try {
-    const res  = await fetch('/api/v1/sadmin/sms-security', {
+    const res  = await apiFetch('/api/v1/sadmin/sms-security', {
       method: 'POST',
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form.value),
     })
@@ -189,8 +191,9 @@ const save = async () => {
 const unblock = async (ip) => {
   if (!confirm(`確定要解封 ${ip} 嗎？`)) return
   try {
-    const res  = await fetch('/api/v1/sadmin/sms-security/unblock', {
+    const res  = await apiFetch('/api/v1/sadmin/sms-security/unblock', {
       method: 'POST',
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ip }),
     })
@@ -205,7 +208,7 @@ const clearAll = async () => {
   if (!confirm('確定要清除所有速率限制紀錄嗎？（封鎖中的 IP 也會被解封）')) return
   clearing.value = true
   try {
-    const res  = await fetch('/api/v1/sadmin/sms-security/rate-limits', { method: 'DELETE' })
+    const res  = await apiFetch('/api/v1/sadmin/sms-security/rate-limits', { method: 'DELETE', auth: true })
     const data = await res.json()
     if (!res.ok) { alert(data.message || '清除失敗'); return }
     alert(data.message)

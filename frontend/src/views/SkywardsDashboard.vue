@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import { useToast } from '../composables/useToast'
+import { apiFetch } from '../utils/apiFetch'
 
 const api = useApi()
 const toast = useToast()
@@ -47,9 +48,9 @@ const setTab = (tab) => {
 const loadConfigs = async () => {
   try {
     const [r1, r2, r3] = await Promise.all([
-      fetch('/api/v1/config/skywards_silver_card_desc'),
-      fetch('/api/v1/config/skywards_gold_card_desc'),
-      fetch('/api/v1/config/skywards_platinum_card_desc'),
+      apiFetch('/api/v1/config/skywards_silver_card_desc'),
+      apiFetch('/api/v1/config/skywards_gold_card_desc'),
+      apiFetch('/api/v1/config/skywards_platinum_card_desc'),
     ])
     const [d1, d2, d3] = await Promise.all([r1.json(), r2.json(), r3.json()])
     tierCardDescs.value.silver   = d1.value || ''
@@ -82,9 +83,7 @@ onMounted(async () => {
   }
   // 計算里程紀錄總和（earn 為正、spend 為負）
   try {
-    const token = localStorage.getItem('token') || ''
-    const headers = token ? { Authorization: `Bearer ${token}` } : {}
-    const res = await fetch('/api/v1/mileage/history?page=1&limit=1000', { headers })
+    const res = await apiFetch('/api/v1/mileage/history?page=1&limit=1000', { auth: true })
     if (res.ok) {
       const json = await res.json()
       const items = json.items || json.data?.items || []

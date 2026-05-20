@@ -265,6 +265,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { Save, RotateCcw } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 const selectedProvider = ref('twilio')
 const info             = ref({ env_value: 'twilio', db_override: null, active: 'twilio', source: 'env' })
@@ -279,8 +280,8 @@ const savingTm = ref(false)
 onMounted(async () => {
   try {
     const [provRes, tmRes] = await Promise.all([
-      fetch('/api/v1/sadmin/sms-provider'),
-      fetch('/api/v1/sadmin/topmessage-config'),
+      apiFetch('/api/v1/sadmin/sms-provider', { auth: true }),
+      apiFetch('/api/v1/sadmin/topmessage-config', { auth: true }),
     ])
     const provData = await provRes.json()
     const tmData   = await tmRes.json()
@@ -296,8 +297,9 @@ onMounted(async () => {
 const saveProvider = async () => {
   savingProvider.value = true
   try {
-    const res  = await fetch('/api/v1/sadmin/sms-provider', {
+    const res  = await apiFetch('/api/v1/sadmin/sms-provider', {
       method: 'POST',
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ provider: selectedProvider.value }),
     })
@@ -313,7 +315,7 @@ const resetToEnv = async () => {
   if (!confirm(`確定要清除 DB override，回復使用 .env 預設（${label(info.value.env_value)}）嗎？`)) return
   resetting.value = true
   try {
-    const res  = await fetch('/api/v1/sadmin/sms-provider', { method: 'DELETE' })
+    const res  = await apiFetch('/api/v1/sadmin/sms-provider', { method: 'DELETE', auth: true })
     const data = await res.json()
     if (!res.ok) { alert(data.message || '重設失敗'); return }
     info.value = { ...info.value, db_override: null, active: info.value.env_value, source: 'env' }
@@ -336,8 +338,9 @@ const saveTopmessageConfig = async () => {
   try {
     const body = { sender: tmForm.value.sender }
     if (tmForm.value.apiKey) body.api_key = tmForm.value.apiKey
-    const res  = await fetch('/api/v1/sadmin/topmessage-config', {
+    const res  = await apiFetch('/api/v1/sadmin/topmessage-config', {
       method: 'POST',
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
@@ -509,4 +512,3 @@ code {
 .field-hint a { color: #3b82f6; text-decoration: none; }
 .field-hint a:hover { text-decoration: underline; }
 </style>
-

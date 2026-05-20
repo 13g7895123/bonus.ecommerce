@@ -112,6 +112,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { RefreshCw, Plus } from 'lucide-vue-next'
 import { fileService } from '../../services/FileService'
+import { apiFetch } from '../../utils/apiFetch'
 
 const mileageItemsList      = ref([])
 const rewardProductsList    = ref([])
@@ -137,7 +138,7 @@ const selectedItemMileageAmount = computed(() => {
 
 const loadMileageItems = async () => {
   try {
-    const res  = await fetch('/api/v1/admin-panel/mileage-items')
+    const res  = await apiFetch('/api/v1/admin-panel/mileage-items', { auth: true })
     const data = await res.json()
     mileageItemsList.value = data.items || []
   } catch {}
@@ -146,7 +147,7 @@ const loadMileageItems = async () => {
 const loadRewardProducts = async () => {
   loadingRewardProducts.value = true
   try {
-    const res  = await fetch('/api/v1/admin-panel/mileage-reward-products')
+    const res  = await apiFetch('/api/v1/admin-panel/mileage-reward-products', { auth: true })
     const data = await res.json()
     rewardProductsList.value = data.items || []
   } finally { loadingRewardProducts.value = false }
@@ -154,7 +155,7 @@ const loadRewardProducts = async () => {
 
 const loadRewardDisplayStyle = async () => {
   try {
-    const res  = await fetch('/api/v1/config/reward_detail_display_style')
+    const res  = await apiFetch('/api/v1/config/reward_detail_display_style')
     const data = await res.json()
     rewardDetailDisplayStyle.value = data.value || 'default'
   } catch {}
@@ -162,8 +163,9 @@ const loadRewardDisplayStyle = async () => {
 
 const saveRewardDisplayStyle = async () => {
   try {
-    await fetch('/api/v1/admin-panel/config/reward_detail_display_style', {
+    await apiFetch('/api/v1/admin-panel/config/reward_detail_display_style', {
       method: 'POST',
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ value: rewardDetailDisplayStyle.value }),
     })
@@ -198,7 +200,7 @@ const submitRewardProduct = async () => {
   try {
     const url    = f.id ? `/api/v1/admin-panel/mileage-reward-products/${f.id}` : '/api/v1/admin-panel/mileage-reward-products'
     const method = f.id ? 'PUT' : 'POST'
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mileage_item_id: f.mileage_item_id || null, name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: selectedItemMileageAmount.value, miles_points: f.miles_points, stock: f.stock, purchase_target: f.purchase_target, is_active: f.is_active, sort_order: f.sort_order }) })
+    const res    = await apiFetch(url, { method, auth: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mileage_item_id: f.mileage_item_id || null, name: f.name, image_url: f.image_url || null, price: f.price, mileage_amount: selectedItemMileageAmount.value, miles_points: f.miles_points, stock: f.stock, purchase_target: f.purchase_target, is_active: f.is_active, sort_order: f.sort_order }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
     f.show = false
     await loadRewardProducts()
@@ -207,7 +209,7 @@ const submitRewardProduct = async () => {
 
 const deleteRewardProduct = async (id) => {
   if (!confirm('確定要刪除此商品嗎？')) return
-  await fetch(`/api/v1/admin-panel/mileage-reward-products/${id}`, { method: 'DELETE' })
+  await apiFetch(`/api/v1/admin-panel/mileage-reward-products/${id}`, { method: 'DELETE', auth: true })
   await loadRewardProducts()
 }
 

@@ -135,6 +135,7 @@ import { ref, onMounted } from 'vue'
 import { Image as ImageIcon, Pencil, Plus, RefreshCw, Save, Trash2, Upload, X } from 'lucide-vue-next'
 import RichTextEditor from '../../components/admin/RichTextEditor.vue'
 import { fileService } from '../../services/FileService'
+import { apiFetch } from '../../utils/apiFetch'
 
 const items = ref([])
 const loading = ref(false)
@@ -185,7 +186,7 @@ const tierOrder = { regular: 0, silver: 1, gold: 2, platinum: 3 }
 const loadItems = async () => {
   loading.value = true
   try {
-    const response = await fetch('/api/v1/admin-panel/skywards-benefits')
+    const response = await apiFetch('/api/v1/admin-panel/skywards-benefits', { auth: true })
     const data = await response.json()
     const list = (data.items || data.data?.items || []).map(normalizeItem)
     list.sort((a, b) => (tierOrder[a.tier] ?? 9) - (tierOrder[b.tier] ?? 9))
@@ -249,8 +250,9 @@ const saveItem = async () => {
     const url = form.value.id
       ? `/api/v1/admin-panel/skywards-benefits/${form.value.id}`
       : '/api/v1/admin-panel/skywards-benefits'
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method,
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
@@ -268,7 +270,7 @@ const saveItem = async () => {
 const deleteItem = async (item) => {
   if (!confirm(`確定要刪除「${tierLabel(item.tier)}」的權益內容嗎？`)) return
   try {
-    const response = await fetch(`/api/v1/admin-panel/skywards-benefits/${item.id}`, { method: 'DELETE' })
+    const response = await apiFetch(`/api/v1/admin-panel/skywards-benefits/${item.id}`, { method: 'DELETE', auth: true })
     if (!response.ok) throw new Error('delete failed')
     await loadItems()
   } catch {

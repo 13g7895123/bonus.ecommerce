@@ -132,6 +132,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { Plus, RefreshCw } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 const BASE = '/api/v1/admin-panel/mileage-codes'
 
@@ -153,7 +154,7 @@ const form = ref(defaultForm())
 const load = async () => {
   loading.value = true
   try {
-    const res  = await fetch(BASE)
+    const res  = await apiFetch(BASE, { auth: true })
     const data = await res.json()
     list.value = data.items || []
   } finally {
@@ -168,7 +169,7 @@ const loadRecords = async () => {
     if (recordFilters.value.code.trim()) params.set('code', recordFilters.value.code.trim())
     if (recordFilters.value.user_id.trim()) params.set('user_id', recordFilters.value.user_id.trim())
     const qs = params.toString() ? `?${params.toString()}` : ''
-    const res = await fetch(`/api/v1/admin-panel/mileage-code-records${qs}`)
+    const res = await apiFetch(`/api/v1/admin-panel/mileage-code-records${qs}`, { auth: true })
     const data = await res.json()
     records.value = data.items || []
   } finally {
@@ -226,7 +227,7 @@ const save = async () => {
     }
     const url    = form.value.id ? `${BASE}/${form.value.id}` : BASE
     const method = form.value.id ? 'PUT' : 'POST'
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    const res    = await apiFetch(url, { method, auth: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
     const data   = await res.json()
     if (!res.ok) { formError.value = data.message || '發生錯誤'; return }
     form.value.show = false
@@ -238,7 +239,7 @@ const save = async () => {
 
 const remove = async (id) => {
   if (!confirm('確定刪除此代碼？')) return
-  await fetch(`${BASE}/${id}`, { method: 'DELETE' })
+  await apiFetch(`${BASE}/${id}`, { method: 'DELETE', auth: true })
   await load()
 }
 

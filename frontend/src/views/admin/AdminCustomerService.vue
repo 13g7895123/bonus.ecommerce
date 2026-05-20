@@ -79,6 +79,7 @@
 <script setup>
 import { ref, nextTick, onUnmounted } from 'vue'
 import { RefreshCw, MessageSquare } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 const conversations  = ref([])
 const loadingList    = ref(false)
@@ -158,7 +159,7 @@ const scrollToBottom = async () => {
 const loadConversations = async () => {
   loadingList.value = true
   try {
-    const res  = await fetch('/api/v1/admin-panel/cs/conversations')
+    const res  = await apiFetch('/api/v1/admin-panel/cs/conversations', { auth: true })
     const data = await res.json()
     conversations.value = data.items || []
   } finally { loadingList.value = false }
@@ -170,7 +171,7 @@ const openConversation = async (conv) => {
   loadingMsgs.value  = true
   messages.value     = []
   try {
-    const res  = await fetch(`/api/v1/admin-panel/cs/conversations/${conv.ticket_id}`)
+    const res  = await apiFetch(`/api/v1/admin-panel/cs/conversations/${conv.ticket_id}`, { auth: true })
     const data = await res.json()
     messages.value = data.items || []
     await scrollToBottom()
@@ -184,8 +185,8 @@ const sendReply = async () => {
   if (!text || sending.value) return
   sending.value = true
   try {
-    const res  = await fetch(`/api/v1/admin-panel/cs/conversations/${activeTicket.value}/reply`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const res  = await apiFetch(`/api/v1/admin-panel/cs/conversations/${activeTicket.value}/reply`, {
+      method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: text }),
     })
     const data = await res.json()
@@ -193,7 +194,7 @@ const sendReply = async () => {
     replyText.value = ''
     // WS 連線時訊息會自動 push 進來；否則 fallback reload
     if (!ws || ws.readyState !== WebSocket.OPEN) {
-      const res2 = await fetch(`/api/v1/admin-panel/cs/conversations/${activeTicket.value}`)
+      const res2 = await apiFetch(`/api/v1/admin-panel/cs/conversations/${activeTicket.value}`, { auth: true })
       const data2 = await res2.json()
       messages.value = data2.items || []
       await scrollToBottom()

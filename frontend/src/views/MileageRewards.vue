@@ -35,6 +35,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../composables/useToast'
 import PageHeader from '../components/PageHeader.vue'
+import { apiFetch } from '../utils/apiFetch'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -74,12 +75,9 @@ const goToDetail = (productId, isActive) => {
 const loadData = async () => {
   loading.value = true
   try {
-    const token = localStorage.getItem('token') || ''
-    const headers = token ? { Authorization: `Bearer ${token}` } : {}
-
     const [productsRes, pendingRes] = await Promise.all([
-      fetch(`/api/v1/mileage/reward-products${itemId.value ? `?item_id=${itemId.value}` : ''}`, { headers }),
-      fetch('/api/v1/mileage/reward-orders/my-pending', { headers }),
+      apiFetch(`/api/v1/mileage/reward-products${itemId.value ? `?item_id=${itemId.value}` : ''}`, { auth: true }),
+      apiFetch('/api/v1/mileage/reward-orders/my-pending', { auth: true }),
     ])
 
     if (productsRes.ok) {

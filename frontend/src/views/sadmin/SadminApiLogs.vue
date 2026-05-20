@@ -114,6 +114,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { RefreshCw, Search } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 const items   = ref([])
 const total   = ref(0)
@@ -187,7 +188,7 @@ const buildQuery = () => {
 const load = async () => {
   loading.value = true
   try {
-    const res  = await fetch(`/api/v1/sadmin/api-logs?${buildQuery()}`)
+    const res  = await apiFetch(`/api/v1/sadmin/api-logs?${buildQuery()}`, { auth: true })
     const data = await res.json()
     items.value = data.items || []
     total.value = data.total || 0
@@ -199,7 +200,7 @@ const goPage      = (p) => { page.value = p; load() }
 const clearFilters = () => { filters.value = { method: '', uri: '', user_id: '', user_email: '', response_code: '', date_from: '', date_to: '' }; search() }
 
 const openDetail = async (id) => {
-  const res  = await fetch(`/api/v1/sadmin/api-logs/${id}`)
+  const res  = await apiFetch(`/api/v1/sadmin/api-logs/${id}`, { auth: true })
   const data = await res.json()
   detail.value = { show: true, data }
 }

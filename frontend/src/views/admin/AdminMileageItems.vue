@@ -151,6 +151,7 @@
 import { ref, onMounted } from 'vue'
 import { RefreshCw, Plus } from 'lucide-vue-next'
 import { fileService } from '../../services/FileService'
+import { apiFetch } from '../../utils/apiFetch'
 
 const mileageItemsList    = ref([])
 const loadingMileageItems = ref(false)
@@ -171,7 +172,7 @@ const STATIC_LOGO_IMAGES = [
 const loadMileageItems = async () => {
   loadingMileageItems.value = true
   try {
-    const res  = await fetch('/api/v1/admin-panel/mileage-items')
+    const res  = await apiFetch('/api/v1/admin-panel/mileage-items', { auth: true })
     const data = await res.json()
     mileageItemsList.value = data.items || []
   } finally { loadingMileageItems.value = false }
@@ -222,7 +223,7 @@ const submitMileageItem = async () => {
     const url    = f.id ? `/api/v1/admin-panel/mileage-items/${f.id}` : '/api/v1/admin-panel/mileage-items'
     const method = f.id ? 'PUT' : 'POST'
     const logoUrl = (f.logo_mode === 'image' || f.logo_mode === 'pick') ? (f.logo_url || null) : null
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, short_desc: f.short_desc, logo_letter: f.logo_letter, logo_color: f.logo_color, logo_url: logoUrl, mileage_amount: f.mileage_amount, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order }) })
+    const res    = await apiFetch(url, { method, auth: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, short_desc: f.short_desc, logo_letter: f.logo_letter, logo_color: f.logo_color, logo_url: logoUrl, mileage_amount: f.mileage_amount, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
     f.show = false
     await loadMileageItems()
@@ -231,7 +232,7 @@ const submitMileageItem = async () => {
 
 const deleteMileageItem = async (id) => {
   if (!confirm('確定要刪除此項目嗎？')) return
-  await fetch(`/api/v1/admin-panel/mileage-items/${id}`, { method: 'DELETE' })
+  await apiFetch(`/api/v1/admin-panel/mileage-items/${id}`, { method: 'DELETE', auth: true })
   await loadMileageItems()
 }
 

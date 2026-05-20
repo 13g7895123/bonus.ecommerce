@@ -55,6 +55,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 const rewardOrdersList    = ref([])
 const loadingRewardOrders = ref(false)
@@ -64,7 +65,7 @@ const loadRewardOrders = async () => {
   loadingRewardOrders.value = true
   try {
     const qs  = rewardOrdersTab.value ? `?status=${rewardOrdersTab.value}` : ''
-    const res  = await fetch(`/api/v1/admin-panel/reward-orders${qs}`)
+    const res  = await apiFetch(`/api/v1/admin-panel/reward-orders${qs}`, { auth: true })
     const data = await res.json()
     rewardOrdersList.value = data.items || []
   } finally { loadingRewardOrders.value = false }
@@ -73,8 +74,8 @@ const loadRewardOrders = async () => {
 const reviewRewardOrder = async (id, action) => {
   if (!confirm(`確定要${action === 'approve' ? '批准' : '拒絕'}此訂單嗎？`)) return
   try {
-    const res  = await fetch(`/api/v1/admin-panel/reward-orders/${id}/review`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const res  = await apiFetch(`/api/v1/admin-panel/reward-orders/${id}/review`, {
+      method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action }),
     })
     const data = await res.json()

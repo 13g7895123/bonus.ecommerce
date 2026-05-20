@@ -86,6 +86,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { RefreshCw, Plus } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 const list    = ref([])
 const loading = ref(false)
@@ -104,7 +105,7 @@ const toLocalDatetimeInput = (dt) => {
 const loadList = async () => {
   loading.value = true
   try {
-    const res  = await fetch('/api/v1/admin-panel/announcements')
+    const res  = await apiFetch('/api/v1/admin-panel/announcements', { auth: true })
     const data = await res.json()
     list.value = data.items || []
   } finally {
@@ -137,8 +138,9 @@ const submitForm = async () => {
   try {
     const url    = f.id ? `/api/v1/admin-panel/announcements/${f.id}` : '/api/v1/admin-panel/announcements'
     const method = f.id ? 'PUT' : 'POST'
-    const res    = await fetch(url, {
+    const res    = await apiFetch(url, {
       method,
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title:        f.title,
@@ -158,7 +160,7 @@ const submitForm = async () => {
 
 const deleteItem = async (id) => {
   if (!confirm('確定要刪除此公告嗎？')) return
-  await fetch(`/api/v1/admin-panel/announcements/${id}`, { method: 'DELETE' })
+  await apiFetch(`/api/v1/admin-panel/announcements/${id}`, { method: 'DELETE', auth: true })
   await loadList()
 }
 

@@ -52,6 +52,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { apiFetch } from '../../utils/apiFetch'
 
 const bankList = ref([])
 const saving   = ref(false)
@@ -67,7 +68,7 @@ const DEFAULT_BANKS = [
 
 const loadBanks = async () => {
   try {
-    const res = await fetch('/api/v1/admin-panel/config/bank_list')
+    const res = await apiFetch('/api/v1/admin-panel/config/bank_list', { auth: true })
     if (res.ok) {
       const data = await res.json()
       const raw = data.value
@@ -86,8 +87,9 @@ const loadBanks = async () => {
 const persistBanks = async () => {
   saving.value = true
   try {
-    const res = await fetch('/api/v1/admin-panel/config/bank_list', {
+    const res = await apiFetch('/api/v1/admin-panel/config/bank_list', {
       method: 'POST',
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ value: JSON.stringify(bankList.value) }),
     })

@@ -40,6 +40,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { apiFetch } from '../../utils/apiFetch'
 import { RefreshCw } from 'lucide-vue-next'
 
 const stats   = ref({})
@@ -48,7 +49,7 @@ const loading = ref(false)
 const load = async () => {
   loading.value = true
   try {
-    const res = await fetch('/api/v1/sadmin/stats')
+    const res = await apiFetch('/api/v1/sadmin/stats', { auth: true })
     stats.value = await res.json()
   } finally { loading.value = false }
 }

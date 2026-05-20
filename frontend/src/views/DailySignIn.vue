@@ -23,6 +23,7 @@
 import { computed, onMounted, ref } from 'vue'
 import PageLayout from '../components/PageLayout.vue'
 import { useToast } from '../composables/useToast'
+import { apiFetch } from '../utils/apiFetch'
 
 const toast = useToast()
 const loading = ref(false)
@@ -49,16 +50,22 @@ const days = computed(() => {
 
 const hasSignedToday = computed(() => signedDates.value.includes(today.value))
 
-const authHeaders = () => {
-  const token = localStorage.getItem('token')
-  return token ? { Authorization: `Bearer ${token}` } : {}
+const handleApiError = async (res, fallbackMessage) => {
+  let message = fallbackMessage
+
+  try {
+    const json = await res.json()
+    message = json?.message || fallbackMessage
+  } catch {}
+
+  throw new Error(message)
 }
 
 const loadStatus = async () => {
   loading.value = true
   try {
-    const res = await fetch('/api/v1/me/sign-in', { headers: authHeaders() })
-    if (!res.ok) throw new Error('load failed')
+    const res = await apiFetch('/api/v1/me/sign-in', { auth: true })
+    if (!res.ok) await handleApiError(res, '載入簽到資料失敗')
     const json = await res.json()
     const data = json.data || {}
     campaign.value = data.campaign || { title: '' }
@@ -75,12 +82,12 @@ const signInNow = async () => {
   if (hasSignedToday.value) return
   loading.value = true
   try {
-    const res = await fetch('/api/v1/me/sign-in', {
+    const res = await apiFetch('/api/v1/me/sign-in', {
       method: 'POST',
-      headers: authHeaders(),
+      auth: true,
     })
+    if (!res.ok) await handleApiError(res, '簽到失敗')
     const json = await res.json()
-    if (!res.ok) throw new Error(json.message || 'error')
     if (!signedDates.value.includes(json.data?.sign_in_date)) {
       signedDates.value = [...signedDates.value, json.data?.sign_in_date]
     }

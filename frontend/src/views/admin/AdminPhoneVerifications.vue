@@ -67,6 +67,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 const items        = ref([])
 const loading      = ref(false)
@@ -101,7 +102,7 @@ const load = async () => {
     const params = new URLSearchParams({ page: page.value, limit })
     if (filterPhone.value)  params.set('phone', filterPhone.value)
     if (filterStatus.value) params.set('status', filterStatus.value)
-    const res  = await fetch(`/api/v1/admin-panel/phone-verifications?${params}`)
+    const res  = await apiFetch(`/api/v1/admin-panel/phone-verifications?${params}`, { auth: true })
     const data = await res.json()
     items.value = data.items || []
     total.value = data.total || 0

@@ -107,6 +107,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 const items         = ref([])
 const loading       = ref(false)
@@ -129,7 +130,7 @@ const load = async () => {
     if (filterSuccess.value !== '') params.set('success', filterSuccess.value)
     if (filterDateFrom.value) params.set('date_from', filterDateFrom.value)
     if (filterDateTo.value)   params.set('date_to',   filterDateTo.value)
-    const res  = await fetch(`/api/v1/admin-panel/sms-logs?${params}`)
+    const res  = await apiFetch(`/api/v1/admin-panel/sms-logs?${params}`, { auth: true })
     const data = await res.json()
     items.value = data.items || []
     total.value = data.total || 0

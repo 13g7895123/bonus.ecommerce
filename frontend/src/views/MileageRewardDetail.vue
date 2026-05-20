@@ -106,6 +106,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/PageHeader.vue'
 import AppButton from '../components/AppButton.vue'
+import { apiFetch } from '../utils/apiFetch'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -194,14 +195,11 @@ const loadData = async () => {
   loading.value = true
   const productId = Number(route.query.product_id)
   try {
-    const token = localStorage.getItem('token') || ''
-    const headers = token ? { Authorization: `Bearer ${token}` } : {}
-
     const [productsRes, walletRes, pendingRes, configRes] = await Promise.all([
-      fetch('/api/v1/mileage/reward-products', { headers }),
-      fetch('/api/v1/wallet/info', { headers }),
-      fetch('/api/v1/mileage/reward-orders/my-pending', { headers }),
-      fetch('/api/v1/config/reward_detail_display_style'),
+      apiFetch('/api/v1/mileage/reward-products', { auth: true }),
+      apiFetch('/api/v1/wallet/info', { auth: true }),
+      apiFetch('/api/v1/mileage/reward-orders/my-pending', { auth: true }),
+      apiFetch('/api/v1/config/reward_detail_display_style'),
     ])
 
     if (productsRes.ok) {

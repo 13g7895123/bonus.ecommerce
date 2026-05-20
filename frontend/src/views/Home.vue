@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { apiFetch } from '../utils/apiFetch'
 
 const { t } = useI18n()
 const isLoggedIn = ref(false)
@@ -11,7 +12,7 @@ onMounted(async () => {
   isLoggedIn.value = !!token
 
   try {
-    const res  = await fetch('/api/v1/announcements?limit=10')
+    const res  = await apiFetch('/api/v1/announcements?limit=10')
     if (res.ok) {
       const json = await res.json()
       const items = json.data?.items || json.data || []

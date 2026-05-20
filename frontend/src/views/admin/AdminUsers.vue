@@ -284,6 +284,7 @@
 import { ref, onMounted } from 'vue'
 import { RefreshCw, Plus } from 'lucide-vue-next'
 import { countries } from '../../utils/countries'
+import { apiFetch } from '../../utils/apiFetch'
 
 const countryName = (code) => {
   if (!code) return '-'
@@ -309,7 +310,7 @@ const normalizeFileUrl = (url) => {
 const loadUsers = async () => {
   loadingUsers.value = true
   try {
-    const res  = await fetch('/api/v1/admin-panel/users?limit=200')
+    const res  = await apiFetch('/api/v1/admin-panel/users?limit=200', { auth: true })
     const data = await res.json()
     usersList.value = data.items || []
   } finally { loadingUsers.value = false }
@@ -324,8 +325,8 @@ const submitDeposit = async () => {
   if (!amount || amount <= 0) { alert('請輸入有效的正數金額'); return }
   depositModal.value.submitting = true
   try {
-    const res  = await fetch(`/api/v1/admin-panel/users/${depositModal.value.user.id}/deposit`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const res  = await apiFetch(`/api/v1/admin-panel/users/${depositModal.value.user.id}/deposit`, {
+      method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount, description: depositModal.value.description || '管理員儲值' }),
     })
     const data = await res.json()
@@ -349,8 +350,8 @@ const submitChangePassword = async () => {
   if (pwdModal.value.newPassword !== pwdModal.value.confirmPassword) { alert('兩次輸入的密碼不一致'); return }
   pwdModal.value.submitting = true
   try {
-    const res  = await fetch(`/api/v1/admin-panel/users/${pwdModal.value.user.id}/change-password`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const res  = await apiFetch(`/api/v1/admin-panel/users/${pwdModal.value.user.id}/change-password`, {
+      method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ new_password: pwdModal.value.newPassword }),
     })
     const data = await res.json()
@@ -369,8 +370,8 @@ const submitChangeWithdrawalPassword = async () => {
   if (wdPwdModal.value.newPassword !== wdPwdModal.value.confirmPassword) { alert('兩次輸入的密碼不一致'); return }
   wdPwdModal.value.submitting = true
   try {
-    const res  = await fetch(`/api/v1/admin-panel/users/${wdPwdModal.value.user.id}/change-withdrawal-password`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const res  = await apiFetch(`/api/v1/admin-panel/users/${wdPwdModal.value.user.id}/change-withdrawal-password`, {
+      method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ new_password: wdPwdModal.value.newPassword }),
     })
     const data = await res.json()
@@ -389,7 +390,7 @@ const detailModal = ref({ show: false, user: null, loading: false })
 const openUserDetail = async (user) => {
   detailModal.value = { show: true, user: { ...user }, loading: true }
   try {
-    const res  = await fetch(`/api/v1/admin-panel/users/${user.id}`)
+    const res  = await apiFetch(`/api/v1/admin-panel/users/${user.id}`, { auth: true })
     const data = await res.json()
     detailModal.value.user    = data
     detailModal.value.loading = false
@@ -412,8 +413,8 @@ const submitCreateUser = async () => {
   if (f.password !== f.confirmPassword) { alert('兩次輸入的密碼不一致'); return }
   f.submitting = true
   try {
-    const res  = await fetch('/api/v1/admin-panel/users', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const res  = await apiFetch('/api/v1/admin-panel/users', {
+      method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: f.email, password: f.password, full_name: f.full_name, phone: f.phone, role: f.role }),
     })
     const data = await res.json()
@@ -442,8 +443,8 @@ const submitBankEdit = async () => {
   const f = bankModal.value
   f.submitting = true
   try {
-    const res  = await fetch(`/api/v1/admin-panel/users/${f.user.id}/bank`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    const res  = await apiFetch(`/api/v1/admin-panel/users/${f.user.id}/bank`, {
+      method: 'PUT', auth: true, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bank_name: f.bank_name, bank_branch: f.bank_branch, bank_account: f.bank_account, bank_account_name: f.bank_account_name }),
     })
     const data = await res.json()
@@ -460,7 +461,7 @@ const submitBankEdit = async () => {
 
 const deleteBankInfo = async (user) => {
   if (!confirm('確定要刪除此使用者的銀行資料嗎？')) return
-  const res  = await fetch(`/api/v1/admin-panel/users/${user.id}/bank`, { method: 'DELETE' })
+  const res  = await apiFetch(`/api/v1/admin-panel/users/${user.id}/bank`, { method: 'DELETE', auth: true })
   const data = await res.json()
   if (!res.ok) { alert(data.message || '刪除失敗'); return }
   detailModal.value.user.bank_info = null

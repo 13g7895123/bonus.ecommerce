@@ -86,6 +86,7 @@ import PageHeader from '../components/PageHeader.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import { MileageService } from '../services/MileageService'
+import { apiFetch } from '../utils/apiFetch'
 
 const toast = useToast()
 const router = useRouter()
@@ -102,9 +103,8 @@ const userMiles = ref(0)
 
 const loadUserMiles = async () => {
   try {
-    const token = localStorage.getItem('token') || ''
-    if (!token) return
-    const res = await fetch('/api/v1/wallet/info', { headers: { Authorization: `Bearer ${token}` } })
+    if (!localStorage.getItem('token')) return
+    const res = await apiFetch('/api/v1/wallet/info', { auth: true })
     if (res.ok) {
       const json = await res.json()
       userMiles.value = json.data?.miles_balance ?? json.miles_balance ?? 0

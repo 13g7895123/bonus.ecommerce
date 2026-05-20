@@ -135,6 +135,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 const kycTabs    = [{ key: 'pending', label: '待審核' }, { key: 'approved', label: '已通過' }, { key: 'rejected', label: '未通過' }]
 const kycTab     = ref('pending')
@@ -152,7 +153,7 @@ const kycBadgeClass = (s) => ({ approved: 'badge-green', verified: 'badge-green'
 const loadKyc = async () => {
   loadingKyc.value = true
   try {
-    const res  = await fetch(`/api/v1/admin-panel/kyc?status=${kycTab.value}`)
+    const res  = await apiFetch(`/api/v1/admin-panel/kyc?status=${kycTab.value}`, { auth: true })
     const data = await res.json()
     kycList.value = data.items || []
   } finally { loadingKyc.value = false }
@@ -163,8 +164,8 @@ const openKycReject = (u) => { kycRejectModal.value = { show: true, user: u, rea
 
 const reviewKyc = async (userId, action, reason = null) => {
   try {
-    const res  = await fetch(`/api/v1/admin-panel/kyc/${userId}/review`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const res  = await apiFetch(`/api/v1/admin-panel/kyc/${userId}/review`, {
+      method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, reason }),
     })
     const data = await res.json()

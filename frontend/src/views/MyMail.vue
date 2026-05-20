@@ -45,6 +45,7 @@ import { ref, onMounted } from 'vue'
 import PageLayout from '../components/PageLayout.vue'
 import ContentList from '../components/ContentList.vue'
 import ContentListItem from '../components/ContentListItem.vue'
+import { apiFetch } from '../utils/apiFetch'
 
 const selectedMail = ref(null)
 const mails        = ref([])
@@ -52,11 +53,10 @@ const mails        = ref([])
 const openMail = async (mail) => {
   selectedMail.value = mail
   if (!mail.is_read) {
-    const token = localStorage.getItem('token')
     try {
-      await fetch(`/api/v1/me/mails/${mail.id}`, {
+      await apiFetch(`/api/v1/me/mails/${mail.id}`, {
         method: 'PATCH',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        auth: true,
       })
     } catch {}
     mail.is_read = true
@@ -69,10 +69,7 @@ const closeMail = () => {
 
 onMounted(async () => {
   try {
-    const token = localStorage.getItem('token')
-    const res = await fetch('/api/v1/me/mails', {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-    })
+    const res = await apiFetch('/api/v1/me/mails', { auth: true })
     if (res.ok) {
       const data = await res.json()
       mails.value = ((data.data?.items || data.items) || []).map(m => ({

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import PageHeader from '../components/PageHeader.vue'
+import { apiFetch } from '../utils/apiFetch'
 
 const route = useRoute()
 const id    = computed(() => route.params.id)
@@ -11,15 +12,13 @@ const loading = ref(true)
 
 onMounted(async () => {
   try {
-    const token   = localStorage.getItem('token') || ''
-    const headers = token ? { Authorization: `Bearer ${token}` } : {}
-    if (token) {
-      fetch(`/api/v1/me/announcements/${id.value}`, {
+    if (localStorage.getItem('token')) {
+      apiFetch(`/api/v1/me/announcements/${id.value}`, {
         method: 'PATCH',
-        headers,
+        auth: true,
       }).catch(() => {})
     }
-    const res     = await fetch(`/api/v1/announcements/${id.value}`, { headers })
+    const res = await apiFetch(`/api/v1/announcements/${id.value}`)
     if (res.ok) {
       const data = await res.json()
       news.value = data.data || data

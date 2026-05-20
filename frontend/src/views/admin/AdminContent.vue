@@ -92,6 +92,7 @@
 import { ref, onMounted } from 'vue'
 import { Eye, Save } from 'lucide-vue-next'
 import RichTextEditor from '../../components/admin/RichTextEditor.vue'
+import { apiFetch } from '../../utils/apiFetch'
 
 const silverCardDesc       = ref('')
 const silverCardPreview    = ref(false)
@@ -105,17 +106,15 @@ const tierGold             = ref(50000)
 const tierPlatinum         = ref(100000)
 const savingTiers          = ref(false)
 
-const getToken = () => localStorage.getItem('token')
-
 const loadContentConfigs = async () => {
   try {
     const [r1, r2, r3, r4, r5, r6] = await Promise.all([
-      fetch('/api/v1/config/skywards_silver_card_desc'),
-      fetch('/api/v1/config/terms_html'),
-      fetch('/api/v1/config/privacy_html'),
-      fetch('/api/v1/config/tier_silver_miles'),
-      fetch('/api/v1/config/tier_gold_miles'),
-      fetch('/api/v1/config/tier_platinum_miles'),
+      apiFetch('/api/v1/config/skywards_silver_card_desc'),
+      apiFetch('/api/v1/config/terms_html'),
+      apiFetch('/api/v1/config/privacy_html'),
+      apiFetch('/api/v1/config/tier_silver_miles'),
+      apiFetch('/api/v1/config/tier_gold_miles'),
+      apiFetch('/api/v1/config/tier_platinum_miles'),
     ])
     silverCardDesc.value = (await r1.json()).value || ''
     termsHtml.value      = (await r2.json()).value || ''
@@ -129,7 +128,7 @@ const loadContentConfigs = async () => {
 const saveSilverCard = async () => {
   savingSilver.value = true
   try {
-    await fetch('/api/v1/admin-panel/config/skywards_silver_card_desc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: silverCardDesc.value }) })
+    await apiFetch('/api/v1/admin-panel/config/skywards_silver_card_desc', { method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: silverCardDesc.value }) })
     alert('儲存成功')
   } finally { savingSilver.value = false }
 }
@@ -137,7 +136,7 @@ const saveSilverCard = async () => {
 const saveTerms = async () => {
   savingTerms.value = true
   try {
-    await fetch('/api/v1/admin-panel/config/terms_html', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: termsHtml.value }) })
+    await apiFetch('/api/v1/admin-panel/config/terms_html', { method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: termsHtml.value }) })
     alert('儲存成功')
   } finally { savingTerms.value = false }
 }
@@ -145,7 +144,7 @@ const saveTerms = async () => {
 const savePrivacy = async () => {
   savingPrivacy.value = true
   try {
-    await fetch('/api/v1/admin-panel/config/privacy_html', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }, body: JSON.stringify({ value: privacyHtml.value }) })
+    await apiFetch('/api/v1/admin-panel/config/privacy_html', { method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: privacyHtml.value }) })
     alert('儲存成功')
   } finally { savingPrivacy.value = false }
 }
@@ -154,9 +153,9 @@ const saveTierThresholds = async () => {
   savingTiers.value = true
   try {
     await Promise.all([
-      fetch('/api/v1/admin-panel/config/tier_silver_miles', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }, body: JSON.stringify({ value: String(tierSilver.value) }) }),
-      fetch('/api/v1/admin-panel/config/tier_gold_miles', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }, body: JSON.stringify({ value: String(tierGold.value) }) }),
-      fetch('/api/v1/admin-panel/config/tier_platinum_miles', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }, body: JSON.stringify({ value: String(tierPlatinum.value) }) }),
+      apiFetch('/api/v1/admin-panel/config/tier_silver_miles', { method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: String(tierSilver.value) }) }),
+      apiFetch('/api/v1/admin-panel/config/tier_gold_miles', { method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: String(tierGold.value) }) }),
+      apiFetch('/api/v1/admin-panel/config/tier_platinum_miles', { method: 'POST', auth: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: String(tierPlatinum.value) }) }),
     ])
     alert('等級閾值儲存成功')
   } finally { savingTiers.value = false }

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, reactive, computed, nextTick } from 'vue'
+import { apiFetch } from '../utils/apiFetch'
 
 // ── 條款/隱私 Modal ──
 const legalModal = ref({ show: false, title: '', content: '', loading: false })
@@ -8,7 +9,7 @@ const openLegalModal = async (type) => {
   legalModal.value = { show: true, title: isTerms ? '網站服務條款' : '隱私政策', content: '', loading: true }
   try {
     const key = isTerms ? 'terms_html' : 'privacy_html'
-    const res = await fetch(`/api/v1/config/${key}`)
+    const res = await apiFetch(`/api/v1/config/${key}`)
     const data = await res.json()
     legalModal.value.content = data.value || ''
   } catch {}

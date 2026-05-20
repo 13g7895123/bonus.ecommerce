@@ -81,6 +81,7 @@ import { useToast } from '../composables/useToast'
 import { getRandomName } from '../utils/random'
 import { FileService } from '../services/FileService'
 import { WalletService } from '../services/WalletService'
+import { apiFetch } from '../utils/apiFetch'
 
 const router = useRouter()
 const toast = useToast()
@@ -104,7 +105,7 @@ const pageLoading        = ref(true)
 onMounted(async () => {
   // 載入銀行清單
   try {
-    const res = await fetch('/api/v1/config/bank_list')
+    const res = await apiFetch('/api/v1/config/bank_list')
     if (res.ok) {
       const data = await res.json()
       const raw = data.value

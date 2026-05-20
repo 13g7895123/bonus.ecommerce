@@ -1,9 +1,10 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ToastNotification from '@/components/ToastNotification.vue'
 import { useToast } from '@/composables/useToast'
+import { apiFetch } from '@/utils/apiFetch'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,13 +23,14 @@ const notificationData = ref({
   mails: { items: [], unread_count: 0 },
 })
 const selectedMail = ref(null)
+const announcementTabRef = ref(null)
+const mailTabRef = ref(null)
 
 const isHomePage = computed(() => route.path === '/')
 const isSettingsPage = computed(() => route.path === '/settings')
 const isSkywardsPage = computed(() => route.path === '/skywards')
 
 const notificationAnnouncements = computed(() => {
-  if (isLoggedIn.value) return notificationData.value.announcements.items
   return announcements.value.map(item => ({ ...item, is_read: 1 }))
 })
 
@@ -44,11 +46,6 @@ const checkLoginStatus = () => {
   isLoggedIn.value = !!localStorage.getItem('token')
 }
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token')
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 const formatDateTime = (value) => {
   if (!value) return ''
   return String(value).replace('T', ' ').substring(0, 16)
@@ -62,7 +59,7 @@ const badgeText = (count) => {
 
 const loadAnnouncements = async () => {
   try {
-    const res = await fetch('/api/v1/announcements?limit=20')
+    const res = await apiFetch('/api/v1/announcements?limit=20')
     if (!res.ok) return
 
     const json = await res.json()
@@ -90,13 +87,17 @@ const loadNotifications = async () => {
   }
 
   try {
-    const res = await fetch('/api/v1/me/notifications', {
-      headers: getAuthHeaders(),
-    })
+    const res = await apiFetch('/api/v1/me/notifications', { auth: true })
     if (!res.ok) return
     const json = await res.json()
     notificationData.value = json.data || notificationData.value
   } catch {}
+}
+
+const focusNotificationTab = async (tab = activeNotificationTab.value) => {
+  await nextTick()
+  const target = tab === 'mails' ? mailTabRef.value : announcementTabRef.value
+  target?.focus()
 }
 
 const syncMenuState = async (newRoute = route) => {
@@ -106,6 +107,7 @@ const syncMenuState = async (newRoute = route) => {
     activeMenu.value = 'news'
     activeNotificationTab.value = 'announcements'
     await loadNotifications()
+    await focusNotificationTab('announcements')
   } else {
     isMenuOpen.value = false
     activeMenu.value = null
@@ -155,6 +157,7 @@ const openMenuSection = async (menu) => {
   if (menu === 'news') {
     activeNotificationTab.value = 'announcements'
     await loadNotifications()
+    await focusNotificationTab('announcements')
   }
 }
 
@@ -177,9 +180,9 @@ const openMailModal = async (mail) => {
   if (Number(mail.is_read) === 1) return
 
   try {
-    await fetch(`/api/v1/me/mails/${mail.id}`, {
+    await apiFetch(`/api/v1/me/mails/${mail.id}`, {
       method: 'PATCH',
-      headers: getAuthHeaders(),
+      auth: true,
     })
   } catch {}
 
@@ -194,9 +197,9 @@ const closeMailModal = () => {
 const openAnnouncement = async (item) => {
   if (isLoggedIn.value && Number(item.is_read) === 0) {
     try {
-      await fetch(`/api/v1/me/announcements/${item.id}`, {
+      await apiFetch(`/api/v1/me/announcements/${item.id}`, {
         method: 'PATCH',
-        headers: getAuthHeaders(),
+        auth: true,
       })
     } catch {}
 
@@ -310,22 +313,18 @@ const activeMenuLabel = computed(() => {
                   <div v-if="activeMenu === 'news'" class="announcements-page">
                     <div class="notification-tabs">
                       <button
+                        ref="announcementTabRef"
                         class="notification-tab"
                         :class="{ active: activeNotificationTab === 'announcements' }"
-                        @click="activeNotificationTab = 'announcements'"
+                        @click="activeNotificationTab = 'announcements'; focusNotificationTab('announcements')"
                       >
                         <span>{{ $t('notifications.latest') }}</span>
-                        <span
-                          v-if="isLoggedIn && notificationData.announcements.unread_count > 0"
-                          class="tab-badge"
-                        >
-                          {{ badgeText(notificationData.announcements.unread_count) }}
-                        </span>
                       </button>
                       <button
+                        ref="mailTabRef"
                         class="notification-tab"
                         :class="{ active: activeNotificationTab === 'mails' }"
-                        @click="activeNotificationTab = 'mails'"
+                        @click="activeNotificationTab = 'mails'; focusNotificationTab('mails')"
                       >
                         <span>{{ $t('notifications.personal') }}</span>
                         <span

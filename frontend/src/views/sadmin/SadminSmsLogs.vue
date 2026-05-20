@@ -144,6 +144,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
+import { apiFetch } from '../../utils/apiFetch'
 
 // ── SMS 驗證模式開關 ───────────────────────────────────────────
 const verifyEnabled = ref(true)
@@ -152,7 +153,7 @@ const blockedCount  = ref(0)
 
 const loadVerifyMode = async () => {
   try {
-    const res  = await fetch('/api/v1/sadmin/sms-verification-mode')
+    const res  = await apiFetch('/api/v1/sadmin/sms-verification-mode', { auth: true })
     const data = await res.json()
     verifyEnabled.value = !!data.enabled
   } catch {
@@ -162,7 +163,7 @@ const loadVerifyMode = async () => {
 
 const loadBlockedCount = async () => {
   try {
-    const res  = await fetch('/api/v1/sadmin/sms-security/blocked-ips')
+    const res  = await apiFetch('/api/v1/sadmin/sms-security/blocked-ips', { auth: true })
     const data = await res.json()
     blockedCount.value = data.total ?? 0
   } catch {
@@ -174,8 +175,9 @@ const toggleVerifyMode = async (e) => {
   const next = e.target.checked
   verifyLoading.value = true
   try {
-    const res  = await fetch('/api/v1/sadmin/sms-verification-mode', {
+    const res  = await apiFetch('/api/v1/sadmin/sms-verification-mode', {
       method:  'POST',
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ enabled: next }),
     })
@@ -215,7 +217,7 @@ const load = async () => {
     if (filterSuccess.value !== '') params.set('success', filterSuccess.value)
     if (filterDateFrom.value) params.set('date_from', filterDateFrom.value)
     if (filterDateTo.value)   params.set('date_to',   filterDateTo.value)
-    const res  = await fetch(`/api/v1/sadmin/sms-logs?${params}`)
+    const res  = await apiFetch(`/api/v1/sadmin/sms-logs?${params}`, { auth: true })
     const data = await res.json()
     items.value = data.items || []
     total.value = data.total || 0

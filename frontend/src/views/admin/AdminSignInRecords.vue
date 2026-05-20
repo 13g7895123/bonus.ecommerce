@@ -45,6 +45,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import { apiFetch } from '../../utils/apiFetch'
 
 const loading = ref(false)
 const items = ref([])
@@ -63,7 +64,7 @@ const loadList = async () => {
       month: String(filters.value.month),
       keyword: filters.value.keyword || '',
     })
-    const res = await fetch(`/api/v1/admin-panel/sign-in-records?${params.toString()}`)
+    const res = await apiFetch(`/api/v1/admin-panel/sign-in-records?${params.toString()}`, { auth: true })
     const data = await res.json()
     items.value = data.items || []
   } finally {
