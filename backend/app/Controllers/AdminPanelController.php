@@ -319,6 +319,55 @@ class AdminPanelController extends Controller
         return $this->json($result, $result['success'] ? 200 : 404);
     }
 
+    public function getSignInCampaignConfig(): ResponseInterface
+    {
+        $year = (int) ($this->request->getGet('year') ?? date('Y'));
+        $month = (int) ($this->request->getGet('month') ?? date('n'));
+        $campaign = (new \App\Services\SignInService())->getOrCreateCampaign($year, $month);
+
+        return $this->json([
+            'item' => [
+                'id' => (int) $campaign['id'],
+                'year' => (int) $campaign['year'],
+                'month' => (int) $campaign['month'],
+                'title' => $campaign['title'],
+                'base_reward_miles' => (int) ($campaign['base_reward_miles'] ?? 0),
+                'streak_days' => (int) ($campaign['streak_days'] ?? 0),
+                'streak_bonus_miles' => (int) ($campaign['streak_bonus_miles'] ?? 0),
+                'is_active' => (int) ($campaign['is_active'] ?? 1),
+            ],
+        ]);
+    }
+
+    public function saveSignInCampaignConfig(): ResponseInterface
+    {
+        $data = $this->request->getJSON(true) ?? [];
+        $year = (int) ($data['year'] ?? date('Y'));
+        $month = (int) ($data['month'] ?? date('n'));
+
+        if ($year < 2000 || $month < 1 || $month > 12) {
+            return $this->json(['message' => '年月格式不正確'], 400);
+        }
+
+        $baseRewardMiles = max(0, (int) ($data['base_reward_miles'] ?? 0));
+        $streakDays = max(0, (int) ($data['streak_days'] ?? 0));
+        $streakBonusMiles = max(0, (int) ($data['streak_bonus_miles'] ?? 0));
+        $title = trim($data['title'] ?? sprintf('%d年【%d】月期 簽到活動', $year, $month));
+
+        $service = new \App\Services\SignInService();
+        $campaign = $service->getOrCreateCampaign($year, $month);
+
+        model(\App\Models\SignInCampaignModel::class)->update($campaign['id'], [
+            'title' => $title,
+            'base_reward_miles' => $baseRewardMiles,
+            'streak_days' => $streakDays,
+            'streak_bonus_miles' => $streakBonusMiles,
+            'is_active' => isset($data['is_active']) ? (int) $data['is_active'] : 1,
+        ]);
+
+        return $this->json(['message' => '簽到活動設定已更新']);
+    }
+
     // ── Mileage Reward Products ────────────────────────────────────────────────
 
     public function mileageRewardProducts(): ResponseInterface
@@ -905,7 +954,7 @@ class AdminPanelController extends Controller
 
         $db = \Config\Database::connect();
         $builder = $db->table('user_sign_ins usi')
-            ->select('usi.id, usi.user_id, usi.campaign_id, usi.sign_in_date, usi.created_at, u.email, u.full_name, sic.title')
+            ->select('usi.id, usi.user_id, usi.campaign_id, usi.sign_in_date, usi.awarded_miles, usi.streak_day_count, usi.is_streak_bonus, usi.created_at, u.email, u.full_name, sic.title')
             ->join('users u', 'u.id = usi.user_id', 'left')
             ->join('sign_in_campaigns sic', 'sic.id = usi.campaign_id', 'left')
             ->where('sic.year', $year)

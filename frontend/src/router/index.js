@@ -22,6 +22,7 @@ import WithdrawalSetup from '../views/WithdrawalSetup.vue'
 import WithdrawalApply from '../views/WithdrawalApply.vue'
 import MyMail from '../views/MyMail.vue'
 import DailySignIn from '../views/DailySignIn.vue'
+import MileageRewardsIntro from '../views/MileageRewardsIntro.vue'
 import MileageRewards from '../views/MileageRewards.vue'
 import MileageRewardDetail from '../views/MileageRewardDetail.vue'
 import MileageRecords from '../views/MileageRecords.vue'
@@ -227,6 +228,12 @@ const routes = [
     path: '/daily-sign-in',
     name: 'DailySignIn',
     component: DailySignIn,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/mileage-rewards-intro',
+    name: 'MileageRewardsIntro',
+    component: MileageRewardsIntro,
     meta: { requiresAuth: true }
   },
   {

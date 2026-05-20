@@ -9,5 +9,5 @@ class UserSignInModel extends Model
     protected $table         = 'user_sign_ins';
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
-    protected $allowedFields = ['user_id', 'campaign_id', 'sign_in_date'];
+    protected $allowedFields = ['user_id', 'campaign_id', 'sign_in_date', 'awarded_miles', 'streak_day_count', 'is_streak_bonus'];
 }

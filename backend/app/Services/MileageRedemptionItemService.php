@@ -27,7 +27,7 @@ class MileageRedemptionItemService
 
     public function create(array $data): array
     {
-        $allowed = ['name', 'short_desc', 'details', 'logo_letter', 'logo_color', 'logo_url',
+        $allowed = ['name', 'short_desc', 'details', 'intro_html', 'logo_letter', 'logo_color', 'logo_url',
                     'is_featured', 'featured_label', 'is_active', 'sort_order', 'mileage_amount'];
         $insert  = array_intersect_key($data, array_flip($allowed));
 
@@ -42,7 +42,7 @@ class MileageRedemptionItemService
             return ['success' => false, 'message' => 'Item not found'];
         }
 
-        $allowed = ['name', 'short_desc', 'details', 'logo_letter', 'logo_color', 'logo_url',
+        $allowed = ['name', 'short_desc', 'details', 'intro_html', 'logo_letter', 'logo_color', 'logo_url',
                     'is_featured', 'featured_label', 'is_active', 'sort_order', 'mileage_amount'];
         $update  = array_intersect_key($data, array_flip($allowed));
 

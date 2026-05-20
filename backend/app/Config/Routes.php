@@ -58,6 +58,9 @@ $routes->group('api/v1', static function ($routes) {
         $routes->post('mileage-items',          'AdminPanelController::createMileageItem');
         $routes->put('mileage-items/(:num)',    'AdminPanelController::updateMileageItem/$1');
         $routes->delete('mileage-items/(:num)', 'AdminPanelController::deleteMileageItem/$1');
+        // Daily Sign-In
+        $routes->get('sign-in-campaign',        'AdminPanelController::getSignInCampaignConfig');
+        $routes->post('sign-in-campaign',       'AdminPanelController::saveSignInCampaignConfig');
         // Skywards Benefits
         $routes->get('skywards-benefits',           'AdminPanelController::skywardsBenefits');
         $routes->post('skywards-benefits',          'AdminPanelController::createSkywardsBenefit');

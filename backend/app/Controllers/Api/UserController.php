@@ -4,6 +4,7 @@ namespace App\Controllers\Api;
 
 use App\Libraries\Auth;
 use App\Services\AnnouncementService;
+use App\Services\SignInService;
 use App\Services\UserService;
 
 class UserController extends BaseApiController
@@ -164,83 +165,24 @@ class UserController extends BaseApiController
 
     public function signInStatus()
     {
-        $campaignModel = model(\App\Models\SignInCampaignModel::class);
-        $recordModel   = model(\App\Models\UserSignInModel::class);
-
-        $now   = new \DateTimeImmutable('now');
-        $year  = (int) $now->format('Y');
-        $month = (int) $now->format('n');
-        $title = sprintf('%d年【%d】月期 簽到活動', $year, $month);
-
-        $campaign = $campaignModel->where('year', $year)->where('month', $month)->first();
-        if (!$campaign) {
-            $campaignId = $campaignModel->insert([
-                'year'      => $year,
-                'month'     => $month,
-                'title'     => $title,
-                'is_active' => 1,
-            ], true);
-            $campaign = $campaignModel->find($campaignId);
-        }
-
-        $records = $recordModel
-            ->where('user_id', Auth::id())
-            ->where('campaign_id', $campaign['id'])
-            ->findAll();
-
-        $signedDates = array_values(array_map(static fn(array $row): string => $row['sign_in_date'], $records));
-        $today = $now->format('Y-m-d');
-
-        return $this->success([
-            'campaign' => [
-                'id'    => (int) $campaign['id'],
-                'year'  => (int) $campaign['year'],
-                'month' => (int) $campaign['month'],
-                'title' => $campaign['title'],
-            ],
-            'today'            => $today,
-            'signed_dates'     => $signedDates,
-            'signed_count'     => count($signedDates),
-            'has_signed_today' => in_array($today, $signedDates, true),
-        ]);
+        return $this->success((new SignInService())->getStatus(Auth::id()));
     }
 
     public function signInToday()
     {
-        $campaignModel = model(\App\Models\SignInCampaignModel::class);
-        $recordModel   = model(\App\Models\UserSignInModel::class);
-
-        $today = (new \DateTimeImmutable('now'))->format('Y-m-d');
-        $year  = (int) substr($today, 0, 4);
-        $month = (int) substr($today, 5, 2);
-
-        $campaign = $campaignModel->where('year', $year)->where('month', $month)->first();
-        if (!$campaign) {
-            $campaignId = $campaignModel->insert([
-                'year'      => $year,
-                'month'     => $month,
-                'title'     => sprintf('%d年【%d】月期 簽到活動', $year, $month),
-                'is_active' => 1,
-            ], true);
-            $campaign = $campaignModel->find($campaignId);
+        $result = (new SignInService())->signToday(Auth::id());
+        if (!$result['success']) {
+            return $this->error($result['message'], 422);
         }
 
-        $exists = $recordModel
-            ->where('user_id', Auth::id())
-            ->where('campaign_id', $campaign['id'])
-            ->where('sign_in_date', $today)
-            ->first();
-
-        if ($exists) {
-            return $this->success(['sign_in_date' => $today], '今日已簽到');
-        }
-
-        $recordModel->insert([
-            'user_id'      => Auth::id(),
-            'campaign_id'  => $campaign['id'],
-            'sign_in_date' => $today,
-        ]);
-
-        return $this->success(['sign_in_date' => $today], '簽到成功');
+        return $this->success([
+            'sign_in_date' => $result['sign_in_date'],
+            'reward_miles' => $result['reward_miles'],
+            'base_reward_miles' => $result['base_reward_miles'] ?? $result['reward_miles'],
+            'streak_bonus_miles' => $result['streak_bonus_miles'] ?? 0,
+            'streak_days' => $result['streak_days'] ?? 0,
+            'is_streak_bonus' => $result['is_streak_bonus'] ?? 0,
+            'miles_balance' => $result['miles_balance'] ?? null,
+        ], $result['message']);
     }
 }

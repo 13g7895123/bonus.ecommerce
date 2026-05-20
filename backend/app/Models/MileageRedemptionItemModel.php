@@ -10,7 +10,7 @@ class MileageRedemptionItemModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
     protected $allowedFields = [
-        'name', 'short_desc', 'details', 'logo_letter', 'logo_color', 'logo_url',
+        'name', 'short_desc', 'details', 'intro_html', 'logo_letter', 'logo_color', 'logo_url',
         'is_featured', 'featured_label', 'is_active', 'sort_order', 'mileage_amount',
     ];
 

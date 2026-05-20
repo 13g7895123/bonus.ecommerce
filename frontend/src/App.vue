@@ -273,12 +273,6 @@ const activeMenuLabel = computed(() => {
                   <li>
                     <a href="#" class="menu-link-with-badge" @click.prevent="openMenuSection('news')">
                       <span>{{ $t('nav.news') }}</span>
-                      <span
-                        v-if="isLoggedIn && (notificationData.announcements.unread_count + notificationData.mails.unread_count) > 0"
-                        class="tab-badge"
-                      >
-                        {{ badgeText(notificationData.announcements.unread_count + notificationData.mails.unread_count) }}
-                      </span>
                     </a>
                   </li>
                   <li><a href="#" @click.prevent="openMenuSection('lang')">{{ $t('nav.language') }}</a></li>
@@ -319,6 +313,12 @@ const activeMenuLabel = computed(() => {
                         @click="activeNotificationTab = 'announcements'; focusNotificationTab('announcements')"
                       >
                         <span>{{ $t('notifications.latest') }}</span>
+                        <span
+                          v-if="notificationAnnouncements.length > 0"
+                          class="tab-badge"
+                        >
+                          {{ badgeText(notificationAnnouncements.length) }}
+                        </span>
                       </button>
                       <button
                         ref="mailTabRef"

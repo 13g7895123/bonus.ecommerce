@@ -123,7 +123,7 @@ const goToRewards = (item) => {
   }
   const q = { item_id: item.id, item_name: item.name }
   if (route.query.from) q.from = route.query.from
-  router.push({ path: '/mileage-rewards', query: q })
+  router.push({ path: '/mileage-rewards-intro', query: q })
 }
 
 const loadRedemptionItems = async () => {

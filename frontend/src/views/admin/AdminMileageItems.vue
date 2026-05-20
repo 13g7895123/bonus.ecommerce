@@ -28,6 +28,7 @@
             <td>{{ item.sort_order }}</td>
             <td class="td-actions">
               <button class="btn btn-sm btn-outline" @click="openMileageForm(item)">編輯</button>
+              <button class="btn btn-sm btn-outline" @click="openIntroForm(item)">介紹頁設定</button>
               <button class="btn btn-sm btn-danger" @click="deleteMileageItem(item.id)">刪除</button>
             </td>
           </tr>
@@ -145,11 +146,28 @@
       </div>
     </div>
   </div>
+
+  <div v-if="introForm.show" class="modal-overlay" @click.self="introForm.show = false">
+    <div class="modal-box" style="max-width:760px;max-height:90vh;overflow-y:auto">
+      <div class="modal-hd">
+        <span>介紹頁設定：{{ introForm.itemName }}</span>
+        <button class="modal-x" @click="introForm.show = false">✕</button>
+      </div>
+      <div class="modal-bd">
+        <RichTextEditor v-model="introForm.intro_html" />
+      </div>
+      <div class="modal-ft">
+        <button class="btn btn-outline" @click="introForm.show = false">取消</button>
+        <button class="btn btn-primary" :disabled="introForm.submitting" @click="saveIntroForm">{{ introForm.submitting ? '處理中...' : '儲存' }}</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { RefreshCw, Plus } from 'lucide-vue-next'
+import RichTextEditor from '../../components/admin/RichTextEditor.vue'
 import { fileService } from '../../services/FileService'
 import { apiFetch } from '../../utils/apiFetch'
 
@@ -159,6 +177,7 @@ const logoUploading       = ref(false)
 const logoGallery         = ref([])
 const logoGalleryLoading  = ref(false)
 const mileageForm = ref({ show: false, id: null, name: '', short_desc: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', mileage_amount: 0, is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0, submitting: false })
+const introForm = ref({ show: false, id: null, itemName: '', intro_html: '', submitting: false })
 
 const STATIC_LOGO_IMAGES = [
   { id: 'static-logo',     url: '/logo.png',        original_name: 'logo.png' },
@@ -184,6 +203,16 @@ const openMileageForm = (item = null) => {
     mileageForm.value = { show: true, submitting: false, id: item.id, name: item.name, short_desc: item.short_desc || '', logo_letter: item.logo_letter || 'S', logo_color: item.logo_color || '#ffffff', logo_url: item.logo_url || '', logo_mode: item.logo_url ? 'image' : 'letter', mileage_amount: Number(item.mileage_amount || 0), is_featured: Number(item.is_featured), featured_label: item.featured_label || '精選', is_active: Number(item.is_active), sort_order: item.sort_order || 0 }
   } else {
     mileageForm.value = { show: true, submitting: false, id: null, name: '', short_desc: '', logo_letter: 'S', logo_color: '#ffffff', logo_url: '', logo_mode: 'letter', mileage_amount: 0, is_featured: 0, featured_label: '精選', is_active: 1, sort_order: 0 }
+  }
+}
+
+const openIntroForm = (item) => {
+  introForm.value = {
+    show: true,
+    id: item.id,
+    itemName: item.name,
+    intro_html: item.intro_html || '',
+    submitting: false,
   }
 }
 
@@ -225,6 +254,26 @@ const submitMileageItem = async () => {
     const logoUrl = (f.logo_mode === 'image' || f.logo_mode === 'pick') ? (f.logo_url || null) : null
     const res    = await apiFetch(url, { method, auth: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, short_desc: f.short_desc, logo_letter: f.logo_letter, logo_color: f.logo_color, logo_url: logoUrl, mileage_amount: f.mileage_amount, is_featured: f.is_featured, featured_label: f.featured_label, is_active: f.is_active, sort_order: f.sort_order }) })
     if (!res.ok) { const d = await res.json(); alert(d.message || '操作失敗'); return }
+    f.show = false
+    await loadMileageItems()
+  } finally { f.submitting = false }
+}
+
+const saveIntroForm = async () => {
+  const f = introForm.value
+  f.submitting = true
+  try {
+    const res = await apiFetch(`/api/v1/admin-panel/mileage-items/${f.id}`, {
+      method: 'PUT',
+      auth: true,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ intro_html: f.intro_html }),
+    })
+    if (!res.ok) {
+      const data = await res.json()
+      alert(data.message || '儲存失敗')
+      return
+    }
     f.show = false
     await loadMileageItems()
   } finally { f.submitting = false }

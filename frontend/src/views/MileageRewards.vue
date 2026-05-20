@@ -47,8 +47,11 @@ const itemName = computed(() => route.query.item_name ? decodeURIComponent(route
 const pageTitle = computed(() => itemName.value || t('mileageRewards.title'))
 const backPath  = computed(() => {
   if (itemId.value) {
-    const base = '/mileage-redemption'
-    return route.query.from ? `${base}?from=${route.query.from}` : base
+    const params = new URLSearchParams()
+    params.set('item_id', String(itemId.value))
+    if (itemName.value) params.set('item_name', itemName.value)
+    if (route.query.from) params.set('from', route.query.from)
+    return `/mileage-rewards-intro?${params.toString()}`
   }
   return '/skywards'
 })
