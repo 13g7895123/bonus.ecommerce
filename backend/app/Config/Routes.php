@@ -122,7 +122,7 @@ $routes->group('api/v1', static function ($routes) {
     });
 
     // ── Users (JWT required) ──
-    $routes->group('users', ['filter' => ['jwt', 'devicebinding']], static function ($routes) {
+    $routes->group('users', ['filter' => ['jwt']], static function ($routes) {
         $routes->get('me',              'Api\UserController::me');
         $routes->put('me',              'Api\UserController::updateMe');
         $routes->put('me/password',     'Api\UserController::changePassword');
@@ -139,13 +139,13 @@ $routes->group('api/v1', static function ($routes) {
         $routes->get('(:segment)/serve',          'Api\FileController::serve/$1');  // 直接提供檔案內容
 
         // 需要 JWT
-        $routes->post('upload',   'Api\FileController::upload',      ['filter' => ['jwt', 'devicebinding']]);
-        $routes->get('mine',      'Api\FileController::mine',         ['filter' => ['jwt', 'devicebinding']]);
-        $routes->delete('(:num)', 'Api\FileController::destroy/$1',   ['filter' => ['jwt', 'devicebinding']]);
+        $routes->post('upload',   'Api\FileController::upload',      ['filter' => ['jwt']]);
+        $routes->get('mine',      'Api\FileController::mine',         ['filter' => ['jwt']]);
+        $routes->delete('(:num)', 'Api\FileController::destroy/$1',   ['filter' => ['jwt']]);
     });
 
     // ── Wallet (JWT required) ──
-    $routes->group('wallet', ['filter' => ['jwt', 'devicebinding']], static function ($routes) {
+    $routes->group('wallet', ['filter' => ['jwt']], static function ($routes) {
         $routes->get('info',         'Api\WalletController::info');
         $routes->post('password',    'Api\WalletController::setPassword');
         $routes->post('bank',        'Api\WalletController::bindBank');
@@ -154,14 +154,14 @@ $routes->group('api/v1', static function ($routes) {
     });
 
     // ── Mileage (JWT required) ──
-    $routes->group('mileage', ['filter' => ['jwt', 'devicebinding']], static function ($routes) {
+    $routes->group('mileage', ['filter' => ['jwt']], static function ($routes) {
         $routes->get('history',                          'Api\MileageController::history');
         $routes->post('redeem',                          'Api\MileageController::redeem');
         $routes->get('redemption-items',                 'Api\MileageController::redemptionItems');
         $routes->get('reward-products',                  'Api\MileageController::rewardProducts');
         $routes->get('reward-orders/my',                 'Api\MileageController::myRewardOrders');
         $routes->get('reward-orders/my-pending',         'Api\MileageController::myPendingRewardOrders');
-        $routes->post('reward-products/(:num)/purchase', 'Api\MileageController::purchaseRewardProduct/$1');
+        $routes->post('reward-products/(:num)/purchase', 'Api\MileageController::purchaseRewardProduct/$1', ['filter' => ['devicebinding']]);
     });
 
     // ── Announcements (Public) ──
@@ -169,7 +169,7 @@ $routes->group('api/v1', static function ($routes) {
     $routes->get('announcements/(:num)', 'Api\AnnouncementController::show/$1');
 
     // ── Skywards (JWT required) ──
-    $routes->group('skywards', ['filter' => ['jwt', 'devicebinding']], static function ($routes) {
+    $routes->group('skywards', ['filter' => ['jwt']], static function ($routes) {
         $routes->get('benefits', 'Api\SkywardsBenefitController::index');
     });
 
@@ -180,23 +180,23 @@ $routes->group('api/v1', static function ($routes) {
     $routes->get('mails', 'AdminPanelController::publicMailList');
 
     // ── User Inbox ──
-    $routes->group('me', ['filter' => ['jwt', 'devicebinding']], static function ($routes) {
+    $routes->group('me', ['filter' => ['jwt']], static function ($routes) {
         $routes->get('mails',           'Api\UserController::myMails');
         $routes->patch('mails/(:num)',   'Api\UserController::markMailRead/$1');
         $routes->get('notifications',   'Api\UserController::notifications');
         $routes->patch('announcements/(:num)', 'Api\UserController::markAnnouncementRead/$1');
-        $routes->get('sign-in',         'Api\UserController::signInStatus');
-        $routes->post('sign-in',        'Api\UserController::signInToday');
+        $routes->get('sign-in',         'Api\UserController::signInStatus', ['filter' => ['devicebinding']]);
+        $routes->post('sign-in',        'Api\UserController::signInToday',  ['filter' => ['devicebinding']]);
     });
 
     // ── Customer Service (JWT required) ──
-    $routes->group('cs', ['filter' => ['jwt', 'devicebinding']], static function ($routes) {
+    $routes->group('cs', ['filter' => ['jwt']], static function ($routes) {
         $routes->get('messages',  'Api\CustomerServiceController::messages');
         $routes->post('messages', 'Api\CustomerServiceController::sendMessage');
     });
 
     // ── Admin (JWT + admin role required) ──
-    $routes->group('admin', ['filter' => ['jwt:admin', 'devicebinding']], static function ($routes) {
+    $routes->group('admin', ['filter' => ['jwt:admin']], static function ($routes) {
         $routes->get('users',                        'Api\AdminController::users');
         $routes->post('users/(:num)/balance',        'Api\AdminController::adjustBalance/$1');
         $routes->post('users/(:num)/verify',         'Api\AdminController::reviewVerification/$1');

@@ -28,7 +28,7 @@ class AuthController extends BaseApiController
             'full_name'       => $data['full_name'] ?? null,
             'phone'           => $data['phone'] ?? null,
             'register_ip'     => $this->request->getIPAddress(),
-            'register_device' => $this->request->getUserAgent()->getAgentString(),
+            'register_device' => $this->buildRegisterDeviceInfo($data['device_info'] ?? null),
         ]);
 
         if (!$result['success']) {
@@ -52,6 +52,23 @@ class AuthController extends BaseApiController
             return $this->error($result['message']);
         }
         return $this->success($result['data'], 'Login successful');
+    }
+
+    private function buildRegisterDeviceInfo(mixed $clientInfo): string
+    {
+        $headers = [
+            'sec_ch_ua'          => $this->request->getHeaderLine('Sec-CH-UA') ?: null,
+            'sec_ch_ua_mobile'   => $this->request->getHeaderLine('Sec-CH-UA-Mobile') ?: null,
+            'sec_ch_ua_platform' => $this->request->getHeaderLine('Sec-CH-UA-Platform') ?: null,
+        ];
+
+        $info = [
+            'user_agent' => $this->request->getUserAgent()->getAgentString(),
+            'headers'    => array_filter($headers, static fn ($value) => $value !== null && $value !== ''),
+            'client'     => is_array($clientInfo) ? $clientInfo : null,
+        ];
+
+        return json_encode($info, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: $info['user_agent'];
     }
 
     public function forgotPassword()

@@ -1,5 +1,6 @@
 import { BaseService } from './BaseService';
 import { mockDb } from './mockDb';
+import { collectDeviceInfo } from '../utils/deviceInfo';
 
 export class AuthService extends BaseService {
   constructor() {
@@ -57,6 +58,7 @@ export class AuthService extends BaseService {
       password: userData.password,
       full_name: [userData.firstName, userData.lastName].filter(Boolean).join(' ') || userData.full_name || '',
       phone: userData.phone || '',
+      device_info: await collectDeviceInfo(),
     };
     const data = await this._post('/register', payload);
     if (data?.token) localStorage.setItem('token', data.token);
@@ -131,4 +133,3 @@ export class AuthService extends BaseService {
     }
   }
 }
-

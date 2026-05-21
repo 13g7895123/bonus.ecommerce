@@ -64,7 +64,7 @@
         </div>
         <div class="form-group">
           <label>綁定設備</label>
-          <div v-if="user?.register_device" class="field-value device-value">{{ user.register_device }}</div>
+          <div v-if="boundDeviceName" class="field-value device-value">{{ boundDeviceName }}</div>
           <div v-else class="field-value unbound-hint">尚未綁定設備，如需解除綁定請聯繫客服</div>
         </div>
       </div>
@@ -177,6 +177,35 @@ const selectCountry = (code) => {
 }
 
 const isEmailVerified = computed(() => !!(user.value?.is_verified || user.value?.verified))
+
+const parseDeviceInfo = (raw) => {
+  if (!raw) return null
+  if (typeof raw !== 'string') return raw
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return { user_agent: raw }
+  }
+}
+
+const formatDeviceName = (info) => {
+  if (!info) return ''
+
+  const client = info.client || info
+  const uaData = client.userAgentData || {}
+  const model = uaData.model || client.model || ''
+  const platform = uaData.platform || info.headers?.sec_ch_ua_platform || client.platform || ''
+  const isMobile = uaData.mobile === true || info.headers?.sec_ch_ua_mobile === '?1'
+
+  if (model) return model
+  if (platform) return `${String(platform).replaceAll('"', '')}${isMobile ? ' 行動裝置' : ''}`
+  return info.user_agent || client.userAgent || ''
+}
+
+const boundDeviceName = computed(() => {
+  const info = parseDeviceInfo(user.value?.register_device)
+  return formatDeviceName(info)
+})
 // 注意：is_verified 已在 UserService.getProfile 正規化為 boolean，
 // 此處直接用即可
 

@@ -55,6 +55,41 @@ import SadminSmsProvider from '../views/sadmin/SadminSmsProvider.vue'
 import SadminSmsLogs from '../views/sadmin/SadminSmsLogs.vue'
 import SadminSmsSettings from '../views/sadmin/SadminSmsSettings.vue'
 import CountryLanguageSettings from '../views/CountryLanguageSettings.vue'
+import { apiFetch } from '../utils/apiFetch'
+
+const DEVICE_UNBOUND_MESSAGE = '尚未綁定設備，請聯繫客服完成設備綁定後再進行操作'
+
+const parseStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || 'null')
+  } catch {
+    return null
+  }
+}
+
+const hasBoundDevice = (user) => {
+  const value = user?.register_device
+  return typeof value === 'string' ? value.trim().length > 0 : !!value
+}
+
+const fetchCurrentUser = async () => {
+  const res = await apiFetch('/api/v1/users/me', { auth: true })
+  if (!res.ok) return null
+  const json = await res.json()
+  const user = json.data || json.user || json
+  if (user && typeof user === 'object') {
+    localStorage.setItem('user', JSON.stringify(user))
+  }
+  return user
+}
+
+const notifyDeviceUnbound = () => {
+  window.setTimeout(() => {
+    window.dispatchEvent(new CustomEvent('device:unbound', {
+      detail: { message: DEVICE_UNBOUND_MESSAGE },
+    }))
+  }, 0)
+}
 
 const routes = [
   {
@@ -228,7 +263,7 @@ const routes = [
     path: '/daily-sign-in',
     name: 'DailySignIn',
     component: DailySignIn,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresDeviceBinding: true }
   },
   {
     path: '/mileage-rewards-intro',
@@ -252,7 +287,7 @@ const routes = [
     path: '/mileage-reward-confirm',
     name: 'MileageRewardConfirm',
     component: MileageRewardConfirm,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresDeviceBinding: true }
   },
   {
     path: '/mileage-records',
@@ -273,7 +308,7 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from) => {
+router.beforeEach(async (to, from) => {
   if (to.meta.requiresAuth) {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -281,6 +316,23 @@ router.beforeEach((to, from) => {
       const t = i18n.global.t
       toast.warning(t('auth.loginRequired'))
       return { path: '/' }
+    }
+  }
+
+  if (to.meta.requiresDeviceBinding) {
+    let user = parseStoredUser()
+
+    if (!hasBoundDevice(user)) {
+      try {
+        user = await fetchCurrentUser()
+      } catch {
+        user = null
+      }
+    }
+
+    if (!hasBoundDevice(user)) {
+      notifyDeviceUnbound()
+      return from.fullPath && from.fullPath !== to.fullPath ? false : { path: '/settings' }
     }
   }
 })

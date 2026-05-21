@@ -91,6 +91,9 @@ const handleApiError = async (res, fallbackMessage) => {
   throw new Error(message)
 }
 
+const isDeviceUnboundError = (message) =>
+  String(message || '').includes('尚未綁定設備')
+
 const loadStatus = async () => {
   loading.value = true
   try {
@@ -102,8 +105,10 @@ const loadStatus = async () => {
     today.value = data.today || ''
     signedDates.value = data.signed_dates || []
     currentStreakDays.value = Number(data.current_streak_days || 0)
-  } catch {
-    toast.error('載入簽到資料失敗')
+  } catch (error) {
+    if (!isDeviceUnboundError(error.message)) {
+      toast.error('載入簽到資料失敗')
+    }
   } finally {
     loading.value = false
   }
@@ -125,7 +130,9 @@ const signInNow = async () => {
     currentStreakDays.value = Number(json.data?.streak_days || currentStreakDays.value)
     toast.success(json.message || '簽到成功')
   } catch (error) {
-    toast.error(error.message || '簽到失敗')
+    if (!isDeviceUnboundError(error.message)) {
+      toast.error(error.message || '簽到失敗')
+    }
   } finally {
     loading.value = false
   }

@@ -170,6 +170,12 @@
               <div class="kyc-row"><span class="kyc-lbl">里程</span><span>{{ (detailModal.user.miles_balance || 0).toLocaleString() }}</span></div>
               <div class="kyc-row"><span class="kyc-lbl">已綁定銀行</span><span>{{ detailModal.user.has_bank_account ? '是' : '否' }}</span></div>
               <div class="kyc-row"><span class="kyc-lbl">註冊時間</span><span>{{ detailModal.user.created_at }}</span></div>
+              <div class="kyc-row"><span class="kyc-lbl">註冊 IP</span><span>{{ detailModal.user.register_ip || '-' }}</span></div>
+              <div v-if="boundDeviceName(detailModal.user.register_device)" class="kyc-row">
+                <span class="kyc-lbl">綁定設備</span>
+                <span class="device-info-value">{{ boundDeviceName(detailModal.user.register_device) }}</span>
+              </div>
+              <div v-else class="kyc-row"><span class="kyc-lbl">綁定設備</span><span>尚未綁定</span></div>
             </div>
           </div>
 
@@ -297,6 +303,31 @@ const loadingUsers = ref(false)
 
 const kycLabel      = (s) => ({ approved: '已通過', verified: '已通過', pending: '待審核', rejected: '未通過', none: '未提交' }[s] || '未提交')
 const kycBadgeClass = (s) => ({ approved: 'badge-green', verified: 'badge-green', pending: 'badge-yellow', rejected: 'badge-red', none: 'badge-gray' }[s] || 'badge-gray')
+
+const parseDeviceInfo = (raw) => {
+  if (!raw) return null
+  if (typeof raw !== 'string') return raw
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return { user_agent: raw }
+  }
+}
+
+const boundDeviceName = (raw) => {
+  const info = parseDeviceInfo(raw)
+  if (!info) return ''
+
+  const client = info.client || info
+  const uaData = client.userAgentData || {}
+  const model = uaData.model || client.model || ''
+  const platform = uaData.platform || info.headers?.sec_ch_ua_platform || client.platform || ''
+  const isMobile = uaData.mobile === true || info.headers?.sec_ch_ua_mobile === '?1'
+
+  if (model) return model
+  if (platform) return `${String(platform).replaceAll('"', '')}${isMobile ? ' 行動裝置' : ''}`
+  return info.user_agent || client.userAgent || ''
+}
 
 // 統一處理頭像/檔案 URL：將舊 domain 的絕對路徑轉為相對路徑，避免跨域或 domain 變更問題
 const normalizeFileUrl = (url) => {
@@ -516,4 +547,7 @@ onMounted(loadUsers)
 .pwd-eye { position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #888; padding: 0; display: flex; align-items: center; outline: none; }
 .pwd-eye:hover { color: #333; }
 .pwd-eye:focus { outline: none; box-shadow: none; }
+.device-info-value {
+  word-break: break-word;
+}
 </style>

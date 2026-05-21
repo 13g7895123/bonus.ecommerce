@@ -101,6 +101,9 @@ const totalMileageReward = computed(() =>
     : 0
 )
 
+const isDeviceUnboundError = (message) =>
+  String(message || '').includes('尚未綁定設備')
+
 const submitPurchase = async () => {
   if (!product.value || submitting.value) return
   submitting.value = true
@@ -116,6 +119,7 @@ const submitPurchase = async () => {
     })
     const data = await res.json()
     if (!res.ok) {
+      if (isDeviceUnboundError(data.message)) return
       errorMsg.value = data.message || t('common.error')
       return
     }
