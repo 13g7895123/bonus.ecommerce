@@ -269,19 +269,19 @@ const routes = [
     path: '/mileage-rewards-intro',
     name: 'MileageRewardsIntro',
     component: MileageRewardsIntro,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresDeviceBinding: true }
   },
   {
     path: '/mileage-rewards',
     name: 'MileageRewards',
     component: MileageRewards,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresDeviceBinding: true }
   },
   {
     path: '/mileage-reward-detail',
     name: 'MileageRewardDetail',
     component: MileageRewardDetail,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresDeviceBinding: true }
   },
   {
     path: '/mileage-reward-confirm',
